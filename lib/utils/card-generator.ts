@@ -37,12 +37,12 @@ export async function generateResultCardBlob(
 
   const qrImage = await loadImage(qrDataUrl);
 
-  // 1. Background Gradient (Festival Teal & Deep Night)
+  // 1. Background Gradient (Festival Dark Cosmic & Deep Night)
   const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, "#0a2626");
-  bgGrad.addColorStop(0.35, "#125252");
-  bgGrad.addColorStop(0.7, "#174242");
-  bgGrad.addColorStop(1, "#0d1f1f");
+  bgGrad.addColorStop(0, "#06061f");
+  bgGrad.addColorStop(0.35, "#0a0a28");
+  bgGrad.addColorStop(0.7, "#125252");
+  bgGrad.addColorStop(1, "#06061f");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 

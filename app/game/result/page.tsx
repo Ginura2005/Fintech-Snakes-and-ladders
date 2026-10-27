@@ -4,8 +4,22 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Trophy, Share2, Download, Copy, Check, Heart, Star, Shield, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
+import {
+  Trophy,
+  Share2,
+  Download,
+  Copy,
+  Check,
+  Heart,
+  Star,
+  Shield,
+  Image as ImageIcon,
+  Sparkles,
+} from "lucide-react";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
+import FestivalHeader from "@/components/layout/FestivalHeader";
+import FestivalFooter from "@/components/layout/FestivalFooter";
 
 interface GameRun {
   status: string;
@@ -25,15 +39,12 @@ interface Profile {
   leaderboard_opt_in: boolean;
 }
 
-interface LeaderboardRank {
-  rank: number | null;
-}
-
 export default function ResultPage() {
   const router = useRouter();
   const supabase = createClient();
   const cardRef = useRef<HTMLDivElement>(null);
 
+  const [user, setUser] = useState<any>(null);
   const [run, setRun] = useState<GameRun | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rank, setRank] = useState<number | null>(null);
@@ -48,13 +59,22 @@ export default function ResultPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/"); return; }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+      if (!user) {
+        router.push("/");
+        return;
+      }
 
       const res = await fetch("/api/game/state");
       if (res.ok) {
         const data = await res.json();
-        if (!data.run) { router.push("/"); return; }
+        if (!data.run) {
+          router.push("/");
+          return;
+        }
         setRun(data.run);
         setProfile(data.profile);
         setLeaderboardOptIn(data.profile?.leaderboard_opt_in ?? false);
@@ -71,7 +91,7 @@ export default function ResultPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [router, supabase.auth]);
 
   const handleGenerateLink = async () => {
     setGeneratingLink(true);
@@ -92,7 +112,6 @@ export default function ResultPage() {
     else setDownloadingStory(true);
 
     try {
-      // Ensure share link is available
       let targetUrl = shareUrl;
       if (!targetUrl) {
         const linkRes = await fetch("/api/share/link", { method: "POST" });
@@ -143,7 +162,7 @@ export default function ResultPage() {
 
   const handleNativeShare = async () => {
     if (!shareUrl) return;
-    const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE! Can you beat me? 🎲\n\nSri Lanka FinTech Festival 2026 — 2–3 November`;
+    const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE! Can you beat me? 🎲\n\nSri Lanka FinTech Festival 2026`;
     try {
       await navigator.share({ title: "LANKA FINTECHVERSE", text, url: shareUrl });
     } catch {
@@ -175,8 +194,8 @@ export default function ResultPage() {
 
   if (loading || !run) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
+        <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -186,97 +205,136 @@ export default function ResultPage() {
   const durationMinutes = run.duration_seconds ? Math.floor(run.duration_seconds / 60) : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+      <FestivalHeader user={user} activePath="/game/result" />
 
-        {/* Result Card */}
+      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full space-y-6">
+        {/* Main Result Showcase Card */}
         <div
           ref={cardRef}
-          className="glass-card p-8 text-center"
-          style={{ background: isWin ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" : isEliminated ? "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)" : "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)" }}
+          className={`festival-panel p-8 sm:p-10 text-center relative overflow-hidden border-2 ${
+            isWin
+              ? "border-[#fec01f] bg-gradient-to-b from-[#fec01f]/15 via-[#0c0c32] to-[#06061f] shadow-[0_0_50px_rgba(254,192,31,0.25)]"
+              : isEliminated
+              ? "border-rose-500/50 bg-gradient-to-b from-rose-950/30 via-[#0c0c32] to-[#06061f]"
+              : "border-white/20 bg-gradient-to-b from-white/5 via-[#0c0c32] to-[#06061f]"
+          }`}
         >
-          {/* Festival branding */}
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg brand-gradient flex items-center justify-center">
-              <span className="text-white text-xs font-bold">SL</span>
-            </div>
-            <span className="text-sm font-semibold text-gray-600">Sri Lanka FinTech Festival 2026</span>
+          {/* Festival Logo */}
+          <div className="relative h-10 w-44 mx-auto mb-4">
+            <Image
+              src="/long-logo-removebg-preview.png"
+              alt="Sri Lanka FinTech Festival"
+              fill
+              className="object-contain"
+            />
           </div>
 
-          {/* Outcome */}
-          <div className="text-6xl mb-3">
+          <span
+            className={`section-badge mb-4 text-xs ${
+              isWin ? "section-badge-primary" : isEliminated ? "section-badge-burgundy" : "section-badge-on-dark"
+            }`}
+          >
+            {isWin ? "★ MATCH VICTORY" : isEliminated ? "MATCH CONCLUDED" : "MATCH COMPLETED"}
+          </span>
+
+          {/* Outcome Emblem */}
+          <div className="text-6xl sm:text-7xl mb-3 animate-float-gentle">
             {isWin ? "🏆" : isEliminated ? "💔" : "🤖"}
           </div>
-          <h1 className="text-3xl font-black text-gray-900 mb-1">
-            {isWin ? "You Won!" : isEliminated ? "Eliminated!" : "Computer Won"}
+
+          <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-2">
+            {isWin ? "Victory in the Arena!" : isEliminated ? "Eliminated by High-Risk Snakes" : "Computer Reached Finish First"}
           </h1>
-          <p className="text-gray-600 text-sm mb-6">
+          <p className="text-white/70 text-sm max-w-md mx-auto mb-8">
             {isWin
-              ? "Congratulations! You reached square 25 and defeated the computer."
+              ? "Phenomenal run! You reached square 25 and triumphed over the autonomous AI opponent."
               : isEliminated
-              ? "You lost all your hearts. Better luck next time!"
-              : "The computer reached square 25 first. Great effort!"}
+              ? "All hearts depleted on risk squares. In FinTech, risk management is paramount!"
+              : "A fierce contest. The computer seized square 25 first. Excellent performance!"}
           </p>
 
-          {/* Score */}
-          <div className="inline-block px-8 py-4 rounded-2xl bg-white border-2 border-teal-200 mb-6">
-            <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">Final Score</p>
-            <p className="text-5xl font-black text-teal-700">{run.player_score.toLocaleString()}</p>
-            {rank && (
-              <p className="text-sm text-gray-600 mt-1">
-                🏅 Rank #{rank} on the leaderboard
+          {/* Score Box */}
+          <div className="inline-block px-8 py-5 rounded-2xl bg-white/[0.04] border-2 border-[#fec01f]/40 mb-8 shadow-inner">
+            <p className="font-mono text-xs uppercase tracking-widest text-[#fec01f] mb-1 font-bold">
+              Official Arena Score
+            </p>
+            <p className="font-mono text-5xl sm:text-6xl font-black text-white">
+              {run.player_score.toLocaleString()}
+            </p>
+            {rank && leaderboardOptIn && (
+              <p className="font-mono text-xs text-[#fec01f] mt-2 flex items-center justify-center gap-1">
+                <Trophy size={13} />
+                <span>Rank #{rank} on Live Festival Leaderboard</span>
               </p>
             )}
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div className="p-3 rounded-xl bg-white/60">
+          {/* Match Stats Grid */}
+          <div className="grid grid-cols-3 gap-3 max-w-md mx-auto">
+            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
               <div className="flex items-center justify-center gap-1 mb-1">
                 {Array.from({ length: 3 }, (_, i) => (
-                  <Heart key={i} size={14} className={i < run.player_hearts ? "text-red-500 fill-red-500" : "text-gray-200 fill-gray-200"} />
+                  <Heart
+                    key={i}
+                    size={14}
+                    className={
+                      i < run.player_hearts
+                        ? "text-rose-500 fill-rose-500"
+                        : "text-white/20 fill-white/10"
+                    }
+                  />
                 ))}
               </div>
-              <p className="text-xs text-gray-500">{run.player_hearts} hearts left</p>
+              <p className="font-mono text-[10px] text-white/50 uppercase tracking-wider">
+                {run.player_hearts} Hearts Left
+              </p>
             </div>
-            <div className="p-3 rounded-xl bg-white/60">
-              <Star size={18} className="fill-yellow-500 text-yellow-500 mx-auto mb-1" />
-              <p className="text-xs text-gray-500">{run.player_quiz_correct} quiz correct</p>
+
+            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+              <Star size={16} className="fill-[#fec01f] text-[#fec01f] mx-auto mb-1" />
+              <p className="font-mono text-xs font-bold text-white">{run.player_quiz_correct}</p>
+              <p className="font-mono text-[10px] text-white/50 uppercase tracking-wider">
+                Quiz Correct
+              </p>
             </div>
-            <div className="p-3 rounded-xl bg-white/60">
-              <p className="text-lg font-bold text-gray-700">💰{(run.player_treasures_collected || []).length}</p>
-              <p className="text-xs text-gray-500">treasures</p>
+
+            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
+              <div className="text-base mb-0.5">💰</div>
+              <p className="font-mono text-xs font-bold text-white">
+                {(run.player_treasures_collected || []).length}
+              </p>
+              <p className="font-mono text-[10px] text-white/50 uppercase tracking-wider">
+                Treasures
+              </p>
             </div>
           </div>
 
           {durationMinutes !== null && (
-            <p className="text-xs text-gray-400 mt-4">
-              ⏱ Game completed in {durationMinutes}m {run.duration_seconds! % 60}s
+            <p className="font-mono text-xs text-white/40 mt-5">
+              ⏱ Duration: {durationMinutes}m {run.duration_seconds! % 60}s
             </p>
           )}
-
-          <p className="text-xs font-semibold text-gray-500 mt-4 tracking-wider uppercase">
-            2–3 November 2026 · See you at the Festival!
-          </p>
         </div>
 
-        {/* One-run notice */}
-        <div className="glass-card p-4 flex items-start gap-3 bg-amber-50 border border-amber-200">
-          <span className="text-amber-500 text-xl flex-shrink-0">ℹ️</span>
-          <div>
-            <p className="font-semibold text-amber-800 text-sm">Official attempt used</p>
-            <p className="text-amber-700 text-xs mt-0.5">
-              This was your official game attempt. You cannot start a new official run.
-              Your score and stats are permanently recorded.
+        {/* 1-Run Notice */}
+        <div className="festival-card p-4 flex items-start gap-3 border-amber-500/40 bg-amber-950/20">
+          <span className="text-xl">ℹ️</span>
+          <div className="text-xs font-mono">
+            <p className="font-bold text-amber-300 uppercase tracking-wider">
+              Official Attempt Record Locked
+            </p>
+            <p className="text-white/70 mt-0.5 leading-relaxed">
+              This was your official festival competition run. Your score is permanently archived for the Sri Lanka FinTech Festival 2026.
             </p>
           </div>
         </div>
 
-        {/* Leaderboard opt-in */}
-        <div className="glass-card p-5">
-          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <Trophy size={18} className="text-teal-600" />
-            Public Leaderboard
+        {/* Leaderboard Opt-in Card */}
+        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
+          <h3 className="font-heading font-bold text-base text-white mb-3 flex items-center gap-2">
+            <Trophy size={18} className="text-[#fec01f]" />
+            Public Leaderboard Status
           </h3>
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -284,76 +342,75 @@ export default function ResultPage() {
               checked={leaderboardOptIn}
               onChange={(e) => handleOptInChange(e.target.checked)}
               disabled={updatingOptIn}
-              className="mt-0.5 w-4 h-4 rounded accent-teal-600"
+              className="mt-0.5 w-4 h-4 rounded text-[#fec01f] accent-[#fec01f] focus:ring-[#fec01f]"
             />
             <div>
-              <p className="text-sm font-medium text-gray-700">
-                Show my name and score on the public leaderboard
+              <p className="text-sm font-medium text-white">
+                Display my player handle and score on the festival leaderboard
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Only your display name and score are shown. Your email is never revealed. You can change this anytime.
+              <p className="text-xs text-white/50 mt-0.5">
+                Your email is never shown. You can toggle this on or off at any time.
               </p>
             </div>
           </label>
-          {rank && leaderboardOptIn && (
-            <div className="mt-3 p-3 bg-teal-50 rounded-xl text-sm text-teal-700 font-semibold text-center">
-              🏅 You're ranked #{rank} on the leaderboard!
-            </div>
-          )}
-          <Link
-            href="/leaderboard"
-            className="mt-3 flex items-center gap-2 text-sm text-teal-600 hover:text-teal-800 font-medium"
-          >
-            View full leaderboard →
-          </Link>
+
+          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <Link
+              href="/leaderboard"
+              className="text-xs font-mono text-[#fec01f] hover:underline flex items-center gap-1 uppercase tracking-wider"
+            >
+              <span>View Live Rankings</span>
+              <span>→</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Result Card Downloads */}
-        <div className="glass-card p-5">
-          <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-            <ImageIcon size={18} className="text-teal-600" />
-            Download Festival Result Cards
+        {/* Result Card Image Generator */}
+        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
+          <h3 className="font-heading font-bold text-base text-white mb-2 flex items-center gap-2">
+            <ImageIcon size={18} className="text-[#fec01f]" />
+            Download Branded Share Card
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Download high-resolution, branded PNG cards with a custom QR code to share on Instagram, LinkedIn, or WhatsApp.
+          <p className="text-sm text-white/70 mb-5">
+            Download high-resolution commemorative cards formatted for Instagram, LinkedIn, and WhatsApp stories with your custom QR challenge code.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => handleDownloadCard("post")}
               disabled={downloadingPost || downloadingStory}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-teal-800 text-white font-semibold text-sm hover:bg-teal-900 transition-colors disabled:opacity-50 shadow-sm"
+              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3.5 px-4 disabled:opacity-50"
             >
-              <Download size={16} />
-              {downloadingPost ? "Generating Post Card…" : "Square/Post Card (1080×1350)"}
+              <Download size={15} />
+              <span>{downloadingPost ? "Generating Post Card…" : "Post Card (1080×1350)"}</span>
             </button>
             <button
               onClick={() => handleDownloadCard("story")}
               disabled={downloadingPost || downloadingStory}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold text-sm hover:opacity-95 transition-opacity disabled:opacity-50 shadow-sm"
+              className="interactive-btn interactive-btn--burgundy text-xs uppercase tracking-wider py-3.5 px-4 disabled:opacity-50"
             >
-              <Download size={16} />
-              {downloadingStory ? "Generating Story Card…" : "Story Card (1080×1920)"}
+              <Download size={15} />
+              <span>{downloadingStory ? "Generating Story Card…" : "Story Card (1080×1920)"}</span>
             </button>
           </div>
         </div>
 
-        {/* Sharing */}
-        <div className="glass-card p-5">
-          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <Share2 size={18} className="text-teal-600" />
-            Challenge Your Friends
+        {/* Challenge Friends */}
+        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
+          <h3 className="font-heading font-bold text-base text-white mb-3 flex items-center gap-2">
+            <Share2 size={18} className="text-[#fec01f]" />
+            Challenge Attendees &amp; Colleagues
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Share your result and challenge friends to beat your score!
+          <p className="text-sm text-white/70 mb-4">
+            Invite your network to match or surpass your score in the FinTechverse.
           </p>
 
           {!shareUrl ? (
             <button
               onClick={handleGenerateLink}
               disabled={generatingLink}
-              className="w-full py-3 rounded-xl brand-gradient text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-60"
+              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60"
             >
-              {generatingLink ? "Generating…" : "🔗 Generate Challenge Link"}
+              {generatingLink ? "Generating Link…" : "🔗 Create Custom Challenge Link"}
             </button>
           ) : (
             <div className="space-y-3">
@@ -361,50 +418,48 @@ export default function ResultPage() {
                 <input
                   readOnly
                   value={shareUrl}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm bg-gray-50 text-gray-700 font-mono"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/15 text-xs text-white/90 font-mono"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-4 py-2 rounded-xl bg-teal-700 text-white text-sm font-semibold hover:bg-teal-800 transition-colors flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl interactive-btn interactive-btn--primary text-xs font-bold uppercase tracking-wider"
                 >
                   {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? "Copied!" : "Copy"}
+                  <span>{copied ? "Copied" : "Copy"}</span>
                 </button>
               </div>
 
               {"share" in navigator && (
                 <button
                   onClick={handleNativeShare}
-                  className="w-full py-2.5 rounded-xl border border-teal-200 text-teal-700 font-semibold text-sm hover:bg-teal-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl border border-white/20 bg-white/5 text-xs font-mono uppercase tracking-wider text-white hover:border-[#fec01f] transition-colors flex items-center justify-center gap-2"
                 >
-                  <Share2 size={16} />
-                  Share via…
+                  <Share2 size={14} />
+                  <span>Share Via Device Menu…</span>
                 </button>
               )}
-
-              <p className="text-xs text-gray-400 text-center">
-                Challenge links don't reveal your email or account details.
-              </p>
             </div>
           )}
         </div>
 
-        {/* Navigation */}
-        <div className="flex gap-3">
+        {/* Back navigation */}
+        <div className="flex gap-4 pt-2">
           <Link
             href="/"
-            className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold text-sm text-center hover:bg-gray-50 transition-colors"
+            className="flex-1 py-3 rounded-xl border border-white/15 bg-white/5 text-white/80 font-mono text-xs uppercase tracking-wider text-center hover:text-white hover:border-[#fec01f] transition-colors"
           >
-            ← Home
+            ← Festival Home
           </Link>
           <Link
             href="/leaderboard"
-            className="flex-1 py-3 rounded-xl brand-gradient text-white font-semibold text-sm text-center hover:opacity-90 transition-opacity"
+            className="flex-1 py-3 rounded-xl interactive-btn interactive-btn--primary font-mono text-xs uppercase tracking-wider text-center"
           >
-            🏆 Leaderboard
+            🏆 Full Leaderboard
           </Link>
         </div>
-      </div>
-    </main>
+      </main>
+
+      <FestivalFooter />
+    </div>
   );
 }

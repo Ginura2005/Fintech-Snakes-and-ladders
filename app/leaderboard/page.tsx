@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Trophy, ArrowLeft } from "lucide-react";
+import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle } from "lucide-react";
+import FestivalHeader from "@/components/layout/FestivalHeader";
+import FestivalFooter from "@/components/layout/FestivalFooter";
 
 interface LeaderboardEntry {
   rank: number;
@@ -21,13 +23,17 @@ export default function LeaderboardPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
 
   useEffect(() => {
     const load = async () => {
       // Get current user's display name
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
       if (user) {
         const res = await fetch("/api/profile");
         if (res.ok) {
@@ -46,7 +52,7 @@ export default function LeaderboardPage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [supabase.auth]);
 
   const loadMore = async () => {
     const nextPage = page + 1;
@@ -66,133 +72,161 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <Link href="/" className="text-gray-500 hover:text-gray-700 p-1">
-            <ArrowLeft size={20} />
-          </Link>
-          <div className="flex items-center gap-2">
-            <Trophy size={20} className="text-teal-600" />
-            <h1 className="font-bold text-gray-800">Leaderboard</h1>
-          </div>
-          <span className="ml-auto text-sm text-gray-500">{total} players</span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+      <FestivalHeader user={user} activePath="/leaderboard" />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Intro */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-black text-gray-900 mb-2">LANKA FINTECHVERSE</h2>
-          <p className="text-gray-600 text-sm">
-            Sri Lanka FinTech Festival 2026 · 2–3 November
+      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
+        {/* Intro Banner */}
+        <div className="text-center mb-10">
+          <span className="section-badge section-badge-primary mb-3">
+            <Trophy size={13} className="text-[#fec01f]" />
+            OFFICIAL FESTIVAL RANKINGS
+          </span>
+          <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight text-white mt-1">
+            Festival Hall of Fame
+          </h1>
+          <p className="font-mono text-xs sm:text-sm text-white/60 mt-2">
+            Sri Lanka FinTech Festival 2026 · {total} Players Registered
           </p>
-          <p className="text-gray-500 text-xs mt-2">
-            Only players who opted in appear here. Leaderboard participation is voluntary.
+          <p className="text-white/40 text-xs mt-1">
+            Displaying opted-in players. Scores are updated automatically upon match completion.
           </p>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center justify-center py-24">
+            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : entries.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            <Trophy size={48} className="mx-auto mb-4 opacity-20" />
-            <p className="font-semibold">No entries yet</p>
-            <p className="text-sm mt-1">Be the first to opt in and claim the top spot!</p>
-            <Link href="/" className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl brand-gradient text-white font-bold text-sm hover:opacity-90 transition-opacity">
-              Play Now
+          <div className="festival-panel p-12 text-center text-white/60 max-w-md mx-auto">
+            <Trophy size={48} className="mx-auto mb-4 text-[#fec01f]/30" />
+            <h3 className="font-heading font-bold text-lg text-white">No Official Records Yet</h3>
+            <p className="text-xs font-mono text-white/60 mt-2 mb-6">
+              Be the first to step into the arena and claim rank #1!
+            </p>
+            <Link
+              href="/game"
+              className="interactive-btn interactive-btn--primary text-sm font-bold"
+            >
+              Play Game Now
             </Link>
           </div>
         ) : (
           <>
-            {/* Top 3 podium */}
+            {/* Top 3 Podium */}
             {entries.length >= 3 && (
-              <div className="flex items-end justify-center gap-3 mb-8">
-                {/* 2nd */}
-                <div className="text-center flex-1 max-w-[120px]">
-                  <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2 text-2xl font-black text-gray-500">
-                    2
+              <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto mb-12 items-end pt-8">
+                {/* 2nd Place */}
+                <div className="festival-card p-3 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(203,213,225,0.3)]">
+                    <span className="text-xl sm:text-2xl font-bold text-slate-200">🥈</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-700 truncate">{entries[1]?.displayName}</p>
-                  <p className="text-teal-700 font-black">{entries[1]?.finalScore.toLocaleString()}</p>
-                  <div className="h-16 bg-gray-100 rounded-t-xl mt-2" />
+                  <span className="font-mono text-[10px] text-slate-300 uppercase tracking-widest font-bold">
+                    Rank 2
+                  </span>
+                  <p className="font-heading font-bold text-xs sm:text-sm text-white truncate max-w-full mt-1">
+                    {entries[1]?.displayName}
+                  </p>
+                  <p className="font-mono font-bold text-sm sm:text-base text-slate-200 mt-1">
+                    {entries[1]?.finalScore.toLocaleString()}
+                  </p>
                 </div>
-                {/* 1st */}
-                <div className="text-center flex-1 max-w-[140px]">
-                  <div className="text-3xl mb-1">👑</div>
-                  <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-2 text-3xl">
-                    🏆
+
+                {/* 1st Place (Champion) */}
+                <div className="festival-card p-4 sm:p-6 text-center border-[#fec01f] bg-gradient-to-b from-[#fec01f]/20 via-[#0a0a2c] to-[#06061f] shadow-[0_0_40px_rgba(254,192,31,0.25)] flex flex-col items-center scale-105 z-10 -translate-y-2">
+                  <span className="text-2xl mb-1 animate-bounce">👑</span>
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#fec01f] text-black border-2 border-white flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(254,192,31,0.6)]">
+                    <Trophy size={28} className="fill-black" />
                   </div>
-                  <p className="text-sm font-bold text-gray-800 truncate">{entries[0]?.displayName}</p>
-                  <p className="text-teal-700 font-black text-lg">{entries[0]?.finalScore.toLocaleString()}</p>
-                  <div className="h-24 bg-yellow-50 border border-yellow-200 rounded-t-xl mt-2" />
+                  <span className="section-badge section-badge-primary text-[9px] sm:text-[10px] py-0.5 px-2">
+                    CHAMPION
+                  </span>
+                  <p className="font-heading font-extrabold text-sm sm:text-base text-white truncate max-w-full mt-2">
+                    {entries[0]?.displayName}
+                  </p>
+                  <p className="font-mono font-black text-lg sm:text-xl text-[#fec01f] mt-1">
+                    {entries[0]?.finalScore.toLocaleString()}
+                  </p>
                 </div>
-                {/* 3rd */}
-                <div className="text-center flex-1 max-w-[120px]">
-                  <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-2 text-2xl font-black text-orange-500">
-                    3
+
+                {/* 3rd Place */}
+                <div className="festival-card p-3 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950 border-2 border-amber-500 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                    <span className="text-xl sm:text-2xl font-bold text-amber-400">🥉</span>
                   </div>
-                  <p className="text-sm font-bold text-gray-700 truncate">{entries[2]?.displayName}</p>
-                  <p className="text-teal-700 font-black">{entries[2]?.finalScore.toLocaleString()}</p>
-                  <div className="h-10 bg-orange-50 rounded-t-xl mt-2" />
+                  <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
+                    Rank 3
+                  </span>
+                  <p className="font-heading font-bold text-xs sm:text-sm text-white truncate max-w-full mt-1">
+                    {entries[2]?.displayName}
+                  </p>
+                  <p className="font-mono font-bold text-sm sm:text-base text-amber-300 mt-1">
+                    {entries[2]?.finalScore.toLocaleString()}
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Table */}
-            <div className="glass-card overflow-hidden">
+            {/* Standings Table */}
+            <div className="festival-card overflow-hidden border-white/15 bg-[#090924]/85">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="px-4 py-3 text-left text-xs text-gray-500 font-semibold uppercase tracking-wider">Rank</th>
-                      <th className="px-4 py-3 text-left text-xs text-gray-500 font-semibold uppercase tracking-wider">Player</th>
-                      <th className="px-4 py-3 text-right text-xs text-gray-500 font-semibold uppercase tracking-wider">Score</th>
-                      <th className="px-4 py-3 text-right text-xs text-gray-500 font-semibold uppercase tracking-wider hidden sm:table-cell">Quiz</th>
-                      <th className="px-4 py-3 text-right text-xs text-gray-500 font-semibold uppercase tracking-wider hidden md:table-cell">Time</th>
+                    <tr className="border-b border-white/10 bg-white/[0.02] text-xs font-mono uppercase tracking-wider text-white/50">
+                      <th className="py-4 px-5">Rank</th>
+                      <th className="py-4 px-5">Player Handle</th>
+                      <th className="py-4 px-5 text-right">Final Score</th>
+                      <th className="py-4 px-5 text-right hidden sm:table-cell">Quiz Score</th>
+                      <th className="py-4 px-5 text-right hidden md:table-cell">Duration</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-white/5 font-mono">
                     {entries.map((entry) => {
                       const isCurrentUser = currentUserName && entry.displayName === currentUserName;
                       return (
                         <tr
                           key={entry.rank}
-                          className={`transition-colors hover:bg-gray-50 ${isCurrentUser ? "bg-teal-50" : ""}`}
+                          className={`transition-colors hover:bg-white/[0.04] ${
+                            isCurrentUser ? "bg-[#fec01f]/10" : ""
+                          }`}
                         >
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                              entry.rank === 1 ? "bg-yellow-100 text-yellow-700" :
-                              entry.rank === 2 ? "bg-gray-100 text-gray-600" :
-                              entry.rank === 3 ? "bg-orange-100 text-orange-700" :
-                              "text-gray-500"
-                            }`}>
-                              {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank - 1] : entry.rank}
+                          <td className="py-4 px-5">
+                            <span
+                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
+                                entry.rank === 1
+                                  ? "bg-[#fec01f] text-black shadow-[0_0_12px_rgba(254,192,31,0.6)]"
+                                  : entry.rank === 2
+                                  ? "bg-slate-300 text-black"
+                                  : entry.rank === 3
+                                  ? "bg-amber-600 text-white"
+                                  : "bg-white/10 text-white/70"
+                              }`}
+                            >
+                              {entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : entry.rank}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-4 px-5 font-sans font-medium text-white">
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-800">
-                                {entry.displayName}
-                              </span>
+                              <span className="font-bold">{entry.displayName}</span>
                               {isCurrentUser && (
-                                <span className="text-xs px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded-full font-medium">You</span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#fec01f]/20 border border-[#fec01f]/40 text-[#fec01f]">
+                                  YOU
+                                </span>
                               )}
                               {entry.playerWon && (
-                                <span className="text-xs px-1.5 py-0.5 bg-green-50 text-green-700 rounded-full">🏆 Won</span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-900/60 border border-teal-500/40 text-teal-300">
+                                  🏆 WON
+                                </span>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <span className="font-black text-teal-700">{entry.finalScore.toLocaleString()}</span>
+                          <td className="py-4 px-5 text-right font-bold text-[#fec01f] text-base">
+                            {entry.finalScore.toLocaleString()}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-500 hidden sm:table-cell">
-                            {entry.quizCorrect} ✓
+                          <td className="py-4 px-5 text-right text-white/70 hidden sm:table-cell">
+                            {entry.quizCorrect} Correct
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-400 hidden md:table-cell">
+                          <td className="py-4 px-5 text-right text-white/40 hidden md:table-cell">
                             {formatDuration(entry.durationSeconds)}
                           </td>
                         </tr>
@@ -203,36 +237,46 @@ export default function LeaderboardPage() {
               </div>
             </div>
 
-            {/* Load more */}
+            {/* Pagination Load More */}
             {entries.length < total && (
-              <div className="text-center mt-4">
+              <div className="text-center mt-6">
                 <button
                   onClick={loadMore}
-                  className="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="interactive-btn interactive-btn--outline text-xs uppercase tracking-wider py-3 px-6"
                 >
-                  Load more
+                  Load More Ranks
                 </button>
               </div>
             )}
           </>
         )}
 
-        {/* Tie-break explanation */}
-        <div className="mt-8 p-4 glass-card text-xs text-gray-500 space-y-1">
-          <p className="font-semibold text-gray-600 mb-2">Ranking tie-breakers (in order):</p>
-          <p>1. Highest final score</p>
-          <p>2. Reached square 25 (win)</p>
-          <p>3. Most correct quiz answers</p>
-          <p>4. Most hearts remaining</p>
-          <p>5. Shortest gameplay duration</p>
+        {/* Tie-Break Rules Card */}
+        <div className="mt-10 p-5 festival-card border-white/10 bg-[#0a0a28]/80 text-xs font-mono text-white/60 space-y-2">
+          <p className="font-bold text-white/80 uppercase tracking-wider text-[11px] mb-2 border-b border-white/5 pb-1">
+            Official Tie-Breaker Precedence
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-white/60">
+            <div>1. Highest Total Points</div>
+            <div>2. Reached Finish Square (Win)</div>
+            <div>3. Most Correct Quizzes</div>
+            <div>4. Most Hearts Preserved</div>
+            <div>5. Shortest Match Duration</div>
+          </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl brand-gradient text-white font-bold text-sm hover:opacity-90 transition-opacity">
-            Play Now
+        {/* Play CTA */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/game"
+            className="interactive-btn interactive-btn--primary text-sm font-bold py-3.5 px-8 shadow-[0_0_20px_rgba(254,192,31,0.3)]"
+          >
+            Play The Festival Game
           </Link>
         </div>
-      </div>
-    </main>
+      </main>
+
+      <FestivalFooter />
+    </div>
   );
 }

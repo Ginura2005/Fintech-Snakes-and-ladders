@@ -38,9 +38,9 @@ function getCellMetadata(square: number) {
   if (square === 25) {
     return {
       type: "finish",
-      bgClass: "bg-gradient-to-br from-emerald-50 to-teal-100 border-teal-500 shadow-sm",
+      bgClass: "bg-gradient-to-br from-[#fec01f]/25 via-teal-900/40 to-[#06061f] border-[#fec01f] shadow-[0_0_25px_rgba(254,192,31,0.35)]",
       badge: "FINISH",
-      badgeClass: "bg-teal-700 text-white font-black",
+      badgeClass: "bg-[#fec01f] text-black font-extrabold shadow-[0_0_10px_rgba(254,192,31,0.5)]",
       icon: "🏁",
       subtext: "+300 pts",
     };
@@ -49,9 +49,9 @@ function getCellMetadata(square: number) {
   if (ladder) {
     return {
       type: "ladder",
-      bgClass: "bg-gradient-to-br from-teal-50 via-cyan-50 to-emerald-50 border-teal-400 hover:border-teal-600",
+      bgClass: "bg-gradient-to-br from-[#125252]/60 via-teal-950/70 to-[#06061f] border-teal-400/70 shadow-[inset_0_0_15px_rgba(45,212,191,0.2)]",
       badge: `↑ ${ladder.to}`,
-      badgeClass: "bg-teal-600 text-white font-bold",
+      badgeClass: "bg-teal-600/90 text-teal-100 border border-teal-300/40 font-bold",
       icon: "🪜",
       subtext: ladder.theme,
     };
@@ -62,32 +62,34 @@ function getCellMetadata(square: number) {
     return {
       type: "snake",
       bgClass: isMajor
-        ? "bg-gradient-to-br from-rose-50 via-red-50 to-orange-50 border-rose-400"
-        : "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300",
+        ? "bg-gradient-to-br from-[#8d1739]/60 via-rose-950/70 to-[#06061f] border-rose-500/80 shadow-[inset_0_0_15px_rgba(251,113,133,0.25)]"
+        : "bg-gradient-to-br from-amber-950/40 via-rose-950/30 to-[#06061f] border-amber-500/60",
       badge: `↓ ${snake.to}`,
-      badgeClass: isMajor ? "bg-red-700 text-white font-bold" : "bg-amber-600 text-white font-bold",
+      badgeClass: isMajor
+        ? "bg-rose-700 text-white border border-rose-400/50 font-bold"
+        : "bg-amber-700 text-amber-100 border border-amber-400/40 font-bold",
       icon: isMajor ? "🐍⚠️" : "🐍",
-      subtext: isMajor ? "-25 & ❤️" : "-10",
+      subtext: isMajor ? "-25 & ❤️" : "-10 pts",
     };
   }
 
   if (special?.type === "quiz") {
     return {
       type: "quiz",
-      bgClass: "bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-300",
+      bgClass: "bg-gradient-to-br from-[#fec01f]/20 via-amber-950/40 to-[#06061f] border-[#fec01f]/70 shadow-[inset_0_0_15px_rgba(254,192,31,0.2)]",
       badge: "+50",
-      badgeClass: "bg-yellow-500 text-yellow-950 font-bold",
+      badgeClass: "bg-[#fec01f]/90 text-black font-bold",
       icon: "📝",
-      subtext: "Quiz",
+      subtext: "FinTech Quiz",
     };
   }
 
   if (special?.type === "treasure") {
     return {
       type: "treasure",
-      bgClass: "bg-gradient-to-br from-orange-50 to-amber-100 border-orange-300",
+      bgClass: "bg-gradient-to-br from-[#f57222]/25 via-amber-950/40 to-[#06061f] border-[#f57222]/70 shadow-[inset_0_0_15px_rgba(245,114,34,0.2)]",
       badge: "🎁",
-      badgeClass: "bg-orange-500 text-white font-bold",
+      badgeClass: "bg-[#f57222] text-white font-bold",
       icon: "💰",
       subtext: "+50 & 🛡️",
     };
@@ -95,7 +97,7 @@ function getCellMetadata(square: number) {
 
   return {
     type: "normal",
-    bgClass: "bg-white/90 border-slate-200/80 hover:border-slate-300",
+    bgClass: "bg-[#0c0c28]/70 border-white/10 hover:border-white/25",
     badge: null,
     badgeClass: "",
     icon: null,
@@ -111,8 +113,8 @@ export default function GameBoard({
 }: BoardProps) {
   return (
     <div className="w-full select-none">
-      {/* 5x5 Grid */}
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 w-full max-w-2xl mx-auto">
+      {/* 5x5 Grid Board Canvas */}
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5 w-full max-w-2xl mx-auto p-2 sm:p-3.5 rounded-2xl bg-[#080824]/90 border-2 border-white/15 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
         {BOARD_GRID.map((row) =>
           row.map((square) => {
             const isPlayerHere = playerPosition === square;
@@ -123,20 +125,26 @@ export default function GameBoard({
               <div
                 key={square}
                 className={`
-                  relative flex flex-col justify-between p-1 sm:p-2 rounded-xl border transition-all duration-300
-                  min-h-[58px] sm:min-h-[76px] md:min-h-[90px]
+                  relative flex flex-col justify-between p-1.5 sm:p-2 rounded-xl border transition-all duration-300
+                  min-h-[64px] sm:min-h-[82px] md:min-h-[96px]
                   ${meta.bgClass}
-                  ${isPlayerHere ? "ring-2 ring-teal-500 shadow-md" : ""}
+                  ${isPlayerHere ? "ring-2 ring-[#fec01f] shadow-[0_0_15px_rgba(254,192,31,0.5)] z-10" : ""}
                 `}
               >
                 {/* Top row: Square number + Destination Badge */}
                 <div className="flex items-center justify-between w-full">
-                  <span className={`text-[11px] sm:text-xs font-black ${square === 25 ? "text-teal-900" : "text-slate-500"}`}>
-                    {square}
+                  <span
+                    className={`font-mono text-[11px] sm:text-xs font-bold ${
+                      square === 25 ? "text-[#fec01f]" : "text-white/60"
+                    }`}
+                  >
+                    {square.toString().padStart(2, "0")}
                   </span>
 
                   {meta.badge && (
-                    <span className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-md leading-none ${meta.badgeClass}`}>
+                    <span
+                      className={`text-[9px] sm:text-[10px] font-mono px-1 sm:px-1.5 py-0.5 rounded leading-none ${meta.badgeClass}`}
+                    >
                       {meta.badge}
                     </span>
                   )}
@@ -145,26 +153,30 @@ export default function GameBoard({
                 {/* Center: Icon & label */}
                 <div className="flex flex-col items-center justify-center my-auto">
                   {meta.icon && (
-                    <span className="text-sm sm:text-base md:text-lg leading-none" role="img" aria-label={meta.type}>
+                    <span
+                      className="text-base sm:text-lg md:text-xl leading-none drop-shadow-md"
+                      role="img"
+                      aria-label={meta.type}
+                    >
                       {meta.icon}
                     </span>
                   )}
                   {meta.subtext && (
-                    <span className="text-[8px] sm:text-[9px] font-semibold text-slate-600 truncate max-w-full text-center mt-0.5 hidden xs:block">
+                    <span className="text-[8px] sm:text-[9px] font-mono text-white/70 truncate max-w-full text-center mt-1 hidden xs:block">
                       {meta.subtext}
                     </span>
                   )}
                 </div>
 
                 {/* Bottom row: Player and Computer Tokens */}
-                <div className="flex items-center justify-center gap-1 min-h-[22px] sm:min-h-[26px]">
+                <div className="flex items-center justify-center gap-1.5 min-h-[24px] sm:min-h-[28px]">
                   {isPlayerHere && (
                     <div
                       className={`
-                        w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-700 text-white font-bold
-                        flex items-center justify-center text-[9px] sm:text-[11px] border-2 border-white
-                        shadow-md transition-transform duration-300
-                        ${animating ? "scale-125" : "scale-100"}
+                        w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-[#ffe072] to-[#fec01f] text-black font-extrabold
+                        flex items-center justify-center text-[10px] sm:text-xs border-2 border-white
+                        shadow-[0_0_12px_rgba(254,192,31,0.8)] transition-transform duration-300
+                        ${animating ? "scale-125 ring-2 ring-[#fec01f]" : "scale-100"}
                       `}
                       title={`You: ${playerName}`}
                     >
@@ -175,10 +187,10 @@ export default function GameBoard({
                   {isComputerHere && (
                     <div
                       className={`
-                        w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#8D1739] text-white font-bold
-                        flex items-center justify-center text-[9px] sm:text-[11px] border-2 border-white
-                        shadow-md transition-transform duration-300
-                        ${animating ? "scale-125" : "scale-100"}
+                        w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-[#fb7185] to-[#8d1739] text-white font-extrabold
+                        flex items-center justify-center text-[10px] sm:text-xs border-2 border-white
+                        shadow-[0_0_12px_rgba(251,113,133,0.8)] transition-transform duration-300
+                        ${animating ? "scale-125 ring-2 ring-[#fb7185]" : "scale-100"}
                       `}
                       title="Computer Opponent"
                     >
@@ -192,34 +204,34 @@ export default function GameBoard({
         )}
       </div>
 
-      {/* Board Summary Strip */}
-      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <div className="bg-teal-50 border border-teal-200 rounded-lg p-2">
-          <p className="font-bold text-teal-800 flex items-center gap-1">
+      {/* Board Summary Strip (Legend) */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+        <div className="festival-card p-2.5 border-teal-500/40 bg-teal-950/30">
+          <p className="font-mono font-bold text-teal-300 flex items-center gap-1.5 uppercase text-[11px]">
             <span>🪜</span> Ladders (+25)
           </p>
-          <p className="text-[11px] text-teal-700 mt-0.5">3→8, 6→11, 10→17, 14→22</p>
+          <p className="font-mono text-[10px] text-white/60 mt-1">3→8, 6→11, 10→17, 14→22</p>
         </div>
 
-        <div className="bg-rose-50 border border-rose-200 rounded-lg p-2">
-          <p className="font-bold text-rose-800 flex items-center gap-1">
+        <div className="festival-card p-2.5 border-rose-500/40 bg-rose-950/30">
+          <p className="font-mono font-bold text-rose-300 flex items-center gap-1.5 uppercase text-[11px]">
             <span>🐍</span> Snakes (-10/-25)
           </p>
-          <p className="text-[11px] text-rose-700 mt-0.5">12→5, 19→9 ⚠️, 21→13, 24→16 ⚠️</p>
+          <p className="font-mono text-[10px] text-white/60 mt-1">12→5, 19→9 ⚠️, 21→13, 24→16 ⚠️</p>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-          <p className="font-bold text-yellow-800 flex items-center gap-1">
+        <div className="festival-card p-2.5 border-[#fec01f]/40 bg-[#fec01f]/10">
+          <p className="font-mono font-bold text-[#fec01f] flex items-center gap-1.5 uppercase text-[11px]">
             <span>📝</span> Quizzes (+50)
           </p>
-          <p className="text-[11px] text-yellow-700 mt-0.5">Squares 4, 15, 18</p>
+          <p className="font-mono text-[10px] text-white/60 mt-1">Squares 4, 15, 18</p>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2">
-          <p className="font-bold text-amber-800 flex items-center gap-1">
+        <div className="festival-card p-2.5 border-orange-500/40 bg-orange-950/30">
+          <p className="font-mono font-bold text-orange-300 flex items-center gap-1.5 uppercase text-[11px]">
             <span>💰</span> Treasures (+50 & 🛡️)
           </p>
-          <p className="text-[11px] text-amber-700 mt-0.5">Squares 7, 20</p>
+          <p className="font-mono text-[10px] text-white/60 mt-1">Squares 7, 20</p>
         </div>
       </div>
     </div>

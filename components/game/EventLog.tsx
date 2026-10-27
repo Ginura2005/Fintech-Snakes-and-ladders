@@ -8,18 +8,25 @@ export default function EventLog({ events }: EventLogProps) {
   if (events.length === 0) return null;
 
   return (
-    <div className="glass-card p-4">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-        Event Log
-      </p>
-      <div className="space-y-1.5 max-h-40 overflow-y-auto">
+    <div className="festival-card p-4 bg-[#0a0a28]/85 border-white/10">
+      <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-white/5">
+        <p className="font-mono text-[10px] font-bold text-white/50 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#fec01f] animate-pulse" />
+          Arena Telemetry Feed
+        </p>
+        <span className="font-mono text-[10px] text-white/30 uppercase">Live</span>
+      </div>
+      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
         {events.map((event, i) => (
-          <p
+          <div
             key={i}
-            className={`text-xs text-gray-700 leading-relaxed ${i === 0 ? "font-medium" : "opacity-75"}`}
+            className={`text-xs font-mono leading-relaxed flex items-start gap-2 ${
+              i === 0 ? "text-white font-medium" : "text-white/60"
+            }`}
           >
-            {event}
-          </p>
+            <span className="text-[#fec01f] text-[10px] mt-0.5 select-none">›</span>
+            <span>{event}</span>
+          </div>
         ))}
       </div>
     </div>

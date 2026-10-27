@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 interface DicePanelProps {
   isPlayerTurn: boolean;
   rolling: boolean;
@@ -39,16 +37,24 @@ const DOT_POSITIONS: Record<number, string[]> = {
   ],
 };
 
-function DieFace({ value, isRolling, color = "teal" }: { value: number | null; isRolling: boolean; color?: "teal" | "burgundy" }) {
+function DieFace({
+  value,
+  isRolling,
+  color = "teal",
+}: {
+  value: number | null;
+  isRolling: boolean;
+  color?: "teal" | "burgundy";
+}) {
   const dots = value && DOT_POSITIONS[value] ? DOT_POSITIONS[value] : [];
-  const dotColor = color === "teal" ? "bg-teal-800" : "bg-[#8D1739]";
-  const borderColor = color === "teal" ? "border-teal-700" : "border-[#8D1739]";
+  const dotColor = color === "teal" ? "bg-[#fec01f] shadow-[0_0_8px_rgba(254,192,31,0.8)]" : "bg-[#fb7185] shadow-[0_0_8px_rgba(251,113,133,0.8)]";
+  const borderColor = color === "teal" ? "border-[#fec01f]/60 bg-[#0e0e36]" : "border-rose-500/60 bg-[#1f0b14]";
 
   return (
     <div
       className={`
-        w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 ${borderColor}
-        shadow-lg flex items-center justify-center p-2.5 transition-all duration-200
+        w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 ${borderColor}
+        shadow-[0_8px_20px_rgba(0,0,0,0.6)] flex items-center justify-center p-2.5 transition-all duration-200
         ${isRolling ? "animate-spin" : "hover:scale-105"}
       `}
     >
@@ -59,7 +65,7 @@ function DieFace({ value, isRolling, color = "teal" }: { value: number | null; i
           ))}
         </div>
       ) : (
-        <span className="text-2xl text-slate-300">🎲</span>
+        <span className="text-2xl text-white/40">🎲</span>
       )}
     </div>
   );
@@ -77,20 +83,20 @@ export default function DicePanel({
   const neededToFinish = 25 - playerPosition;
 
   return (
-    <div className="glass-card p-4 sm:p-5">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div className="festival-card p-4 sm:p-5 border-2 border-white/15 bg-[#0a0a28]/90">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
         {/* Dice visualizers */}
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-center">
-            <span className="text-[11px] font-bold text-teal-800 uppercase tracking-wider mb-1.5">
-              Your Roll
+            <span className="font-mono text-[10px] font-bold text-[#fec01f] uppercase tracking-wider mb-2">
+              Your Die
             </span>
             <DieFace value={lastRoll} isRolling={rolling} color="teal" />
           </div>
 
           {computerRoll !== null && (
             <div className="flex flex-col items-center">
-              <span className="text-[11px] font-bold text-[#8D1739] uppercase tracking-wider mb-1.5">
+              <span className="font-mono text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2">
                 Computer
               </span>
               <DieFace value={computerRoll} isRolling={false} color="burgundy" />
@@ -105,42 +111,42 @@ export default function DicePanel({
               onClick={onRoll}
               disabled={rolling || disabled}
               className={`
-                w-full sm:w-auto px-8 py-3.5 rounded-2xl font-black text-white text-base
-                transition-all duration-200 shadow-md flex items-center justify-center gap-3
+                w-full sm:w-auto px-8 py-3.5 rounded-xl font-heading font-extrabold text-base
+                transition-all duration-200 shadow-lg flex items-center justify-center gap-3
                 ${
                   rolling || disabled
-                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                    : "brand-gradient hover:opacity-95 hover:shadow-lg active:scale-95 animate-pulse-ring cursor-pointer"
+                    ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
+                    : "interactive-btn interactive-btn--primary shadow-[0_0_25px_rgba(254,192,31,0.4)] cursor-pointer"
                 }
               `}
             >
               {rolling ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Rolling Authoritative Die…</span>
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span className="font-mono text-sm tracking-wider uppercase">Rolling Authoritative Die…</span>
                 </>
               ) : (
                 <>
                   <span>🎲</span>
-                  <span>ROLL THE DIE</span>
+                  <span className="tracking-wider uppercase">ROLL THE DIE</span>
                 </>
               )}
             </button>
           ) : (
-            <div className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-full sm:w-auto px-6 py-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2.5">
+              <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
               <span>Computer is rolling…</span>
             </div>
           )}
 
           {/* Context tip */}
-          <div className="mt-2 text-xs text-slate-500 text-center sm:text-right">
+          <div className="mt-2 text-xs font-mono text-white/60 text-center sm:text-right">
             {playerPosition >= 19 ? (
-              <span className="text-amber-700 font-semibold">
+              <span className="text-[#fec01f] font-semibold">
                 🎯 Exactly {neededToFinish} needed to reach finish! (overshooting stays in place)
               </span>
             ) : (
-              <span>Roll 1–6 to advance. Watch out for snakes!</span>
+              <span>Roll 1–6 to advance toward square 25.</span>
             )}
           </div>
         </div>

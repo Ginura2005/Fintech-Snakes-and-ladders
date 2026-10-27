@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,8 @@ import DicePanel from "@/components/game/DicePanel";
 import PlayerPanel from "@/components/game/PlayerPanel";
 import EventLog from "@/components/game/EventLog";
 import OnboardingModal from "@/components/game/OnboardingModal";
+import FestivalHeader from "@/components/layout/FestivalHeader";
+import FestivalFooter from "@/components/layout/FestivalFooter";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
 
 interface GameRun {
@@ -82,7 +84,9 @@ export default function GamePage() {
   // Load user and game state
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         router.push("/?signin=required");
         return;
@@ -109,7 +113,7 @@ export default function GamePage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [router, supabase.auth]);
 
   const handleOnboardingComplete = async (displayName: string, leaderboardOptIn: boolean) => {
     setShowOnboarding(false);
@@ -229,8 +233,7 @@ export default function GamePage() {
           setRun(stateData.run);
         }
 
-        // Now process computer turn — do another roll for computer
-        // Computer turn was deferred because quiz was pending
+        // Process computer turn
         setTimeout(async () => {
           const rollRes = await fetch("/api/game/roll", {
             method: "POST",
@@ -256,12 +259,17 @@ export default function GamePage() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-teal-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
         <div className="text-center">
-          <div className="w-12 h-12 border-3 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading your game…</p>
+          <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="font-mono text-sm text-white/70">Connecting to Arena Host…</p>
         </div>
       </div>
     );
@@ -278,8 +286,13 @@ export default function GamePage() {
 
   if (!run) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Something went wrong. <a href="/" className="text-teal-600 underline">Go home</a></p>
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white">
+        <div className="text-center">
+          <p className="text-white/70 mb-4">No active match found.</p>
+          <a href="/" className="interactive-btn interactive-btn--primary text-sm font-bold">
+            Return to Festival Home
+          </a>
+        </div>
       </div>
     );
   }
@@ -287,40 +300,45 @@ export default function GamePage() {
   const gameOver = isTerminal(run.status);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-2">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg brand-gradient flex items-center justify-center">
-              <span className="text-white text-xs font-bold">SL</span>
-            </div>
-            <span className="font-bold text-sm text-gray-800 hidden sm:block">LANKA FINTECHVERSE</span>
-          </a>
-          <div className="flex items-center gap-3 text-sm">
-            {profile && (
-              <span className="text-gray-600 font-medium hidden sm:block">{profile.display_name}</span>
-            )}
-            <span className="text-teal-700 font-bold">
-              {run.player_score.toLocaleString()} pts
-            </span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+      {/* Festival Header */}
+      <FestivalHeader
+        user={user}
+        onSignOut={handleSignOut}
+        activePath="/game"
+      />
 
-      <div className="max-w-6xl mx-auto px-4 py-4">
+      <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        {/* Error notification */}
         {error && (
-          <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center justify-between">
+          <div className="mb-4 px-4 py-3 rounded-xl bg-red-950/70 border border-red-500/50 text-sm font-mono text-red-300 flex items-center justify-between">
             <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-600">✕</button>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-200 ml-4 font-bold"
+            >
+              ✕
+            </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
-          {/* Board + Dice */}
-          <div className="space-y-4">
-            {/* Board */}
-            <div className="glass-card p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
+          {/* Main Board & Controls */}
+          <div className="space-y-5">
+            {/* Arena Board */}
+            <div className="festival-card p-4 sm:p-6 bg-[#090924]/80">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#fec01f] animate-ping" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-white/80 font-bold">
+                    Official Match Arena
+                  </span>
+                </div>
+                <span className="font-mono text-xs text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded">
+                  Turn {run.turn_sequence}
+                </span>
+              </div>
+
               <GameBoard
                 playerPosition={run.player_position}
                 computerPosition={run.computer_position}
@@ -329,7 +347,7 @@ export default function GamePage() {
               />
             </div>
 
-            {/* Dice */}
+            {/* Dice Control Console */}
             {!gameOver && (
               <DicePanel
                 isPlayerTurn={run.current_turn === "player"}
@@ -343,9 +361,9 @@ export default function GamePage() {
             )}
           </div>
 
-          {/* Right panel */}
-          <div className="space-y-4">
-            {/* Player stats */}
+          {/* Right Stats & Telemetry Feed */}
+          <div className="space-y-5">
+            {/* Player Stats HUD */}
             <PlayerPanel
               label={profile?.display_name || "You"}
               hearts={run.player_hearts}
@@ -357,9 +375,9 @@ export default function GamePage() {
               tokenColor="teal"
             />
 
-            {/* Computer stats */}
+            {/* Computer Opponent HUD */}
             <PlayerPanel
-              label="Computer"
+              label="Autonomous FinTech AI"
               hearts={run.computer_hearts}
               shields={run.computer_shields}
               score={run.computer_score}
@@ -369,27 +387,38 @@ export default function GamePage() {
               tokenColor="burgundy"
             />
 
-            {/* Event log */}
+            {/* Live Telemetry Log */}
             <EventLog events={events} />
 
-            {/* Legend */}
-            <div className="glass-card p-3 text-xs text-gray-600 space-y-1">
-              <p className="font-semibold text-gray-700 mb-2">Board Legend</p>
-              <div className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-teal-50 border border-teal-400 inline-block flex-shrink-0" /> Ladder (climb up!)</div>
-              <div className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-red-50 border border-red-400 inline-block flex-shrink-0" /> Snake (slide back)</div>
-              <div className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-yellow-50 border border-yellow-400 inline-block flex-shrink-0" /> FinTech Quiz</div>
-              <div className="flex items-center gap-2"><span className="w-4 h-4 rounded bg-orange-50 border border-orange-400 inline-block flex-shrink-0" /> Treasure</div>
+            {/* Strategic Quick Guide */}
+            <div className="festival-card p-4 text-xs font-mono text-white/60 space-y-2 border-white/10 bg-[#0a0a28]/80">
+              <p className="font-bold text-white/90 uppercase tracking-wider text-[11px] mb-2 border-b border-white/5 pb-1">
+                Field Intel
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-teal-500/20 border border-teal-400 shrink-0" />
+                <span><strong>Ladders:</strong> Boost ahead +25 pts</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
+                <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; ❤️</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
+                <span><strong>Quiz:</strong> FinTech test +50 pts</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3.5 h-3.5 rounded bg-orange-500/20 border border-orange-400 shrink-0" />
+                <span><strong>Treasure:</strong> Points &amp; Shield protection</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Quiz Overlay */}
       {quizQuestion && (
-        <QuizOverlay
-          question={quizQuestion}
-          onAnswer={handleQuizAnswer}
-        />
+        <QuizOverlay question={questionIdFix(quizQuestion)} onAnswer={handleQuizAnswer} />
       )}
 
       {/* Treasure Overlay */}
@@ -400,6 +429,14 @@ export default function GamePage() {
           onClose={() => setShowTreasure(null)}
         />
       )}
-    </main>
+
+      {/* Festival Footer */}
+      <FestivalFooter />
+    </div>
   );
+}
+
+// Helper to ensure question structure
+function questionIdFix(q: QuizQuestion) {
+  return q;
 }

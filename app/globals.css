@@ -1,199 +1,428 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #fec01f;
+  --color-primary-hover: #e5ac1b;
+  --color-background: #06061f;
+  --color-brand-burgundy: #8d1739;
+  --color-brand-green: #125252;
+  --color-brand-orange: #f57222;
+  --color-brand-lankapay: #004382;
+
+  --font-sora: var(--font-sora, "Sora", sans-serif);
+  --font-epilogue: var(--font-epilogue, "Epilogue", sans-serif);
+  --font-jetbrains: var(--font-jetbrains, "JetBrains Mono", monospace);
+}
+
 :root {
-  --yellow: #FEC01F;
-  --orange: #F57222;
+  --primary: #fec01f;
+  --primary-hover: #e5ac1b;
+  --background: #06061f;
+  --burgundy: #8d1739;
   --teal: #125252;
-  --burgundy: #8D1739;
   --teal-light: #1a7a7a;
-  --teal-dark: #0a3535;
+  --orange: #f57222;
+  --lankapay: #004382;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  background: #fafaf8;
-  color: #1a1a1a;
-  -webkit-font-smoothing: antialiased;
+html {
+  background-color: #06061f;
+  color: #ffffff;
+  color-scheme: dark;
 }
 
-/* Custom scrollbar */
+body {
+  background-color: #06061f;
+  color: #ffffff;
+  font-family: var(--font-epilogue, "Epilogue", sans-serif);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-sora, "Sora", sans-serif);
+}
+
+code, kbd, pre, .font-mono, .font-caps {
+  font-family: var(--font-jetbrains, "JetBrains Mono", monospace);
+}
+
+/* Custom festival scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #06061f;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--teal);
-  border-radius: 3px;
+  background: #125252;
+  border-radius: 4px;
+  border: 2px solid #06061f;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #fec01f;
 }
 
-/* Animation utilities */
-@keyframes bounce-gentle {
+/* ========================================================
+   FESTIVAL ANIMATIONS & KEYFRAMES
+   ======================================================== */
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes card-border-shine {
+  0% { stroke-dashoffset: 0.22px; }
+  100% { stroke-dashoffset: -1.08px; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float-gentle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+@keyframes radar-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(254, 192, 31, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(254, 192, 31, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(254, 192, 31, 0);
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(18, 82, 82, 0.4); }
-  70% { box-shadow: 0 0 0 12px rgba(18, 82, 82, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(18, 82, 82, 0); }
+@keyframes beam-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.animate-bounce-gentle {
-  animation: bounce-gentle 2s ease-in-out infinite;
+.animate-marquee {
+  animation: marquee 35s linear infinite;
 }
 
-.animate-shake {
-  animation: shake 0.5s ease-in-out;
+.animate-marquee-slow {
+  animation: marquee 50s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee-reverse 40s linear infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-out forwards;
+  animation: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-pulse-ring {
-  animation: pulse-ring 1.5s ease-out infinite;
+/* ========================================================
+   FESTIVAL UI COMPONENTS & UTILITIES
+   ======================================================== */
+
+/* Section badge matching fintechfestival.lk */
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  max-width: 100%;
+  font-family: var(--font-jetbrains, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  line-height: 1.2;
+  border: 1px solid;
+  transition: all 0.25s ease;
 }
 
-/* Board grid */
+.section-badge-primary {
+  background: rgba(254, 192, 31, 0.12);
+  border-color: rgba(254, 192, 31, 0.6);
+  color: #fec01f;
+}
+
+.section-badge-on-dark {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.section-badge-teal {
+  background: rgba(18, 82, 82, 0.25);
+  border-color: rgba(26, 122, 122, 0.6);
+  color: #2dd4bf;
+}
+
+.section-badge-burgundy {
+  background: rgba(141, 23, 57, 0.25);
+  border-color: rgba(141, 23, 57, 0.6);
+  color: #fb7185;
+}
+
+/* Glass cards with festival styling */
+.festival-card {
+  background: rgba(10, 10, 35, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.festival-card:hover {
+  border-color: rgba(254, 192, 31, 0.35);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.6), 0 0 24px rgba(254, 192, 31, 0.08);
+}
+
+.festival-panel {
+  background: rgba(8, 8, 28, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.25rem;
+}
+
+/* Interactive button styling */
+.interactive-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-sora, sans-serif);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+}
+
+.interactive-btn:active {
+  transform: scale(0.97);
+}
+
+.interactive-btn--primary {
+  background-color: #fec01f;
+  color: #06061f;
+  box-shadow: 0 4px 18px rgba(254, 192, 31, 0.3);
+}
+
+.interactive-btn--primary:hover {
+  background-color: #e5ac1b;
+  box-shadow: 0 6px 24px rgba(254, 192, 31, 0.45);
+  transform: translateY(-1px);
+}
+
+.interactive-btn--burgundy {
+  background-color: #8d1739;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.interactive-btn--burgundy:hover {
+  background-color: #aa1a44;
+  box-shadow: 0 6px 24px rgba(141, 23, 57, 0.4);
+}
+
+.interactive-btn--outline {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.interactive-btn--outline:hover {
+  border-color: #fec01f;
+  color: #fec01f;
+  background-color: rgba(254, 192, 31, 0.08);
+}
+
+/* ========================================================
+   MARQUEE TICKER (Matching fintechfestival.lk)
+   ======================================================== */
+.awards-marquee {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.awards-marquee__row {
+  width: max-content;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.awards-marquee__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-jetbrains, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.awards-marquee__chip:hover {
+  border-color: #fec01f;
+  color: #fec01f;
+}
+
+/* ========================================================
+   SNAKES & LADDERS BOARD GAME CELLS (Cyber Festival Theme)
+   ======================================================== */
+
 .board-cell {
   aspect-ratio: 1;
-  border: 1px solid rgba(18, 82, 82, 0.15);
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   position: relative;
-  transition: all 0.2s ease;
-  background: white;
+  transition: all 0.25s ease;
+  background: rgba(14, 14, 46, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.board-cell:hover {
+  transform: translateY(-2px);
+  border-color: rgba(254, 192, 31, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  z-index: 10;
 }
 
 .board-cell.ladder-start {
-  background: linear-gradient(135deg, #e8f8f8 0%, #d0f0f0 100%);
-  border-color: var(--teal);
+  background: linear-gradient(135deg, rgba(18, 82, 82, 0.65) 0%, rgba(10, 48, 48, 0.9) 100%);
+  border-color: #2dd4bf;
+  box-shadow: inset 0 0 16px rgba(45, 212, 191, 0.25);
 }
 
 .board-cell.snake-start {
-  background: linear-gradient(135deg, #fff0f0 0%, #ffe0e0 100%);
-  border-color: var(--burgundy);
+  background: linear-gradient(135deg, rgba(141, 23, 57, 0.65) 0%, rgba(68, 10, 27, 0.9) 100%);
+  border-color: #fb7185;
+  box-shadow: inset 0 0 16px rgba(251, 113, 133, 0.25);
 }
 
 .board-cell.quiz-square {
-  background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
-  border-color: var(--yellow);
+  background: linear-gradient(135deg, rgba(254, 192, 31, 0.25) 0%, rgba(138, 97, 6, 0.5) 100%);
+  border-color: #fec01f;
+  box-shadow: inset 0 0 16px rgba(254, 192, 31, 0.25);
 }
 
 .board-cell.treasure-square {
-  background: linear-gradient(135deg, #fff3e8 0%, #ffe8cc 100%);
-  border-color: var(--orange);
+  background: linear-gradient(135deg, rgba(245, 114, 34, 0.25) 0%, rgba(133, 54, 5, 0.5) 100%);
+  border-color: #f57222;
+  box-shadow: inset 0 0 16px rgba(245, 114, 34, 0.25);
 }
 
 .board-cell.finish-square {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f0ff 100%);
-  border-color: var(--teal);
+  background: linear-gradient(135deg, rgba(254, 192, 31, 0.35) 0%, rgba(18, 82, 82, 0.7) 100%);
+  border-color: #fec01f;
+  box-shadow: 0 0 24px rgba(254, 192, 31, 0.4), inset 0 0 20px rgba(254, 192, 31, 0.3);
 }
 
-/* Token styles */
+/* Tokens */
 .token-player {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--teal);
-  border: 2px solid white;
+  background: radial-gradient(circle at 30% 30%, #ffd966, #fec01f 60%, #b8860b 100%);
+  border: 2px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  font-size: 0.65rem;
+  color: #06061f;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(254, 192, 31, 0.8), 0 3px 6px rgba(0, 0, 0, 0.5);
   position: absolute;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 25;
 }
 
 .token-computer {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--burgundy);
-  border: 2px solid white;
+  background: radial-gradient(circle at 30% 30%, #ff6b8b, #8d1739 60%, #4a061a 100%);
+  border: 2px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  font-size: 0.65rem;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(251, 113, 133, 0.8), 0 3px 6px rgba(0, 0, 0, 0.5);
   position: absolute;
   transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 25;
 }
 
-/* Glass card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.6);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-}
-
-/* Brand gradient */
-.brand-gradient {
-  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
-}
-
-/* Dice face */
-.dice-face {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background: white;
-  border: 2px solid var(--teal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.1s ease;
-}
-
-/* Responsive board */
-@media (max-width: 480px) {
-  .board-cell {
-    font-size: 0.5rem;
-    border-radius: 5px;
-  }
-  .token-player, .token-computer {
-    width: 18px;
-    height: 18px;
-    font-size: 0.45rem;
-  }
-  .dice-face {
-    width: 48px;
-    height: 48px;
-    font-size: 1.4rem;
-  }
-}
-
-/* Reduced motion */
+/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

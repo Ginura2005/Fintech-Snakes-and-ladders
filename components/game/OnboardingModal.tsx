@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Info, Heart, Shield, Zap, Star } from "lucide-react";
+import { Info, Heart, Shield, Zap, Sparkles, Trophy } from "lucide-react";
+import Image from "next/image";
 
 interface OnboardingModalProps {
   googleName: string;
@@ -9,7 +10,9 @@ interface OnboardingModalProps {
 }
 
 export default function OnboardingModal({ googleName, onComplete }: OnboardingModalProps) {
-  const [displayName, setDisplayName] = useState(googleName.replace(/[^a-zA-Z0-9 _\-]/g, "").trim().slice(0, 30) || "");
+  const [displayName, setDisplayName] = useState(
+    googleName.replace(/[^a-zA-Z0-9 _\-]/g, "").trim().slice(0, 30) || ""
+  );
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [step, setStep] = useState(1);
   const [nameError, setNameError] = useState("");
@@ -25,111 +28,126 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
 
   const handleNext = () => {
     const error = validateName(displayName);
-    if (error) { setNameError(error); return; }
+    if (error) {
+      setNameError(error);
+      return;
+    }
     setStep(2);
   };
 
   const handleStart = () => {
     const error = validateName(displayName);
-    if (error) { setNameError(error); return; }
+    if (error) {
+      setNameError(error);
+      return;
+    }
     onComplete(displayName.trim(), leaderboardOptIn);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-        {/* Header */}
-        <div className="brand-gradient p-6 text-white text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider opacity-80 mb-2">
-            Sri Lanka FinTech Festival 2026
-          </p>
-          <h1 className="text-2xl font-black">LANKA FINTECHVERSE</h1>
-          <p className="text-sm opacity-80 mt-1">Snakes &amp; Ladders</p>
+    <div className="min-h-screen bg-[#06061f] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background glow and rings */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-gradient-to-b from-[#fec01f]/15 to-transparent blur-3xl opacity-60" />
+      <div className="pointer-events-none absolute right-[-10%] top-[-10%] w-[500px] h-[500px] opacity-10">
+        <Image src="/elements/circles.webp" alt="" fill className="object-contain" />
+      </div>
+
+      <div className="festival-panel max-w-md w-full overflow-hidden bg-[#0a0a28]/95 border-2 border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative z-10">
+        {/* Header with Festival Logo */}
+        <div className="p-6 text-center border-b border-white/10 bg-white/[0.02]">
+          <div className="relative h-10 w-48 mx-auto mb-3">
+            <Image
+              src="/long-logo-removebg-preview.png"
+              alt="Sri Lanka FinTech Festival"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <span className="section-badge section-badge-primary text-[10px] mb-2">
+            OFFICIAL FESTIVAL ARENA
+          </span>
+          <h1 className="font-heading text-xl font-bold text-white mt-1">LANKA FINTECHVERSE</h1>
+          <p className="font-mono text-xs text-white/60">Snakes &amp; Ladders Arena</p>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 sm:p-8">
           {step === 1 && (
             <div className="animate-slide-up">
-              <h2 className="text-xl font-bold text-gray-800 mb-1">Welcome!</h2>
-              <p className="text-gray-600 text-sm mb-5">
-                Set up your public display name to get started.
+              <h2 className="font-heading text-xl font-bold text-white mb-2">Welcome, Innovator!</h2>
+              <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                Choose your public player handle for the festival leaderboard and match records.
               </p>
 
               {/* Name input */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Display Name
+              <div className="mb-6">
+                <label className="block font-mono text-xs uppercase tracking-wider text-white/70 mb-2">
+                  Player Display Name
                 </label>
                 <input
                   type="text"
                   value={displayName}
-                  onChange={(e) => { setDisplayName(e.target.value); setNameError(""); }}
+                  onChange={(e) => {
+                    setDisplayName(e.target.value);
+                    setNameError("");
+                  }}
                   maxLength={30}
-                  placeholder="e.g. Nuwan_LK"
-                  className={`w-full px-4 py-3 border-2 rounded-xl text-sm font-medium transition-colors focus:outline-none ${
-                    nameError ? "border-red-300 focus:border-red-500" : "border-gray-200 focus:border-teal-500"
-                  }`}
+                  placeholder="e.g. Satoshi_LK"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-white/30 text-sm font-mono focus:outline-none focus:border-[#fec01f] focus:ring-1 focus:ring-[#fec01f] transition-all"
                 />
-                {nameError ? (
-                  <p className="text-red-500 text-xs mt-1">{nameError}</p>
-                ) : (
-                  <p className="text-gray-400 text-xs mt-1">{displayName.length}/30 · Letters, numbers, spaces, hyphens, underscores</p>
+                {nameError && (
+                  <p className="text-rose-400 text-xs font-mono mt-1.5">{nameError}</p>
                 )}
-              </div>
-
-              {/* One-run notice */}
-              <div className="flex gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-5">
-                <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>One official attempt per account.</strong> Your game progress is automatically saved.
-                  If you close the browser, you can resume from where you left off.
+                <p className="text-white/40 text-xs font-mono mt-2">
+                  2–30 chars · letters, numbers, spaces, hyphens
                 </p>
               </div>
 
               <button
                 onClick={handleNext}
-                className="w-full py-3 rounded-xl brand-gradient text-white font-bold hover:opacity-90 transition-opacity"
+                className="w-full py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-base shadow-[0_0_20px_rgba(254,192,31,0.3)]"
               >
-                Next →
+                Proceed to Briefing →
               </button>
             </div>
           )}
 
           {step === 2 && (
-            <div className="animate-slide-up">
-              <h2 className="text-xl font-bold text-gray-800 mb-1">Quick Rules</h2>
-              <p className="text-gray-600 text-sm mb-4">Here's what you're playing for:</p>
+            <div className="animate-slide-up space-y-5">
+              <h2 className="font-heading text-xl font-bold text-white">Arena Briefing</h2>
 
-              <div className="space-y-3 mb-5">
-                {[
-                  { icon: <Zap size={16} className="text-yellow-500" />, text: "Roll dice and race to square 25 before the computer." },
-                  { icon: <Heart size={16} className="text-red-500" />, text: "You start with 3 hearts. Major-risk snakes cost a heart." },
-                  { icon: <Shield size={16} className="text-blue-500" />, text: "Collect treasure for shields — they protect against heart loss." },
-                  { icon: <Star size={16} className="text-orange-500" />, text: "Answer FinTech quiz questions for bonus points." },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-                      {item.icon}
-                    </div>
-                    <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-                  </div>
-                ))}
+              {/* Rules highlight */}
+              <div className="space-y-2.5 text-xs font-mono text-white/80">
+                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-3">
+                  <span className="text-base">🎲</span>
+                  <span><strong>1 Official Run:</strong> Your official score is locked upon match conclusion.</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-3">
+                  <Heart size={16} className="text-rose-400 shrink-0" />
+                  <span><strong>3 Hearts:</strong> Major-risk snakes deduct 1 heart. Reach 0 and you are eliminated.</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-3">
+                  <Sparkles size={16} className="text-[#fec01f] shrink-0" />
+                  <span><strong>Quizzes &amp; Treasures:</strong> Answer correctly for bonus score &amp; collect shields.</span>
+                </div>
               </div>
 
-              {/* Leaderboard opt-in */}
-              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl mb-5">
+              {/* Leaderboard opt-in checkbox */}
+              <div className="p-3.5 rounded-xl bg-[#fec01f]/10 border border-[#fec01f]/30">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={leaderboardOptIn}
                     onChange={(e) => setLeaderboardOptIn(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded accent-teal-600"
+                    className="mt-0.5 w-4 h-4 rounded text-[#fec01f] accent-[#fec01f] focus:ring-[#fec01f]"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-teal-800">Join the public leaderboard</p>
-                    <p className="text-xs text-teal-700 mt-0.5">
-                      Your display name and score will appear publicly. You can opt out anytime.
-                      Your email is never shared.
+                    <span className="font-heading text-xs font-bold text-white flex items-center gap-1.5">
+                      <Trophy size={13} className="text-[#fec01f]" />
+                      Publish my score to the Festival Leaderboard
+                    </span>
+                    <p className="text-[11px] text-white/60 mt-1 leading-normal">
+                      Opt in to let other attendees see your score &amp; ranking. You can change this anytime.
                     </p>
                   </div>
                 </label>
@@ -138,15 +156,15 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-4 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="py-3 px-4 rounded-xl border border-white/15 bg-white/5 text-white/70 text-xs font-mono uppercase tracking-wider hover:text-white hover:border-white/30 transition-colors"
                 >
-                  ← Back
+                  Back
                 </button>
                 <button
                   onClick={handleStart}
-                  className="flex-1 py-3 rounded-xl brand-gradient text-white font-bold hover:opacity-90 transition-opacity"
+                  className="flex-1 py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)]"
                 >
-                  🎲 Start Playing!
+                  Enter the Arena Now 🚀
                 </button>
               </div>
             </div>
