@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     // Resilient fallback if board_seed column migration hasn't run yet in database
-    if (insertError && (insertError.code === "PGRST204" || insertError.message?.includes("board_seed"))) {
+    if (insertError && (insertError.code === "PGRST204" || insertError.code === "42703" || insertError.message?.toLowerCase().includes("board_seed") || (insertError as any)?.details?.toLowerCase().includes("board_seed"))) {
       delete insertPayload.board_seed;
       const retry = await db.from("game_runs").insert(insertPayload).select().single();
       newRun = retry.data;

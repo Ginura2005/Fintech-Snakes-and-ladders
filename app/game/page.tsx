@@ -401,7 +401,7 @@ function GameContent() {
       const ladderTo = ladderEv.toSquare || finalTo;
       setActiveLadder(ladderFrom);
       setFloatingMessage({
-        text: `🪜 Ladder Boost! +${BOARD_CONFIG.scoring.ladder} pts`,
+        text: `🪜 Ladder Boost! +${activeBoardConfig.scoring.ladder} pts`,
         type: "ladder",
       });
       sounds.playLadderClimb();
@@ -603,7 +603,7 @@ function GameContent() {
     const treasureEv = pResult.events.find((e) => e.type === "treasure_collected");
     if (treasureEv) {
       sounds.playTreasure();
-      setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: pResult.toPosition });
+      setShowTreasure({ points: activeBoardConfig.treasure.points, square: pResult.toPosition });
       triggerPlayerMood("celebrating", 2400);
       triggerComputerReaction("thinking", "Nice treasure cache! That shield will help protect points.", 2400);
     }
@@ -790,7 +790,7 @@ function GameContent() {
       const treasureEv = data.playerEvents?.find((e) => e.type === "treasure_collected");
       if (treasureEv) {
         sounds.playTreasure();
-        setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: data.run.player_position });
+        setShowTreasure({ points: activeBoardConfig.treasure.points, square: data.run.player_position });
         triggerPlayerMood("celebrating", 2400);
         triggerComputerReaction("thinking", "Nice treasure cache! That shield will help protect points.", 2400);
       }
@@ -890,10 +890,10 @@ function GameContent() {
         sounds.playQuizCorrect();
         triggerPlayerMood("celebrating", 2600);
         triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
-        localStateRef.current.playerScore += BOARD_CONFIG.scoring.quizCorrect;
+        localStateRef.current.playerScore += activeBoardConfig.scoring.quizCorrect;
         localStateRef.current.playerQuizCorrect += 1;
         setEvents((prev) => [
-          `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} pts! ${q?.explanation || ""}`,
+          `✅ Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${q?.explanation || ""}`,
           ...prev,
         ]);
       } else {
@@ -989,7 +989,7 @@ function GameContent() {
           triggerPlayerMood("celebrating", 2600);
           triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
           setEvents((prev) => [
-            `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} pts! ${data.explanation}`,
+            `✅ Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${data.explanation}`,
             ...prev,
           ]);
         } else {
@@ -1324,7 +1324,7 @@ function GameContent() {
       {showTreasure && (
         <TreasureOverlay
           points={showTreasure.points}
-          shieldAwarded={BOARD_CONFIG.treasure.shieldAwarded}
+          shieldAwarded={activeBoardConfig.treasure.shieldAwarded}
           onClose={() => setShowTreasure(null)}
         />
       )}

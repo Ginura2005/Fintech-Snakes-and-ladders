@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Fetch run
     const { data: run, error: runError } = await serviceClient
       .from("game_runs")
-      .select("id, status, player_quiz_correct, player_quiz_encountered, player_score, turn_sequence, board_seed")
+      .select("*")
       .eq("player_id", user.id)
       .single();
 
