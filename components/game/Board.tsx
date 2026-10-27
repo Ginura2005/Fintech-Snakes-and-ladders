@@ -1,7 +1,7 @@
 "use client";
 
 import { BOARD_CONFIG, getLadder, getSnake, getSpecialSquare } from "@/lib/game-engine/board-config";
-import BoardSvgOverlay from "./BoardSvgOverlay";
+import BoardSvgOverlay, { SQUARE_CENTERS } from "./BoardSvgOverlay";
 import GameAvatar, { AvatarMood } from "./GameAvatar";
 
 interface BoardProps {
@@ -113,6 +113,40 @@ export default function GameBoard({
   movingPawn = null,
   floatingMessage = null,
 }: BoardProps) {
+  // Center coordinates for character pawns on 1000x1000 board
+  const playerCoord = SQUARE_CENTERS[playerPosition] || SQUARE_CENTERS[1];
+  const computerCoord = SQUARE_CENTERS[computerPosition] || SQUARE_CENTERS[1];
+  const sameSquare = playerPosition === computerPosition;
+
+  // Floating coordinates in percentage
+  // X = col * 20 + 10% (from SQUARE_CENTERS.x / 10)
+  // Y = row * 20 + 13.5% (anchored to lower half of tile)
+  const playerX = playerCoord.x / 10;
+  const playerY = playerCoord.row * 20 + 13.5;
+
+  const computerX = computerCoord.x / 10;
+  const computerY = computerCoord.row * 20 + 13.5;
+
+  // Movement action states
+  const isPlayerMoving = movingPawn === "player";
+  const isComputerMoving = movingPawn === "computer";
+
+  const isPlayerLadder = activeLadder !== null && isPlayerMoving;
+  const isComputerLadder = activeLadder !== null && isComputerMoving;
+  const isPlayerSnake = activeSnake !== null && isPlayerMoving;
+  const isComputerSnake = activeSnake !== null && isComputerMoving;
+
+  // Dynamic spring physics depending on movement type
+  const getPawnTransition = (isLadder: boolean, isSnake: boolean) => {
+    if (isLadder) {
+      return "left 650ms cubic-bezier(0.22, 1, 0.36, 1), top 650ms cubic-bezier(0.22, 1, 0.36, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+    }
+    if (isSnake) {
+      return "left 700ms cubic-bezier(0.45, 0, 0.55, 1), top 700ms cubic-bezier(0.45, 0, 0.55, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+    }
+    return "left 240ms cubic-bezier(0.34, 1.25, 0.64, 1), top 240ms cubic-bezier(0.34, 1.25, 0.64, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+  };
+
   return (
     <div className="w-full select-none">
       {/* 5x5 Arena Board with Aspect-Square Canvas */}
@@ -122,8 +156,8 @@ export default function GameBoard({
         {floatingMessage && (
           <div
             className={`
-              absolute top-3 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl font-heading font-extrabold text-xs sm:text-sm
-              shadow-2xl flex items-center gap-2 border animate-bounce max-w-[90%] text-center
+              absolute top-3 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl font-heading font-extrabold text-xs sm:text-sm
+              shadow-2xl flex items-center gap-2 border animate-toast-pop max-w-[90%] text-center pointer-events-none
               ${
                 floatingMessage.type === "ladder"
                   ? "bg-teal-500/95 text-white border-teal-300 shadow-[0_0_25px_rgba(45,212,191,0.6)]"
@@ -158,10 +192,17 @@ export default function GameBoard({
                   <div
                     key={square}
                     className={`
-                      relative flex flex-col justify-between p-1 sm:p-1.5 rounded-lg sm:rounded-xl border transition-all duration-200
+                      relative flex flex-col justify-between p-1 sm:p-1.5 rounded-lg sm:rounded-xl border transition-all duration-300
                       ${meta.bgClass}
-                      ${isPlayerHere ? "ring-2 ring-[#fec01f] shadow-[0_0_12px_rgba(254,192,31,0.6)] z-20" : ""}
-                      ${isComputerHere && !isPlayerHere ? "ring-1.5 ring-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.4)]" : ""}
+                      ${
+                        isPlayerHere && isComputerHere
+                          ? "ring-2 ring-[#fec01f] shadow-[0_0_16px_rgba(254,192,31,0.6)] z-20"
+                          : isPlayerHere
+                          ? "ring-2 ring-[#fec01f] shadow-[0_0_12px_rgba(254,192,31,0.5)] z-20"
+                          : isComputerHere
+                          ? "ring-1.5 ring-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.4)]"
+                          : ""
+                      }
                     `}
                   >
                     {/* Top Header: Crisp Square Number + Feature Indicator */}
@@ -183,7 +224,7 @@ export default function GameBoard({
                       )}
                     </div>
 
-                    {/* Middle: Clean Feature Icon (Subtle & Uncluttered) */}
+                    {/* Middle: Clean Feature Icon */}
                     <div className="flex items-center justify-center my-auto">
                       {meta.icon && (
                         <span
@@ -196,56 +237,100 @@ export default function GameBoard({
                       )}
                     </div>
 
-                    {/* Bottom: Expressive Character Avatars & Hop Animation */}
-                    <div className="flex items-center justify-center gap-1 min-h-[22px] sm:min-h-[28px] relative">
-                      {/* Player Avatar Pawn */}
-                      {isPlayerHere && (
-                        <div
-                          className={`
-                            transition-all duration-200 relative
-                            ${
-                              movingPawn === "player"
-                                ? "-translate-y-3.5 sm:-translate-y-4 scale-125 z-30 drop-shadow-[0_10px_10px_rgba(254,192,31,0.8)]"
-                                : animating
-                                ? "scale-105"
-                                : "scale-100"
-                            }
-                          `}
-                          title={`You (Square ${square})`}
-                        >
-                          <GameAvatar type="player" size="pawn" mood={playerMood} />
-                          {/* Hop ground shadow */}
-                          {movingPawn === "player" && (
-                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/60 rounded-full blur-[1px] animate-pulse" />
-                          )}
-                        </div>
-                      )}
-
-                      {/* Ava (AI Rival) Avatar Pawn */}
-                      {isComputerHere && (
-                        <div
-                          className={`
-                            transition-all duration-200 relative
-                            ${
-                              movingPawn === "computer"
-                                ? "-translate-y-3.5 sm:-translate-y-4 scale-125 z-30 drop-shadow-[0_10px_10px_rgba(244,63,94,0.8)]"
-                                : "scale-100"
-                            }
-                          `}
-                          title={`Ava (AI Rival · Square ${square})`}
-                        >
-                          <GameAvatar type="computer" size="pawn" mood={computerMood} />
-                          {/* Hop ground shadow */}
-                          {movingPawn === "computer" && (
-                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/60 rounded-full blur-[1px] animate-pulse" />
-                          )}
-                        </div>
-                      )}
+                    {/* Bottom: Subtle Tile Landing Groove */}
+                    <div className="flex items-center justify-center min-h-[14px] sm:min-h-[18px] w-full">
+                      <div
+                        className={`
+                          w-6 sm:w-8 h-1 rounded-full transition-all duration-300
+                          ${
+                            isPlayerHere || isComputerHere
+                              ? "bg-[#fec01f]/35 blur-[0.5px] scale-110"
+                              : "bg-white/[0.04]"
+                          }
+                        `}
+                      />
                     </div>
                   </div>
                 );
               })
             )}
+          </div>
+
+          {/* ── Continuous Floating Pawn Layer (Smooth Physical Movement) ── */}
+          <div className="absolute inset-0 pointer-events-none z-25 overflow-hidden">
+            {/* Human Player Character Pawn ("Trailblazer") */}
+            <div
+              className="absolute will-change-[left,top,transform]"
+              style={{
+                left: `${playerX}%`,
+                top: `${playerY}%`,
+                transform: sameSquare
+                  ? "translate(calc(-50% - 13px), -50%)"
+                  : "translate(-50%, -50%)",
+                transition: getPawnTransition(isPlayerLadder, isPlayerSnake),
+                zIndex: isPlayerMoving ? 35 : 28,
+              }}
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Parabolic Hop Body */}
+                <div
+                  className={`
+                    relative transition-transform duration-200
+                    ${isPlayerMoving ? "animate-pawn-hop" : animating ? "scale-105" : "scale-100"}
+                    ${isPlayerLadder ? "ring-4 ring-[#fec01f] shadow-[0_0_25px_rgba(254,192,31,0.9)] rounded-full" : ""}
+                    ${isPlayerSnake ? "ring-4 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.9)] rounded-full" : ""}
+                  `}
+                  title={`You (Square ${playerPosition})`}
+                >
+                  <GameAvatar type="player" size="pawn" mood={playerMood} />
+                </div>
+
+                {/* Ground Drop Shadow */}
+                <span
+                  className={`
+                    w-4 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
+                    ${isPlayerMoving ? "animate-pawn-shadow" : "opacity-60"}
+                  `}
+                />
+              </div>
+            </div>
+
+            {/* Ava (AI Rival) Character Pawn */}
+            <div
+              className="absolute will-change-[left,top,transform]"
+              style={{
+                left: `${computerX}%`,
+                top: `${computerY}%`,
+                transform: sameSquare
+                  ? "translate(calc(-50% + 13px), -50%)"
+                  : "translate(-50%, -50%)",
+                transition: getPawnTransition(isComputerLadder, isComputerSnake),
+                zIndex: isComputerMoving ? 35 : 27,
+              }}
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Parabolic Hop Body */}
+                <div
+                  className={`
+                    relative transition-transform duration-200
+                    ${isComputerMoving ? "animate-pawn-hop" : "scale-100"}
+                    ${isComputerLadder ? "ring-4 ring-[#fec01f] shadow-[0_0_25px_rgba(254,192,31,0.9)] rounded-full" : ""}
+                    ${isComputerSnake ? "ring-4 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.9)] rounded-full" : ""}
+                  `}
+                  title={`Ava (Square ${computerPosition})`}
+                >
+                  <GameAvatar type="computer" size="pawn" mood={computerMood} />
+                </div>
+
+                {/* Ground Drop Shadow */}
+                <span
+                  className={`
+                    w-4 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
+                    ${isComputerMoving ? "animate-pawn-shadow" : "opacity-60"}
+                  `}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function CompactScoreHeader({
         
         {/* Ava's Human-like Speech Reaction Bubble */}
         {computerReaction && (
-          <div className="absolute -bottom-3 right-4 z-30 animate-bounce">
+          <div className="absolute -bottom-3 right-4 z-30 animate-speech-bubble pointer-events-none">
             <div className="bg-gradient-to-r from-rose-900 to-[#1e0712] border border-rose-400 text-white text-[10px] sm:text-xs font-mono font-bold px-2.5 py-1 rounded-full shadow-[0_4px_15px_rgba(244,63,94,0.5)] flex items-center gap-1.5">
               <span>💬 Ava:</span>
               <span className="text-rose-200">"{computerReaction}"</span>

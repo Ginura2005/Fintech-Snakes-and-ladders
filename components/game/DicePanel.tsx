@@ -56,17 +56,22 @@ function DieFace({
   onClick?: () => void;
 }) {
   const [displayVal, setDisplayVal] = useState<number>(value || 1);
+  const [justLanded, setJustLanded] = useState(false);
 
-  // Fast shuffle animation while rolling
+  // Fast shuffle animation while rolling & smooth physical land bounce
   useEffect(() => {
-    if (!isRolling) {
-      if (value) setDisplayVal(value);
-      return;
+    if (isRolling) {
+      setJustLanded(false);
+      const interval = setInterval(() => {
+        setDisplayVal(Math.floor(Math.random() * 6) + 1);
+      }, 55);
+      return () => clearInterval(interval);
+    } else if (value) {
+      setDisplayVal(value);
+      setJustLanded(true);
+      const timer = setTimeout(() => setJustLanded(false), 450);
+      return () => clearTimeout(timer);
     }
-    const interval = setInterval(() => {
-      setDisplayVal(Math.floor(Math.random() * 6) + 1);
-    }, 65);
-    return () => clearInterval(interval);
   }, [isRolling, value]);
 
   const dots = DOT_POSITIONS[displayVal] || [];
@@ -88,7 +93,9 @@ function DieFace({
         transition-all duration-200 select-none shrink-0
         ${
           isRolling
-            ? "animate-pulse scale-105 rotate-3 shadow-[0_0_25px_rgba(254,192,31,0.5)]"
+            ? "animate-dice-tumble shadow-[0_0_28px_rgba(254,192,31,0.65)] scale-105"
+            : justLanded
+            ? "animate-dice-settle shadow-[0_0_20px_rgba(254,192,31,0.5)]"
             : clickable
             ? "cursor-pointer hover:scale-105 hover:border-[#fec01f] active:scale-95"
             : ""
@@ -151,7 +158,7 @@ export default function DicePanel({
           {(computerRoll !== null || computerRolling) && (
             <div className="flex flex-col items-center">
               <span className="font-mono text-[9px] sm:text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-1">
-                AI
+                Ava
               </span>
               <DieFace
                 value={computerRoll}

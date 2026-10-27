@@ -326,7 +326,7 @@ function GameContent() {
         setComputerDisplayPos(pos);
       }
       sounds.playPawnStep();
-      await sleep(200);
+      await sleep(250);
     }
 
     // 3. Check for ladder ascent
@@ -349,12 +349,12 @@ function GameContent() {
         triggerComputerReaction("celebrating", "Boom! Golden ladder boost! 🚀", 2600);
       }
 
-      await sleep(500);
+      await sleep(350);
 
       if (actor === "player") setPlayerDisplayPos(ladderTo);
       else setComputerDisplayPos(ladderTo);
 
-      await sleep(600);
+      await sleep(750);
       setActiveLadder(null);
       setFloatingMessage(null);
     }
@@ -398,12 +398,12 @@ function GameContent() {
           triggerComputerReaction("worried", "Ugh! Slid down the hazard!", 2500);
         }
       }
-      await sleep(500);
+      await sleep(350);
 
       if (actor === "player") setPlayerDisplayPos(snakeTo);
       else setComputerDisplayPos(snakeTo);
 
-      await sleep(600);
+      await sleep(750);
       setActiveSnake(null);
       setFloatingMessage(null);
     }
