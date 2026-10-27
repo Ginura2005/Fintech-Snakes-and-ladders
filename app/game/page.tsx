@@ -8,6 +8,7 @@ import GameBoard from "@/components/game/Board";
 import QuizOverlay from "@/components/game/QuizOverlay";
 import TreasureOverlay from "@/components/game/TreasureOverlay";
 import DicePanel from "@/components/game/DicePanel";
+import CompactScoreHeader from "@/components/game/CompactScoreHeader";
 import PlayerPanel from "@/components/game/PlayerPanel";
 import EventLog from "@/components/game/EventLog";
 import OnboardingModal from "@/components/game/OnboardingModal";
@@ -112,6 +113,7 @@ function GameContent() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animating, setAnimating] = useState(false);
+  const [showMobileIntel, setShowMobileIntel] = useState(false);
 
   // Local Practice Game Engine state
   const localStateRef = useRef<GameState | null>(null);
@@ -871,46 +873,37 @@ function GameContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
-          {/* Main Board & Controls */}
-          <div className="space-y-5">
-            {/* Arena Board */}
-            <div className="festival-card p-3 sm:p-5 bg-[#090924]/85 shadow-[0_16px_50px_rgba(0,0,0,0.7)]">
-              <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#fec01f] animate-ping" />
-                  <span className="font-mono text-xs uppercase tracking-widest text-white/90 font-bold">
-                    {isPracticeMode ? "Practice Match Arena" : "Official Tournament Arena"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isPracticeMode && (
-                    <button
-                      onClick={startPracticeGame}
-                      className="font-mono text-[11px] text-teal-300 hover:text-teal-100 flex items-center gap-1 bg-teal-950/50 border border-teal-500/30 px-2 py-0.5 rounded"
-                      title="Reset practice match"
-                    >
-                      <RotateCcw size={11} />
-                      Reset
-                    </button>
-                  )}
-                  <span className="font-mono text-xs text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded">
-                    Turn {run.turn_sequence}
-                  </span>
-                </div>
-              </div>
+                {/* Unified Mobile-First Match Header (Player vs AI) */}
+        <CompactScoreHeader
+          playerName={profile?.display_name || "You"}
+          playerScore={run.player_score}
+          playerHearts={run.player_hearts}
+          playerShields={run.player_shields}
+          playerPosition={playerDisplayPos}
+          playerQuizCorrect={run.player_quiz_correct}
+          computerScore={run.computer_score}
+          computerHearts={run.computer_hearts}
+          computerShields={run.computer_shields}
+          computerPosition={computerDisplayPos}
+          currentTurn={run.current_turn as "player" | "computer"}
+          turnSequence={run.turn_sequence}
+          isPracticeMode={isPracticeMode}
+          onResetPractice={isPracticeMode ? startPracticeGame : undefined}
+        />
 
-              <GameBoard
-                playerPosition={playerDisplayPos}
-                computerPosition={computerDisplayPos}
-                playerName={profile?.display_name || "You"}
-                animating={animating}
-                activeLadder={activeLadder}
-                activeSnake={activeSnake}
-                movingPawn={movingPawn}
-                floatingMessage={floatingMessage}
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 sm:gap-6 items-start">
+          {/* Main Arena Board & Controls */}
+          <div className="space-y-3 sm:space-y-4">
+            <GameBoard
+              playerPosition={playerDisplayPos}
+              computerPosition={computerDisplayPos}
+              playerName={profile?.display_name || "You"}
+              animating={animating}
+              activeLadder={activeLadder}
+              activeSnake={activeSnake}
+              movingPawn={movingPawn}
+              floatingMessage={floatingMessage}
+            />
 
             {/* Dice Control Console */}
             {!gameOver && (
@@ -925,38 +918,48 @@ function GameContent() {
                 playerPosition={playerDisplayPos}
               />
             )}
+
+            {/* Mobile Collapsible Chronicle & Field Intel */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setShowMobileIntel(!showMobileIntel)}
+                className="w-full py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 text-xs font-mono uppercase tracking-wider text-white/70 flex items-center justify-between hover:bg-white/10 transition-colors"
+              >
+                <span>📜 Match Chronicle &amp; Field Guide ({events.length})</span>
+                <span>{showMobileIntel ? "▲ Hide" : "▼ Show"}</span>
+              </button>
+              {showMobileIntel && (
+                <div className="mt-3 space-y-3 animate-slide-up">
+                  <EventLog events={events} />
+                  <div className="festival-card p-3 text-xs font-mono text-white/60 space-y-1.5 border-white/10 bg-[#0a0a28]/80">
+                    <p className="font-bold text-white/90 uppercase tracking-wider text-[11px] mb-1">
+                      Field Intel
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded bg-teal-500/20 border border-teal-400 shrink-0" />
+                      <span><strong>Ladders:</strong> Boost ahead +25 pts</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
+                      <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; ❤️</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
+                      <span><strong>Quiz:</strong> FinTech test +50 pts</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded bg-orange-500/20 border border-orange-400 shrink-0" />
+                      <span><strong>Treasure:</strong> Points &amp; Shield protection</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Right Stats & Telemetry Feed */}
-          <div className="space-y-5">
-            {/* Player Stats HUD */}
-            <PlayerPanel
-              label={profile?.display_name || "You"}
-              hearts={run.player_hearts}
-              shields={run.player_shields}
-              score={run.player_score}
-              position={playerDisplayPos}
-              quizCorrect={run.player_quiz_correct}
-              isCurrentTurn={run.current_turn === "player"}
-              tokenColor="teal"
-            />
-
-            {/* Computer Opponent HUD */}
-            <PlayerPanel
-              label="FinTech Autonomous AI"
-              hearts={run.computer_hearts}
-              shields={run.computer_shields}
-              score={run.computer_score}
-              position={computerDisplayPos}
-              quizCorrect={0}
-              isCurrentTurn={run.current_turn === "computer"}
-              tokenColor="burgundy"
-            />
-
-            {/* Live Telemetry Log */}
+          {/* Desktop Right Telemetry Feed */}
+          <div className="hidden lg:block space-y-4">
             <EventLog events={events} />
-
-            {/* Strategic Quick Guide */}
             <div className="festival-card p-4 text-xs font-mono text-white/60 space-y-2 border-white/10 bg-[#0a0a28]/80">
               <p className="font-bold text-white/90 uppercase tracking-wider text-[11px] mb-2 border-b border-white/5 pb-1">
                 Field Intel
