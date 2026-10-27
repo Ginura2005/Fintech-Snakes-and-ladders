@@ -25,170 +25,318 @@ export async function generateResultCardBlob(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not create canvas 2d context");
 
-  // Generate QR Code data URL
+  // Generate QR Code data URL with festival brand colors
   const qrDataUrl = await QRCode.toDataURL(options.challengeUrl, {
-    width: 220,
+    width: 240,
     margin: 1,
     color: {
-      dark: "#125252",
+      dark: "#06061F",
       light: "#FFFFFF",
     },
   });
 
-  const qrImage = await loadImage(qrDataUrl);
+  const [qrImage, festivalLogo] = await Promise.all([
+    loadImage(qrDataUrl),
+    loadImage("/long-logo-removebg-preview.png").catch(() => null),
+  ]);
 
-  // 1. Background Gradient (Festival Dark Cosmic & Deep Night)
+  // 1. Deep Cosmic Festival Backdrop
   const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, "#06061f");
-  bgGrad.addColorStop(0.35, "#0a0a28");
-  bgGrad.addColorStop(0.7, "#125252");
-  bgGrad.addColorStop(1, "#06061f");
+  bgGrad.addColorStop(0, "#050518");
+  bgGrad.addColorStop(0.28, "#09092c");
+  bgGrad.addColorStop(0.65, "#0b2628");
+  bgGrad.addColorStop(1, "#040415");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // Subtle decorative geometric network accents
+  // Subtle Geometric Grid & Tech Accent Lines
   ctx.save();
-  ctx.strokeStyle = "rgba(254, 192, 31, 0.12)";
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < 6; i++) {
+  ctx.strokeStyle = "rgba(254, 192, 31, 0.08)";
+  ctx.lineWidth = 1;
+  const gridSize = 60;
+  for (let x = gridSize; x < width; x += gridSize) {
     ctx.beginPath();
-    ctx.arc(width * 0.85, height * 0.15, 80 + i * 50, 0, Math.PI * 2);
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
     ctx.stroke();
   }
-  for (let i = 0; i < 5; i++) {
+  for (let y = gridSize; y < height; y += gridSize) {
     ctx.beginPath();
-    ctx.arc(width * 0.1, height * 0.85, 60 + i * 45, 0, Math.PI * 2);
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  // Concentric radar rings (inspired by fintechfestival.lk cyber security & DPI motifs)
+  ctx.strokeStyle = "rgba(28, 160, 133, 0.14)";
+  ctx.lineWidth = 1.5;
+  for (let r = 80; r <= 360; r += 70) {
+    ctx.beginPath();
+    ctx.arc(width * 0.88, height * 0.12, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  for (let r = 70; r <= 320; r += 60) {
+    ctx.beginPath();
+    ctx.arc(width * 0.1, height * 0.88, r, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
 
-  // Content vertical centering adjustment for story vs post
-  const yOffset = options.format === "story" ? 180 : 70;
-
-  // 2. Festival Header Badge
-  const badgeY = yOffset + 50;
+  // Outer Luxury Border with Target Reticles
   ctx.save();
-  drawRoundedRect(ctx, width / 2 - 250, badgeY, 500, 52, 26);
-  ctx.fillStyle = "rgba(254, 192, 31, 0.15)";
-  ctx.fill();
-  ctx.strokeStyle = "#FEC01F";
+  ctx.strokeStyle = "rgba(254, 192, 31, 0.35)";
   ctx.lineWidth = 2;
+  drawRoundedRect(ctx, 36, 36, width - 72, height - 72, 28);
+  ctx.stroke();
+
+  // Corner Bracket Accents
+  const cornerLen = 32;
+  ctx.strokeStyle = "#FEC01F";
+  ctx.lineWidth = 4;
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(36, 36 + cornerLen);
+  ctx.lineTo(36, 36);
+  ctx.lineTo(36 + cornerLen, 36);
+  ctx.stroke();
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(width - 36 - cornerLen, 36);
+  ctx.lineTo(width - 36, 36);
+  ctx.lineTo(width - 36, 36 + cornerLen);
+  ctx.stroke();
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(36, height - 36 - cornerLen);
+  ctx.lineTo(36, height - 36);
+  ctx.lineTo(36 + cornerLen, height - 36);
+  ctx.stroke();
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(width - 36 - cornerLen, height - 36);
+  ctx.lineTo(width - 36, height - 36);
+  ctx.lineTo(width - 36, height - 36 - cornerLen);
+  ctx.stroke();
+  ctx.restore();
+
+  // Vertical layout adjustments
+  const yStart = options.format === "story" ? 140 : 68;
+
+  // 2. Official Presenters & Festival Banner
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#FEC01F";
+  ctx.letterSpacing = "2px";
+  ctx.fillText("FINTECH FORUM SRI LANKA  ×  MINISTRY OF DIGITAL ECONOMY", width / 2, yStart + 22);
+
+  // Logo or Festival Title
+  if (festivalLogo) {
+    const logoW = 340;
+    const logoH = 68;
+    ctx.drawImage(festivalLogo, width / 2 - logoW / 2, yStart + 40, logoW, logoH);
+  } else {
+    ctx.font = "900 36px system-ui, -apple-system, sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", width / 2, yStart + 80);
+  }
+
+  // Event Location & Dates
+  ctx.font = "600 18px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+  ctx.fillText("Shangri-La Colombo, Sri Lanka  ·  2–3 November 2026", width / 2, yStart + 128);
+
+  // Tournament Badge
+  const badgeY = yStart + 150;
+  drawRoundedRect(ctx, width / 2 - 210, badgeY, 420, 36, 18);
+  ctx.fillStyle = "rgba(254, 192, 31, 0.14)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(254, 192, 31, 0.6)";
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   ctx.fillStyle = "#FEC01F";
-  ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", width / 2, badgeY + 34);
+  ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
+  ctx.fillText("★ OFFICIAL ARENA TOURNAMENT CERTIFICATE ★", width / 2, badgeY + 23);
   ctx.restore();
 
-  // 3. Game Title
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.font = "900 68px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText("LANKA FINTECHVERSE", width / 2, badgeY + 125);
-
-  ctx.font = "600 24px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-  ctx.fillText("Official Snakes & Ladders Tournament", width / 2, badgeY + 165);
-  ctx.restore();
-
-  // 4. Outcome Card Box
-  const cardY = badgeY + 210;
+  // 3. Main Glassmorphic Result Plaque
+  const cardY = badgeY + 60;
   const cardWidth = 920;
-  const cardHeight = options.format === "story" ? 640 : 530;
+  const cardHeight = options.format === "story" ? 680 : 540;
   const cardX = (width - cardWidth) / 2;
 
-  ctx.save();
-  drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 36);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.96)";
-  ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
-  ctx.shadowBlur = 30;
-  ctx.shadowOffsetY = 15;
-  ctx.fill();
-  ctx.restore();
-
-  // Outcome Icon & Title
+  // Outcome styling
   const isWon = options.outcome === "player_won";
   const isElim = options.outcome === "player_eliminated";
-  const outcomeText = isWon ? "VICTORY" : isElim ? "ELIMINATED" : "RUN COMPLETED";
-  const outcomeColor = isWon ? "#125252" : isElim ? "#8D1739" : "#F57222";
+  const outcomeText = isWon
+    ? "ARENA CHAMPION · VICTORY"
+    : isElim
+    ? "RISK AUDIT CONCLUDED"
+    : "MATCH FINISHED";
+  const outcomeGlow = isWon ? "#FEC01F" : isElim ? "#F43F5E" : "#1CA085";
 
   ctx.save();
-  ctx.textAlign = "center";
+  // Plaque backing
+  drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 32);
+  const cardGrad = ctx.createLinearGradient(0, cardY, 0, cardY + cardHeight);
+  cardGrad.addColorStop(0, "rgba(255, 255, 255, 0.07)");
+  cardGrad.addColorStop(1, "rgba(8, 12, 38, 0.85)");
+  ctx.fillStyle = cardGrad;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 20;
+  ctx.fill();
 
-  // Player Name
-  ctx.font = "bold 32px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "#4A5568";
+  // Plaque border
+  ctx.strokeStyle = isWon ? "rgba(254, 192, 31, 0.75)" : "rgba(255, 255, 255, 0.18)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Player Name & Title
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#FFFFFF";
   ctx.fillText(options.displayName, width / 2, cardY + 65);
 
-  // Outcome pill
-  const pillY = cardY + 90;
-  drawRoundedRect(ctx, width / 2 - 140, pillY, 280, 44, 22);
-  ctx.fillStyle = outcomeColor;
+  // Outcome Pill
+  const pillW = 320;
+  const pillH = 40;
+  const pillY = cardY + 86;
+  ctx.save();
+  drawRoundedRect(ctx, width / 2 - pillW / 2, pillY, pillW, pillH, 20);
+  ctx.fillStyle = isWon ? "#125252" : isElim ? "#8D1739" : "#F57222";
   ctx.fill();
+  ctx.strokeStyle = outcomeGlow;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
-  ctx.fillText(outcomeText, width / 2, pillY + 29);
+  ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+  ctx.fillText(outcomeText, width / 2, pillY + 25);
+  ctx.restore();
 
-  // Big Score Display
-  ctx.fillStyle = "#718096";
-  ctx.font = "600 20px system-ui, -apple-system, sans-serif";
-  ctx.fillText("FINAL SCORE", width / 2, cardY + 185);
+  // "OFFICIAL TOURNAMENT SCORE" Label
+  ctx.fillStyle = "#FEC01F";
+  ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+  ctx.letterSpacing = "3px";
+  ctx.fillText("OFFICIAL ARENA SCORE", width / 2, cardY + 168);
 
-  ctx.fillStyle = "#125252";
-  ctx.font = "900 86px system-ui, -apple-system, sans-serif";
-  ctx.fillText(options.finalScore.toLocaleString(), width / 2, cardY + 270);
+  // Giant High-Tech Score Display
+  ctx.font = "900 96px system-ui, -apple-system, sans-serif";
+  const scoreGrad = ctx.createLinearGradient(0, cardY + 175, 0, cardY + 275);
+  scoreGrad.addColorStop(0, "#FFFFFF");
+  scoreGrad.addColorStop(1, "#FEC01F");
+  ctx.fillStyle = scoreGrad;
+  ctx.fillText(options.finalScore.toLocaleString(), width / 2, cardY + 265);
 
-  // Leaderboard Rank if available
+  // Leaderboard Rank Pill (if opted-in)
   if (options.rank) {
+    const rankPillW = 380;
+    const rankPillY = cardY + 295;
+    ctx.save();
+    drawRoundedRect(ctx, width / 2 - rankPillW / 2, rankPillY, rankPillW, 38, 19);
+    ctx.fillStyle = "rgba(245, 114, 34, 0.15)";
+    ctx.fill();
+    ctx.strokeStyle = "#F57222";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
     ctx.fillStyle = "#F57222";
-    ctx.font = "bold 24px system-ui, -apple-system, sans-serif";
-    ctx.fillText(`🏆 Rank #${options.rank} on Official Leaderboard`, width / 2, cardY + 315);
+    ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
+    ctx.fillText(`🏆 Rank #${options.rank} on Festival Leaderboard`, width / 2, rankPillY + 25);
+    ctx.restore();
   }
 
-  // Stats Grid in card
-  const statBoxY = cardY + (options.rank ? 345 : 320);
+  // Stats Grid: 3 Distinct Metric Cards
+  const statsY = cardY + (options.rank ? 355 : 320);
   const colWidth = (cardWidth - 80) / 3;
 
-  drawStatBox(ctx, cardX + 30, statBoxY, colWidth, 90, "❤️ HEARTS", `${options.heartsRemaining} / 3`);
-  drawStatBox(ctx, cardX + 40 + colWidth, statBoxY, colWidth, 90, "📝 QUIZ SCORE", `${options.quizCorrect} Correct`);
-  drawStatBox(ctx, cardX + 50 + colWidth * 2, statBoxY, colWidth, 90, "💰 TREASURES", `${options.treasuresCollected} Claimed`);
+  drawMetricCard(
+    ctx,
+    cardX + 28,
+    statsY,
+    colWidth,
+    options.format === "story" ? 120 : 100,
+    "❤️ HEARTS LEFT",
+    `${options.heartsRemaining} / 3`,
+    "Resilience"
+  );
+  drawMetricCard(
+    ctx,
+    cardX + 38 + colWidth,
+    statsY,
+    colWidth,
+    options.format === "story" ? 120 : 100,
+    "💡 FINTECH IQ",
+    `${options.quizCorrect} Correct`,
+    "Domain Mastery"
+  );
+  drawMetricCard(
+    ctx,
+    cardX + 48 + colWidth * 2,
+    statsY,
+    colWidth,
+    options.format === "story" ? 120 : 100,
+    "🛡️ SHIELDS & TREASURE",
+    `${options.treasuresCollected} Claimed`,
+    "Risk Safeguard"
+  );
   ctx.restore();
 
-  // 5. Campaign Call To Action & QR Section
-  const qrSectionY = cardY + cardHeight + 40;
-
-  // QR Code Box (white rounded card)
-  const qrBoxSize = 250;
+  // 4. Scannable QR Code & Challenge Section
+  const qrBoxY = cardY + cardHeight + (options.format === "story" ? 45 : 30);
+  const qrBoxSize = options.format === "story" ? 270 : 230;
   const qrBoxX = width / 2 - qrBoxSize / 2;
+
+  // QR Code Frame with Gold Rim
   ctx.save();
-  drawRoundedRect(ctx, qrBoxX, qrSectionY, qrBoxSize, qrBoxSize, 24);
+  drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 24);
   ctx.fillStyle = "#FFFFFF";
-  ctx.shadowColor = "rgba(0, 0, 0, 0.25)";
-  ctx.shadowBlur = 20;
+  ctx.shadowColor = "rgba(254, 192, 31, 0.35)";
+  ctx.shadowBlur = 25;
+  ctx.shadowOffsetY = 6;
   ctx.fill();
-  ctx.drawImage(qrImage, qrBoxX + 15, qrSectionY + 15, 220, 220);
+  ctx.strokeStyle = "#FEC01F";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Draw QR Image
+  const qrPadding = options.format === "story" ? 18 : 14;
+  ctx.drawImage(
+    qrImage,
+    qrBoxX + qrPadding,
+    qrBoxY + qrPadding,
+    qrBoxSize - qrPadding * 2,
+    qrBoxSize - qrPadding * 2
+  );
   ctx.restore();
 
-  // Campaign Message
+  // Call-to-action text
   ctx.save();
   ctx.textAlign = "center";
   ctx.fillStyle = "#FEC01F";
-  ctx.font = "900 28px system-ui, -apple-system, sans-serif";
-  ctx.fillText("SCAN TO BEAT MY SCORE", width / 2, qrSectionY + qrBoxSize + 48);
+  ctx.font = "900 26px system-ui, -apple-system, sans-serif";
+  ctx.letterSpacing = "1px";
+  ctx.fillText("SCAN TO BEAT THIS SCORE", width / 2, qrBoxY + qrBoxSize + 42);
 
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "700 22px system-ui, -apple-system, sans-serif";
-  ctx.fillText("PLAY THE GAME · CLIMB THE LEADERBOARD · CHALLENGE FRIENDS", width / 2, qrSectionY + qrBoxSize + 85);
+  ctx.font = "600 18px system-ui, -apple-system, sans-serif";
+  ctx.fillText(
+    "Race against autonomous AI · Climb the Festival Hall of Fame",
+    width / 2,
+    qrBoxY + qrBoxSize + 72
+  );
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-  ctx.font = "500 20px system-ui, -apple-system, sans-serif";
-  ctx.fillText(`Join us at the Sri Lanka FinTech Festival 2026 — ${options.festivalDates}`, width / 2, qrSectionY + qrBoxSize + 120);
-
-  ctx.fillStyle = "#FEC01F";
-  ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
-  ctx.fillText("See you at the Festival!", width / 2, qrSectionY + qrBoxSize + 155);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+  ctx.font = "500 16px system-ui, -apple-system, sans-serif";
+  ctx.fillText(
+    "Sri Lanka FinTech Festival 2026  ·  fintechfestival.lk  ·  #SLFinTechFest2026",
+    width / 2,
+    qrBoxY + qrBoxSize + 102
+  );
   ctx.restore();
 
   return new Promise((resolve, reject) => {
@@ -220,29 +368,37 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
-function drawStatBox(
+function drawMetricCard(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   w: number,
   h: number,
-  label: string,
-  val: string
+  title: string,
+  value: string,
+  subtitle: string
 ) {
-  drawRoundedRect(ctx, x, y, w, h, 16);
-  ctx.fillStyle = "#F7FAFC";
+  ctx.save();
+  drawRoundedRect(ctx, x, y, w, h, 18);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
   ctx.fill();
-  ctx.strokeStyle = "#E2E8F0";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  ctx.fillStyle = "#718096";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#FEC01F";
   ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
-  ctx.fillText(label, x + w / 2, y + 32);
+  ctx.fillText(title, x + w / 2, y + 28);
 
-  ctx.fillStyle = "#1A202C";
-  ctx.font = "bold 22px system-ui, -apple-system, sans-serif";
-  ctx.fillText(val, x + w / 2, y + 66);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "900 24px system-ui, -apple-system, sans-serif";
+  ctx.fillText(value, x + w / 2, y + 60);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.font = "500 11px system-ui, -apple-system, sans-serif";
+  ctx.fillText(subtitle, x + w / 2, y + 80);
+  ctx.restore();
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

@@ -16,7 +16,9 @@ import {
   Shield,
   Image as ImageIcon,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
+import VictoryConfetti from "@/components/game/VictoryConfetti";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
@@ -125,17 +127,46 @@ function ResultContent() {
     load();
   }, [router, searchParams, supabase.auth]);
 
-  const handleGenerateLink = async () => {
+  const getOrGenerateShareUrl = async (): Promise<string> => {
+    if (shareUrl) return shareUrl;
     setGeneratingLink(true);
     try {
       const res = await fetch("/api/share/link", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setShareUrl(data.url);
+        return data.url;
       }
     } finally {
       setGeneratingLink(false);
     }
+    return typeof window !== "undefined" ? window.location.origin : "https://fintechfestival.lk";
+  };
+
+  const handleGenerateLink = async () => {
+    await getOrGenerateShareUrl();
+  };
+
+  const handleShareWhatsApp = async () => {
+    const target = await getOrGenerateShareUrl();
+    const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
+    const text = `🎲 I scored ${scoreText} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n\nChallenge me here: ${target}\n\n#SLFinTechFest2026`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleShareLinkedIn = async () => {
+    const target = await getOrGenerateShareUrl();
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(target)}`, "_blank");
+  };
+
+  const handleShareTwitter = async () => {
+    const target = await getOrGenerateShareUrl();
+    const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
+    const text = `I just scored ${scoreText} pts in LANKA FINTECHVERSE! Race against autonomous AI at the Sri Lanka FinTech Festival 2026. Can you beat me? 🎲`;
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(target)}&hashtags=SLFinTechFest2026,FinTechSriLanka`,
+      "_blank"
+    );
   };
 
   const handleDownloadCard = async (format: "post" | "story") => {
@@ -146,14 +177,7 @@ function ResultContent() {
     try {
       let targetUrl = shareUrl;
       if (!targetUrl) {
-        const linkRes = await fetch("/api/share/link", { method: "POST" });
-        if (linkRes.ok) {
-          const linkData = await linkRes.json();
-          targetUrl = linkData.url;
-          setShareUrl(targetUrl);
-        } else {
-          targetUrl = window.location.origin;
-        }
+        targetUrl = await getOrGenerateShareUrl();
       }
 
       const blob = await generateResultCardBlob({
@@ -186,17 +210,17 @@ function ResultContent() {
   };
 
   const handleCopyLink = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
+    const target = await getOrGenerateShareUrl();
+    await navigator.clipboard.writeText(target);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleNativeShare = async () => {
-    if (!shareUrl) return;
+    const target = await getOrGenerateShareUrl();
     const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE! Can you beat me? 🎲\n\nSri Lanka FinTech Festival 2026`;
     try {
-      await navigator.share({ title: "LANKA FINTECHVERSE", text, url: shareUrl });
+      await navigator.share({ title: "LANKA FINTECHVERSE", text, url: target });
     } catch {
       handleCopyLink();
     }
@@ -238,6 +262,7 @@ function ResultContent() {
 
   return (
     <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+      {isWin && <VictoryConfetti />}
       <FestivalHeader user={user} activePath="/game/result" />
 
       <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full space-y-6">
@@ -426,21 +451,54 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* Challenge Friends */}
+        {/* Challenge Friends & 1-Click Social Sharing */}
         <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
-          <h3 className="font-heading font-bold text-base text-white mb-3 flex items-center gap-2">
-            <Share2 size={18} className="text-[#fec01f]" />
-            Challenge Attendees &amp; Colleagues
-          </h3>
-          <p className="text-sm text-white/70 mb-4">
-            Invite your network to match or surpass your score in the FinTechverse.
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-heading font-bold text-base text-white flex items-center gap-2">
+              <Share2 size={18} className="text-[#fec01f]" />
+              Challenge Attendees &amp; Colleagues
+            </h3>
+            <span className="text-[10px] font-mono text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded-full">
+              #SLFinTechFest2026
+            </span>
+          </div>
+          <p className="text-sm text-white/70 mb-5 leading-relaxed">
+            Invite your colleagues from banking, fintech, and tech sectors to beat your score in the official FinTechverse arena.
           </p>
+
+          {/* Instant 1-Click Viral Channels */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
+            <button
+              onClick={handleShareWhatsApp}
+              disabled={generatingLink}
+              className="py-3 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <span className="text-base">💬</span>
+              <span>Share to WhatsApp</span>
+            </button>
+            <button
+              onClick={handleShareLinkedIn}
+              disabled={generatingLink}
+              className="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/50 text-sky-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <span className="text-base">💼</span>
+              <span>Post to LinkedIn</span>
+            </button>
+            <button
+              onClick={handleShareTwitter}
+              disabled={generatingLink}
+              className="py-3 px-3 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-slate-500/50 text-slate-200 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <span className="text-base">🐦</span>
+              <span>Share on X</span>
+            </button>
+          </div>
 
           {!shareUrl ? (
             <button
               onClick={handleGenerateLink}
               disabled={generatingLink}
-              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60"
+              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer"
             >
               {generatingLink ? "Generating Link…" : "🔗 Create Custom Challenge Link"}
             </button>
@@ -450,11 +508,11 @@ function ResultContent() {
                 <input
                   readOnly
                   value={shareUrl}
-                  className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/15 text-xs text-white/90 font-mono"
+                  className="flex-1 px-3 py-2.5 rounded-xl bg-white/5 border border-white/15 text-xs text-white/90 font-mono focus:outline-none"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-4 py-2.5 rounded-xl interactive-btn interactive-btn--primary text-xs font-bold uppercase tracking-wider"
+                  className="px-4 py-2.5 rounded-xl interactive-btn interactive-btn--primary text-xs font-bold uppercase tracking-wider cursor-pointer"
                 >
                   {copied ? <Check size={14} /> : <Copy size={14} />}
                   <span>{copied ? "Copied" : "Copy"}</span>
@@ -464,7 +522,7 @@ function ResultContent() {
               {"share" in navigator && (
                 <button
                   onClick={handleNativeShare}
-                  className="w-full py-2.5 rounded-xl border border-white/20 bg-white/5 text-xs font-mono uppercase tracking-wider text-white hover:border-[#fec01f] transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl border border-white/20 bg-white/5 text-xs font-mono uppercase tracking-wider text-white hover:border-[#fec01f] transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Share2 size={14} />
                   <span>Share Via Device Menu…</span>

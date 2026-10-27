@@ -147,9 +147,10 @@ export default function ChallengePage() {
               <span>💰 {cardData?.treasuresCollected} treasure</span>
             </div>
 
-            <p className="font-mono text-[10px] text-white/40 tracking-wider uppercase">
-              {cardData?.festivalDates} · Sri Lanka FinTech Festival 2026
-            </p>
+            <div className="border-t border-white/10 pt-3 text-[10px] font-mono text-white/50 space-y-1">
+              <p className="text-[#fec01f] font-bold">FinTech Forum Sri Lanka  ×  Ministry of Digital Economy</p>
+              <p>Shangri-La Colombo, Sri Lanka  ·  2–3 November 2026</p>
+            </div>
           </div>
 
           {/* CTA Box */}
@@ -164,7 +165,7 @@ export default function ChallengePage() {
             {user ? (
               <Link
                 href="/game"
-                className="interactive-btn interactive-btn--primary w-full py-3.5 text-sm font-bold shadow-[0_0_20px_rgba(254,192,31,0.3)]"
+                className="interactive-btn interactive-btn--primary w-full py-3.5 text-sm font-bold shadow-[0_0_20px_rgba(254,192,31,0.3)] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Play size={16} className="fill-current" />
                 <span>Play Your Game</span>
@@ -173,7 +174,7 @@ export default function ChallengePage() {
               <button
                 onClick={handleSignIn}
                 disabled={signingIn}
-                className="interactive-btn interactive-btn--primary w-full py-3.5 text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60"
+                className="interactive-btn interactive-btn--primary w-full py-3.5 text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer flex items-center justify-center"
               >
                 <svg className="w-4 h-4 mr-1 shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -185,13 +186,22 @@ export default function ChallengePage() {
               </button>
             )}
 
-            <div className="mt-4 pt-3 border-t border-white/5">
+            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
               <Link
                 href="/leaderboard"
                 className="font-mono text-xs text-[#fec01f] hover:underline uppercase tracking-wider"
               >
-                View Live Festival Leaderboard →
+                Leaderboard →
               </Link>
+              <button
+                onClick={() => {
+                  const text = `🎲 Challenge: Can you beat ${cardData?.displayName || "my"}'s score of ${cardData?.finalScore?.toLocaleString()} in LANKA FINTECHVERSE? Check it out: ${window.location.href}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+                }}
+                className="font-mono text-xs text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <span>💬 Forward via WhatsApp</span>
+              </button>
             </div>
           </div>
         </div>

@@ -128,11 +128,20 @@ export default function HomePage() {
 
           <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center">
             {/* Festival Badge */}
-            <div className="inline-flex items-center gap-2 mb-6">
+            <div className="inline-flex items-center gap-2 mb-3">
               <span className="section-badge section-badge-primary">
                 <Sparkles size={14} className="text-[#fec01f] animate-pulse" />
-                SRI LANKA FINTECH FESTIVAL 2026 · OFFICIAL GAME
+                SRI LANKA FINTECH FESTIVAL 2026 · OFFICIAL DIGITAL GAME
               </span>
+            </div>
+
+            {/* Presenters & Venue */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-xs text-white/70 mb-6">
+              <span className="text-[#fec01f] font-bold">FinTech Forum Sri Lanka × Ministry of Digital Economy</span>
+              <span className="hidden sm:inline text-white/30">·</span>
+              <span>Shangri-La Colombo</span>
+              <span className="hidden sm:inline text-white/30">·</span>
+              <span className="text-teal-300 font-semibold">2–3 November 2026</span>
             </div>
 
             {/* Hero Main Heading */}

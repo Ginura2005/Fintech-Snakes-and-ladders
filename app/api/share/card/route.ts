@@ -14,13 +14,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
 
+    const hasServiceKey = Boolean(
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    );
     const serviceClient = createServiceClient();
+    const supabase = await createClient();
+    const db = hasServiceKey ? serviceClient : supabase;
 
     let runId: string | null = null;
 
     if (token) {
       // Challenge link
-      const { data: link } = await serviceClient
+      const { data: link } = await db
         .from("challenge_links")
         .select("run_id")
         .eq("token", token)
@@ -33,7 +40,6 @@ export async function GET(request: NextRequest) {
       runId = link.run_id;
     } else {
       // Authenticated user's own card
-      const supabase = await createClient();
       const {
         data: { user },
         error: authError,
@@ -43,7 +49,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
 
-      const { data: run } = await serviceClient
+      const { data: run } = await db
         .from("game_runs")
         .select("id")
         .eq("player_id", user.id)
@@ -56,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch run + profile
-    const { data: run } = await serviceClient
+    const { data: run } = await db
       .from("game_runs")
       .select(
         `id, status, player_score, player_won, player_quiz_correct, player_hearts,
@@ -80,14 +86,14 @@ export async function GET(request: NextRequest) {
     // Fetch leaderboard rank if opted in
     let rank: number | null = null;
     if (profile?.leaderboard_opt_in) {
-      const { data: leaderboardEntry } = await serviceClient
+      const { data: leaderboardEntry } = await db
         .from("leaderboard_entries")
         .select("id")
         .eq("run_id", runId)
         .maybeSingle();
 
       if (leaderboardEntry) {
-        const { count } = await serviceClient
+        const { count } = await db
           .from("leaderboard_entries")
           .select("id", { count: "exact" })
           .gt("final_score", run.player_score);

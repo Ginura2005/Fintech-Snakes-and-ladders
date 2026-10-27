@@ -20,10 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const serviceClient = createServiceClient();
+    const hasServiceKey = Boolean(
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    );
+    const db = hasServiceKey ? createServiceClient() : supabase;
 
     // Fetch the player's run
-    const { data: run, error: runError } = await serviceClient
+    const { data: run, error: runError } = await db
       .from("game_runs")
       .select("id, status, player_score, player_won, player_quiz_correct")
       .eq("player_id", user.id)
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if a challenge link already exists
-    const { data: existing } = await serviceClient
+    const { data: existing } = await db
       .from("challenge_links")
       .select("token")
       .eq("run_id", run.id)
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Generate a new token
     const token = generateToken();
-    const { error: insertError } = await serviceClient
+    const { error: insertError } = await db
       .from("challenge_links")
       .insert({
         token,

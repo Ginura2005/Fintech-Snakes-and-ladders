@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle } from "lucide-react";
+import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 
@@ -23,13 +23,16 @@ export default function LeaderboardPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+  const [userRank, setUserRank] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 20;
+  const [searchQuery, setSearchQuery] = useState("");
+  const myRowRef = useRef<HTMLTableRowElement | null>(null);
+  const PAGE_SIZE = 30;
 
   useEffect(() => {
     const load = async () => {
-      // Get current user's display name
+      // Get current user's profile
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -46,13 +49,30 @@ export default function LeaderboardPage() {
       const res = await fetch(`/api/leaderboard?limit=${PAGE_SIZE}&offset=0`);
       if (res.ok) {
         const data = await res.json();
-        setEntries(data.entries || []);
+        const loadedEntries: LeaderboardEntry[] = data.entries || [];
+        setEntries(loadedEntries);
         setTotal(data.total || 0);
       }
       setLoading(false);
     };
     load();
   }, [supabase.auth]);
+
+  // Find user rank if present in entries
+  useEffect(() => {
+    if (currentUserName && entries.length > 0) {
+      const match = entries.find((e) => e.displayName === currentUserName);
+      if (match) {
+        setUserRank(match.rank);
+      }
+    }
+  }, [currentUserName, entries]);
+
+  const scrollToMyRank = () => {
+    if (myRowRef.current) {
+      myRowRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   const loadMore = async () => {
     const nextPage = page + 1;
@@ -71,26 +91,59 @@ export default function LeaderboardPage() {
     return `${m}m ${s}s`;
   };
 
+  const filteredEntries = entries.filter((entry) =>
+    entry.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
       <FestivalHeader user={user} activePath="/leaderboard" />
 
       <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
-        {/* Intro Banner */}
+        {/* Presenter & Collaboration Header */}
         <div className="text-center mb-10">
-          <span className="section-badge section-badge-primary mb-3">
-            <Trophy size={13} className="text-[#fec01f]" />
-            OFFICIAL FESTIVAL RANKINGS
-          </span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fec01f]/10 border border-[#fec01f]/30 mb-3 text-xs font-mono text-[#fec01f]">
+            <Award size={13} className="text-[#fec01f]" />
+            <span>FinTech Forum Sri Lanka  ×  Ministry of Digital Economy</span>
+          </div>
+
           <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight text-white mt-1">
             Festival Hall of Fame
           </h1>
-          <p className="font-mono text-xs sm:text-sm text-white/60 mt-2">
-            Sri Lanka FinTech Festival 2026 · {total} Players Registered
+
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 font-mono text-xs text-white/60 mt-3">
+            <span className="flex items-center gap-1.5">
+              <Calendar size={13} className="text-[#fec01f]" />
+              2–3 November 2026
+            </span>
+            <span>·</span>
+            <span className="flex items-center gap-1.5">
+              <MapPin size={13} className="text-teal-400" />
+              Shangri-La Colombo, Sri Lanka
+            </span>
+            <span>·</span>
+            <span className="text-[#fec01f] font-bold">
+              {total} Tournament Competitors
+            </span>
+          </div>
+
+          <p className="text-white/40 text-xs mt-2 max-w-xl mx-auto leading-relaxed">
+            Official rankings for the Lanka FinTechverse Arena. Displays opted-in festival attendees.
+            Tie-breakers follow official tournament rules.
           </p>
-          <p className="text-white/40 text-xs mt-1">
-            Displaying opted-in players. Scores are updated automatically upon match completion.
-          </p>
+
+          {/* Quick jump to My Rank button */}
+          {userRank && (
+            <div className="mt-4">
+              <button
+                onClick={scrollToMyRank}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#fec01f]/20 via-[#f57222]/20 to-teal-900/30 border border-[#fec01f]/50 text-[#fec01f] font-mono text-xs font-bold hover:scale-105 transition-all shadow-[0_0_20px_rgba(254,192,31,0.25)] cursor-pointer"
+              >
+                <UserCheck size={14} />
+                <span>You are currently Rank #{userRank} — Click to Jump</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -113,11 +166,11 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <>
-            {/* Top 3 Podium */}
+            {/* Top 3 Podium Cards */}
             {entries.length >= 3 && (
-              <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto mb-12 items-end pt-8">
+              <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto mb-10 items-end pt-8">
                 {/* 2nd Place */}
-                <div className="festival-card p-3 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
+                <div className="festival-card p-3.5 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(203,213,225,0.3)]">
                     <span className="text-xl sm:text-2xl font-bold text-slate-200">🥈</span>
                   </div>
@@ -128,7 +181,7 @@ export default function LeaderboardPage() {
                     {entries[1]?.displayName}
                   </p>
                   <p className="font-mono font-bold text-sm sm:text-base text-slate-200 mt-1">
-                    {entries[1]?.finalScore.toLocaleString()}
+                    {entries[1]?.finalScore.toLocaleString()} pts
                   </p>
                 </div>
 
@@ -139,18 +192,18 @@ export default function LeaderboardPage() {
                     <Trophy size={28} className="fill-black" />
                   </div>
                   <span className="section-badge section-badge-primary text-[9px] sm:text-[10px] py-0.5 px-2">
-                    CHAMPION
+                    FESTIVAL CHAMPION
                   </span>
                   <p className="font-heading font-extrabold text-sm sm:text-base text-white truncate max-w-full mt-2">
                     {entries[0]?.displayName}
                   </p>
                   <p className="font-mono font-black text-lg sm:text-xl text-[#fec01f] mt-1">
-                    {entries[0]?.finalScore.toLocaleString()}
+                    {entries[0]?.finalScore.toLocaleString()} pts
                   </p>
                 </div>
 
                 {/* 3rd Place */}
-                <div className="festival-card p-3 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
+                <div className="festival-card p-3.5 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950 border-2 border-amber-500 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                     <span className="text-xl sm:text-2xl font-bold text-amber-400">🥉</span>
                   </div>
@@ -161,14 +214,31 @@ export default function LeaderboardPage() {
                     {entries[2]?.displayName}
                   </p>
                   <p className="font-mono font-bold text-sm sm:text-base text-amber-300 mt-1">
-                    {entries[2]?.finalScore.toLocaleString()}
+                    {entries[2]?.finalScore.toLocaleString()} pts
                   </p>
                 </div>
               </div>
             )}
 
+            {/* Search Filter Bar */}
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-sm">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                <input
+                  type="text"
+                  placeholder="Filter by player handle…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-white/40 font-mono focus:border-[#fec01f] focus:outline-none transition-colors"
+                />
+              </div>
+              <span className="text-xs font-mono text-white/50 hidden sm:inline">
+                Showing {filteredEntries.length} of {total}
+              </span>
+            </div>
+
             {/* Standings Table */}
-            <div className="festival-card overflow-hidden border-white/15 bg-[#090924]/85">
+            <div className="festival-card overflow-hidden border-white/15 bg-[#090924]/85 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -181,13 +251,16 @@ export default function LeaderboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 font-mono">
-                    {entries.map((entry) => {
+                    {filteredEntries.map((entry) => {
                       const isCurrentUser = currentUserName && entry.displayName === currentUserName;
                       return (
                         <tr
                           key={entry.rank}
+                          ref={isCurrentUser ? myRowRef : undefined}
                           className={`transition-colors hover:bg-white/[0.04] ${
-                            isCurrentUser ? "bg-[#fec01f]/10" : ""
+                            isCurrentUser
+                              ? "bg-[#fec01f]/15 ring-1 ring-[#fec01f]/40 font-semibold"
+                              : ""
                           }`}
                         >
                           <td className="py-4 px-5">
@@ -196,9 +269,9 @@ export default function LeaderboardPage() {
                                 entry.rank === 1
                                   ? "bg-[#fec01f] text-black shadow-[0_0_12px_rgba(254,192,31,0.6)]"
                                   : entry.rank === 2
-                                  ? "bg-slate-300 text-black"
+                                  ? "bg-slate-300 text-black shadow-[0_0_10px_rgba(203,213,225,0.4)]"
                                   : entry.rank === 3
-                                  ? "bg-amber-600 text-white"
+                                  ? "bg-amber-600 text-white shadow-[0_0_10px_rgba(245,158,11,0.4)]"
                                   : "bg-white/10 text-white/70"
                               }`}
                             >
@@ -209,7 +282,7 @@ export default function LeaderboardPage() {
                             <div className="flex items-center gap-2">
                               <span className="font-bold">{entry.displayName}</span>
                               {isCurrentUser && (
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#fec01f]/20 border border-[#fec01f]/40 text-[#fec01f]">
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#fec01f]/25 border border-[#fec01f]/50 text-[#fec01f] font-bold">
                                   YOU
                                 </span>
                               )}
@@ -242,7 +315,7 @@ export default function LeaderboardPage() {
               <div className="text-center mt-6">
                 <button
                   onClick={loadMore}
-                  className="interactive-btn interactive-btn--outline text-xs uppercase tracking-wider py-3 px-6"
+                  className="interactive-btn interactive-btn--outline text-xs uppercase tracking-wider py-3 px-6 cursor-pointer"
                 >
                   Load More Ranks
                 </button>
@@ -251,7 +324,7 @@ export default function LeaderboardPage() {
           </>
         )}
 
-        {/* Tie-Break Rules Card */}
+        {/* Tie-Break Rules Card (Official Festival Standard) */}
         <div className="mt-10 p-5 festival-card border-white/10 bg-[#0a0a28]/80 text-xs font-mono text-white/60 space-y-2">
           <p className="font-bold text-white/80 uppercase tracking-wider text-[11px] mb-2 border-b border-white/5 pb-1">
             Official Tie-Breaker Precedence
@@ -269,9 +342,10 @@ export default function LeaderboardPage() {
         <div className="mt-8 text-center">
           <Link
             href="/game"
-            className="interactive-btn interactive-btn--primary text-sm font-bold py-3.5 px-8 shadow-[0_0_20px_rgba(254,192,31,0.3)]"
+            className="interactive-btn interactive-btn--primary text-sm font-bold py-3.5 px-8 shadow-[0_0_20px_rgba(254,192,31,0.3)] inline-flex items-center gap-2"
           >
-            Play The Festival Game
+            <span>Play The Festival Game</span>
+            <span>→</span>
           </Link>
         </div>
       </main>

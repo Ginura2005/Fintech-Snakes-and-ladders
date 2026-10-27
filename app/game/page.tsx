@@ -150,6 +150,14 @@ function GameContent() {
     }, durationMs);
   };
 
+  const triggerHaptic = (pattern: number | number[]) => {
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch {}
+    }
+  };
+
   const getRandomAvaThinkingLine = () => {
     const lines = [
       "My turn! Let's see what I get...",
@@ -405,6 +413,7 @@ function GameContent() {
         type: "ladder",
       });
       sounds.playLadderClimb();
+      if (actor === "player") triggerHaptic([30, 40, 60]);
 
       if (actor === "player") {
         triggerPlayerMood("celebrating", 2600);
@@ -435,6 +444,7 @@ function GameContent() {
       const shieldConsumed = eventsList.some((e) => e.type === "shield_consumed");
       if (shieldConsumed) {
         sounds.playShieldDeflect();
+        if (actor === "player") triggerHaptic([30, 30, 30]);
         setFloatingMessage({ text: "🛡️ Cyber Shield Absorbed Incident!", type: "snake" });
         if (actor === "player") {
           triggerPlayerMood("happy", 2400);
@@ -446,6 +456,7 @@ function GameContent() {
         }
       } else {
         sounds.playHeartLost();
+        if (actor === "player") triggerHaptic([80, 50, 90]);
         setFloatingMessage({
           text: isMajor ? "🐍⚠️ Major Risk Snake: -25 pts & ❤️ lost!" : "🐍 Snake Hazard: -10 pts & ❤️ lost!",
           type: "snake",
@@ -509,6 +520,7 @@ function GameContent() {
     setRolling(true);
     setError(null);
     sounds.playDiceRoll();
+    triggerHaptic(25);
 
     // Auto-dismiss practice banner on roll
     if (showPracticeBanner) {
@@ -717,6 +729,7 @@ function GameContent() {
     setLastRoll(null);
     setComputerRoll(null);
     sounds.playDiceRoll();
+    triggerHaptic(25);
 
     setDiceOverlay({
       show: true,
@@ -888,6 +901,7 @@ function GameContent() {
 
       if (isCorrect) {
         sounds.playQuizCorrect();
+        triggerHaptic([40, 40, 80]);
         triggerPlayerMood("celebrating", 2600);
         triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
         localStateRef.current.playerScore += activeBoardConfig.scoring.quizCorrect;
@@ -898,6 +912,7 @@ function GameContent() {
         ]);
       } else {
         sounds.playQuizWrong();
+        triggerHaptic(60);
         triggerPlayerMood("worried", 2600);
         triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
         setEvents((prev) => [`❌ Incorrect. ${q?.explanation || ""}`, ...prev]);
@@ -986,6 +1001,7 @@ function GameContent() {
       if (res.ok) {
         if (data.isCorrect) {
           sounds.playQuizCorrect();
+          triggerHaptic([40, 40, 80]);
           triggerPlayerMood("celebrating", 2600);
           triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
           setEvents((prev) => [
@@ -994,6 +1010,7 @@ function GameContent() {
           ]);
         } else {
           sounds.playQuizWrong();
+          triggerHaptic(60);
           triggerPlayerMood("worried", 2600);
           triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
           setEvents((prev) => [`❌ Incorrect. ${data.explanation}`, ...prev]);

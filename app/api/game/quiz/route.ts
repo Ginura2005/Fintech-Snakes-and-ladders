@@ -35,10 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
     }
 
-    const serviceClient = createServiceClient();
+    const hasServiceKey = Boolean(
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    );
+    const db = hasServiceKey ? createServiceClient() : supabase;
 
     // Fetch run
-    const { data: run, error: runError } = await serviceClient
+    const { data: run, error: runError } = await db
       .from("game_runs")
       .select("*")
       .eq("player_id", user.id)
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Idempotency: check if already answered this square
-    const { data: existing } = await serviceClient
+    const { data: existing } = await db
       .from("quiz_attempts")
       .select("*")
       .eq("run_id", run.id)
@@ -98,7 +103,7 @@ export async function POST(request: NextRequest) {
     const newQuizCorrect = (run.player_quiz_correct || 0) + (isCorrect ? 1 : 0);
 
     // Record quiz attempt (unique per run+square)
-    const { error: attemptError } = await serviceClient
+    const { error: attemptError } = await db
       .from("quiz_attempts")
       .insert({
         run_id: run.id,
@@ -110,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     if (attemptError?.code === "23505") {
       // Race condition: already recorded
-      const { data: raceExisting } = await serviceClient
+      const { data: raceExisting } = await db
         .from("quiz_attempts")
         .select("*")
         .eq("run_id", run.id)
@@ -124,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     // Update score if correct
     if (isCorrect) {
-      await serviceClient
+      await db
         .from("game_runs")
         .update({
           player_score: newScore,
@@ -133,7 +138,7 @@ export async function POST(request: NextRequest) {
         .eq("id", run.id);
 
       // Record in ledger
-      await serviceClient.from("score_ledger").insert({
+      await db.from("score_ledger").insert({
         run_id: run.id,
         turn_sequence: run.turn_sequence,
         actor: "player",
