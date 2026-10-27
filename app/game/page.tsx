@@ -8,6 +8,8 @@ import GameBoard from "@/components/game/Board";
 import QuizOverlay from "@/components/game/QuizOverlay";
 import TreasureOverlay from "@/components/game/TreasureOverlay";
 import DicePanel from "@/components/game/DicePanel";
+import Cinematic3DDiceOverlay from "@/components/game/Cinematic3DDiceOverlay";
+import { ThrowPhysics } from "@/components/game/Cube3D";
 import CompactScoreHeader from "@/components/game/CompactScoreHeader";
 import { AvatarMood } from "@/components/game/GameAvatar";
 import EventLog from "@/components/game/EventLog";
@@ -101,7 +103,22 @@ function GameContent() {
   const [movingPawn, setMovingPawn] = useState<"player" | "computer" | null>(null);
   const [activeLadder, setActiveLadder] = useState<number | null>(null);
   const [activeSnake, setActiveSnake] = useState<number | null>(null);
-    const [floatingMessage, setFloatingMessage] = useState<{
+    // 3D Cinematic Matte Blur Dice Overlay State
+  const [diceOverlay, setDiceOverlay] = useState<{
+    show: boolean;
+    actor: "player" | "computer";
+    rollValue: number | null;
+    isRolling: boolean;
+    physics?: ThrowPhysics;
+    isOvershoot?: boolean;
+  }>({
+    show: false,
+    actor: "player",
+    rollValue: null,
+    isRolling: false,
+  });
+
+  const [floatingMessage, setFloatingMessage] = useState<{
     text: string;
     type: "ladder" | "snake" | "treasure" | "quiz" | "finish";
   } | null>(null);
@@ -327,7 +344,7 @@ function GameContent() {
         setComputerDisplayPos(pos);
       }
       sounds.playPawnStep();
-      await sleep(185);
+      await sleep(135);
     }
 
     // 3. Check for ladder ascent
@@ -436,20 +453,42 @@ function GameContent() {
   /**
    * Execute Turn (Practice Mode using pure engine)
    */
-  const handlePracticeRoll = async () => {
+  const handlePracticeRoll = async (physics?: ThrowPhysics) => {
     if (!localStateRef.current || rolling || animating || quizQuestion) return;
     const currentState = localStateRef.current;
     if (currentState.currentTurn !== "player" || checkTerminal(currentState)) return;
 
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -25, dur: 0.3 };
     setRolling(true);
     setError(null);
     sounds.playDiceRoll();
 
-    // 1. Roll Player Die
-    await sleep(300);
+    // 1. Roll Player 3D Die with Cinematic Matte Blur Overlay
+    setDiceOverlay({
+      show: true,
+      actor: "player",
+      rollValue: null,
+      isRolling: true,
+      physics: activePhysics,
+    });
+
+    await sleep(320);
     const pDice = rollDice();
+    const isOvershot = currentState.playerPosition + pDice > 25;
+
     setLastRoll(pDice);
     setRolling(false);
+    setDiceOverlay({
+      show: true,
+      actor: "player",
+      rollValue: pDice,
+      isRolling: false,
+      physics: activePhysics,
+      isOvershoot: isOvershot,
+    });
+
+    await sleep(340);
+    setDiceOverlay((prev) => ({ ...prev, show: false }));
     setAnimating(true);
 
     const fromPos = currentState.playerPosition;
@@ -527,16 +566,44 @@ function GameContent() {
 
     // 2. Autonomous Computer Opponent Turn
     if (stateAfterPlayer.currentTurn === "computer") {
-      await sleep(200);
-      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1800);
       await sleep(150);
+      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1600);
+      await sleep(100);
+
+      const avaPhysics: ThrowPhysics = {
+        speed: 1.1,
+        tilt: (Math.random() - 0.5) * 26,
+        arc: -25,
+        dur: 0.28,
+      };
+
       setComputerRolling(true);
       sounds.playDiceRoll();
+      setDiceOverlay({
+        show: true,
+        actor: "computer",
+        rollValue: null,
+        isRolling: true,
+        physics: avaPhysics,
+      });
 
-      await sleep(280);
+      await sleep(300);
       const cDice = rollDice();
+      const compOvershot = stateAfterPlayer.computerPosition + cDice > 25;
       setComputerRoll(cDice);
       setComputerRolling(false);
+
+      setDiceOverlay({
+        show: true,
+        actor: "computer",
+        rollValue: cDice,
+        isRolling: false,
+        physics: avaPhysics,
+        isOvershoot: compOvershot,
+      });
+
+      await sleep(320);
+      setDiceOverlay((prev) => ({ ...prev, show: false }));
 
       const cFrom = stateAfterPlayer.computerPosition;
       const cResult = processTurn(stateAfterPlayer, cDice);
@@ -584,16 +651,27 @@ function GameContent() {
   /**
    * Execute Turn (Ranked Mode via Server API)
    */
-  const handleRankedRoll = useCallback(async () => {
+  const handleRankedRoll = useCallback(async (physics?: ThrowPhysics) => {
     if (!run || rolling || animating || quizQuestion) return;
     if (run.current_turn !== "player") return;
     if (isTerminal(run.status)) return;
 
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -25, dur: 0.3 };
     setRolling(true);
     setError(null);
     setLastRoll(null);
     setComputerRoll(null);
     sounds.playDiceRoll();
+
+    setDiceOverlay({
+      show: true,
+      actor: "player",
+      rollValue: null,
+      isRolling: true,
+      physics: activePhysics,
+    });
+
+    const startTime = Date.now();
 
     try {
       const res = await fetch("/api/game/roll", {
@@ -606,11 +684,31 @@ function GameContent() {
       if (!res.ok) {
         setError((data as any).error || "Roll failed");
         setRolling(false);
+        setDiceOverlay((prev) => ({ ...prev, show: false }));
         return;
       }
 
-      setLastRoll(data.playerRoll);
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 300) {
+        await sleep(300 - elapsed);
+      }
+
+      const pRoll = data.playerRoll ?? 1;
+      const isOvershot = (data.playerFrom ?? run.player_position) + pRoll > 25;
+
+      setLastRoll(pRoll);
       setRolling(false);
+      setDiceOverlay({
+        show: true,
+        actor: "player",
+        rollValue: pRoll,
+        isRolling: false,
+        physics: activePhysics,
+        isOvershoot: isOvershot,
+      });
+
+      await sleep(340);
+      setDiceOverlay((prev) => ({ ...prev, show: false }));
       setAnimating(true);
 
       // Animate player pawn movement
@@ -651,15 +749,43 @@ function GameContent() {
 
       // Now sequentially animate Computer Turn if returned
       if (data.computerRoll !== null) {
-        await sleep(200);
-        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1800);
         await sleep(150);
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1600);
+        await sleep(100);
+
+        const avaPhysics: ThrowPhysics = {
+          speed: 1.1,
+          tilt: (Math.random() - 0.5) * 26,
+          arc: -25,
+          dur: 0.28,
+        };
+
         setComputerRolling(true);
         sounds.playDiceRoll();
+        setDiceOverlay({
+          show: true,
+          actor: "computer",
+          rollValue: null,
+          isRolling: true,
+          physics: avaPhysics,
+        });
 
-        await sleep(280);
+        await sleep(300);
+        const compOvershot = (data.computerFrom ?? run.computer_position) + data.computerRoll > 25;
         setComputerRoll(data.computerRoll);
         setComputerRolling(false);
+
+        setDiceOverlay({
+          show: true,
+          actor: "computer",
+          rollValue: data.computerRoll,
+          isRolling: false,
+          physics: avaPhysics,
+          isOvershoot: compOvershot,
+        });
+
+        await sleep(320);
+        setDiceOverlay((prev) => ({ ...prev, show: false }));
 
         const compFrom = data.computerFrom ?? run.computer_position;
         const compTo = data.computerTo ?? data.run.computer_position;
@@ -685,11 +811,11 @@ function GameContent() {
     setAnimating(false);
   }, [run, rolling, animating, quizQuestion, router]);
 
-  const handleRoll = () => {
+  const handleRoll = (physics?: ThrowPhysics) => {
     if (isPracticeMode) {
-      handlePracticeRoll();
+      handlePracticeRoll(physics);
     } else {
-      handleRankedRoll();
+      handleRankedRoll(physics);
     }
   };
 
@@ -1121,6 +1247,9 @@ function GameContent() {
           onClose={() => setShowTreasure(null)}
         />
       )}
+
+      {/* Cinematic 3D Physical Dice Overlay (Full-Screen Matte Blur) */}
+      <Cinematic3DDiceOverlay {...diceOverlay} />
 
       {/* Festival Footer */}
       <FestivalFooter />
