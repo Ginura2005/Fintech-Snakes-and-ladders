@@ -34,7 +34,7 @@ export default function DicePanel({
 
   const handleButtonClick = () => {
     if (!isPlayerTurn || rolling || disabled) return;
-    onRoll({ speed: 1.0, tilt: 10, arc: -25, dur: 0.3 });
+    onRoll({ speed: 1.0, tilt: 10, arc: -24, dur: 0.52 });
   };
 
   return (

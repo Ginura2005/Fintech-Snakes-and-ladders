@@ -147,7 +147,7 @@ export default function Cube3D({
       const angles = TARGET_ANGLES[value] || TARGET_ANGLES[1];
       setRotations({ x: angles.x, y: angles.y });
       setHasLanded(true);
-      const timer = setTimeout(() => setHasLanded(false), 420);
+      const timer = setTimeout(() => setHasLanded(false), 520);
       return () => clearTimeout(timer);
     }
   }, [isRolling, value]);
@@ -260,7 +260,7 @@ export default function Cube3D({
             ? "none"
             : isDragging
             ? "transform 0.05s ease-out"
-            : "transform 0.42s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            : "transform 0.52s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
         className={`relative w-full h-full ${isRolling ? "animate-dice-tumble" : ""} ${
           hasLanded ? "scale-105" : "scale-100"

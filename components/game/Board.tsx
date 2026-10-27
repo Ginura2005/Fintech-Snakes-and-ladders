@@ -139,12 +139,12 @@ export default function GameBoard({
   // Dynamic spring physics depending on movement type
   const getPawnTransition = (isLadder: boolean, isSnake: boolean) => {
     if (isLadder) {
-      return "left 650ms cubic-bezier(0.22, 1, 0.36, 1), top 650ms cubic-bezier(0.22, 1, 0.36, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+      return "left 750ms cubic-bezier(0.22, 1, 0.36, 1), top 750ms cubic-bezier(0.22, 1, 0.36, 1), transform 260ms cubic-bezier(0.25, 1, 0.5, 1)";
     }
     if (isSnake) {
-      return "left 700ms cubic-bezier(0.45, 0, 0.55, 1), top 700ms cubic-bezier(0.45, 0, 0.55, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+      return "left 800ms cubic-bezier(0.4, 0, 0.2, 1), top 800ms cubic-bezier(0.4, 0, 0.2, 1), transform 260ms cubic-bezier(0.25, 1, 0.5, 1)";
     }
-    return "left 240ms cubic-bezier(0.34, 1.25, 0.64, 1), top 240ms cubic-bezier(0.34, 1.25, 0.64, 1), transform 240ms cubic-bezier(0.34, 1.25, 0.64, 1)";
+    return "left 260ms cubic-bezier(0.25, 1, 0.5, 1), top 260ms cubic-bezier(0.25, 1, 0.5, 1), transform 260ms cubic-bezier(0.25, 1, 0.5, 1)";
   };
 
   return (

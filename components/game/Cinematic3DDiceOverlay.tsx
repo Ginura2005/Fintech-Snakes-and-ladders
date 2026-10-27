@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Cube3D, { ThrowPhysics } from "./Cube3D";
 import { Sparkles } from "lucide-react";
 
@@ -18,20 +18,42 @@ export default function Cinematic3DDiceOverlay({
   actor,
   rollValue,
   isRolling,
-  physics = { speed: 1, tilt: 12, arc: -30, dur: 0.3 },
+  physics = { speed: 1, tilt: 10, arc: -24, dur: 0.52 },
   isOvershoot = false,
 }: Cinematic3DDiceOverlayProps) {
-  if (!show) return null;
+  const [mounted, setMounted] = useState(show);
+  const [visible, setVisible] = useState(false);
+
+  // Silky smooth mounting and unmounting fade
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (show) {
+      setMounted(true);
+      // Ensure element is in DOM before triggering opacity transition
+      const frame = requestAnimationFrame(() => {
+        setVisible(true);
+      });
+      return () => cancelAnimationFrame(frame);
+    } else {
+      setVisible(false);
+      timer = setTimeout(() => {
+        setMounted(false);
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [show]);
+
+  if (!mounted) return null;
 
   const isPlayer = actor === "player";
 
   // Derive throw flavor label from physics
-  let throwStyleLabel = "Standard Throw";
+  let throwStyleLabel = "Smooth Fair Throw";
   if (physics.speed > 1.3) {
     throwStyleLabel = "⚡ Power Throw";
   } else if (physics.speed < 0.85) {
     throwStyleLabel = "🌿 Gentle Roll";
-  } else if (Math.abs(physics.tilt) > 18) {
+  } else if (Math.abs(physics.tilt) > 16) {
     throwStyleLabel = physics.tilt > 0 ? "↗️ Right Bank Roll" : "↖️ Left Bank Roll";
   }
 
@@ -43,13 +65,26 @@ export default function Cinematic3DDiceOverlay({
         "--throw-arc": `${physics.arc}px`,
         "--throw-dur": `${physics.dur}s`,
       }}
-      className="fixed inset-0 z-50 backdrop-blur-md bg-black/70 flex flex-col items-center justify-center p-4 transition-all duration-200 pointer-events-none select-none"
+      className={`
+        fixed inset-0 z-50 flex flex-col items-center justify-center p-4 select-none pointer-events-none
+        transition-all duration-350 ease-out
+        ${
+          visible
+            ? "opacity-100 backdrop-blur-md bg-black/75"
+            : "opacity-0 backdrop-blur-none bg-black/0"
+        }
+      `}
     >
       {/* Tabletop Arena Felt Ring */}
       <div
         className={`
           relative w-72 h-72 sm:w-88 sm:h-88 rounded-full border-2 flex flex-col items-center justify-center p-6 text-center
-          transition-all duration-300
+          transition-all duration-400 ease-out
+          ${
+            visible
+              ? "scale-100 opacity-100 translate-y-0"
+              : "scale-90 opacity-0 translate-y-3"
+          }
           ${
             isPlayer
               ? "border-[#fec01f]/75 bg-gradient-to-b from-[#125252]/50 via-[#07191d]/90 to-black/95 shadow-[0_0_65px_rgba(254,192,31,0.35),inset_0_0_50px_rgba(18,82,82,0.6)]"

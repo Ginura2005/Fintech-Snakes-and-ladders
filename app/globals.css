@@ -169,14 +169,14 @@ code, kbd, pre, .font-mono, .font-caps {
   0% {
     transform: translateY(0) scale(1, 1);
   }
-  30% {
-    transform: translateY(-16px) scale(1.15, 1.15);
+  35% {
+    transform: translateY(-9px) scale(1.06, 1.06);
   }
-  70% {
-    transform: translateY(-3px) scale(1.05, 1.05);
+  75% {
+    transform: translateY(-2px) scale(1.02, 1.02);
   }
-  86% {
-    transform: translateY(2px) scale(1.12, 0.88); /* Organic ground squish */
+  88% {
+    transform: translateY(1.5px) scale(1.04, 0.96); /* Gentle organic landing */
   }
   100% {
     transform: translateY(0) scale(1, 1);
@@ -204,13 +204,13 @@ code, kbd, pre, .font-mono, .font-caps {
     transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateY(0) scale(1);
   }
   25% {
-    transform: rotateX(180deg) rotateY(90deg) rotateZ(var(--throw-tilt, 16deg)) translateY(var(--throw-arc, -20px)) scale(1.2);
+    transform: rotateX(180deg) rotateY(90deg) rotateZ(var(--throw-tilt, 12deg)) translateY(var(--throw-arc, -24px)) scale(1.06);
   }
   50% {
-    transform: rotateX(360deg) rotateY(180deg) rotateZ(calc(var(--throw-tilt, 16deg) * -1)) translateY(calc(var(--throw-arc, -20px) * 1.3)) scale(1.25);
+    transform: rotateX(360deg) rotateY(180deg) rotateZ(calc(var(--throw-tilt, 12deg) * -1)) translateY(calc(var(--throw-arc, -24px) * 1.2)) scale(1.1);
   }
   75% {
-    transform: rotateX(540deg) rotateY(270deg) rotateZ(var(--throw-tilt, 16deg)) translateY(calc(var(--throw-arc, -20px) * 0.5)) scale(1.14);
+    transform: rotateX(540deg) rotateY(270deg) rotateZ(var(--throw-tilt, 12deg)) translateY(calc(var(--throw-arc, -24px) * 0.4)) scale(1.05);
   }
   100% {
     transform: rotateX(720deg) rotateY(360deg) rotateZ(0deg) translateY(0) scale(1);
@@ -219,16 +219,13 @@ code, kbd, pre, .font-mono, .font-caps {
 
 @keyframes dice-3d-land {
   0% {
-    transform: translateY(-8px) scale(1.22) rotateZ(var(--throw-tilt, 4deg));
+    transform: translateY(-6px) scale(1.06) rotateZ(var(--throw-tilt, 3deg));
   }
-  35% {
-    transform: translateY(3px) scale(1.12, 0.88) rotateZ(0deg); /* Physical tabletop impact squish */
+  40% {
+    transform: translateY(2px) scale(1.03, 0.97) rotateZ(0deg);
   }
-  65% {
-    transform: translateY(-2px) scale(0.96, 1.04);
-  }
-  85% {
-    transform: translateY(1px) scale(1.02, 0.98);
+  70% {
+    transform: translateY(-1px) scale(0.98, 1.02);
   }
   100% {
     transform: translateY(0) scale(1);
@@ -293,11 +290,11 @@ code, kbd, pre, .font-mono, .font-caps {
 }
 
 .animate-dice-tumble {
-  animation: dice-3d-tumble var(--throw-dur, 0.3s) ease-in-out infinite;
+  animation: dice-3d-tumble var(--throw-dur, 0.52s) cubic-bezier(0.42, 0, 0.58, 1) infinite;
 }
 
 .animate-dice-settle {
-  animation: dice-3d-land 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: dice-3d-land 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-toast-pop {

@@ -344,7 +344,7 @@ function GameContent() {
         setComputerDisplayPos(pos);
       }
       sounds.playPawnStep();
-      await sleep(135);
+      await sleep(270);
     }
 
     // 3. Check for ladder ascent
@@ -367,12 +367,12 @@ function GameContent() {
         triggerComputerReaction("celebrating", "Boom! Golden ladder boost! 🚀", 2600);
       }
 
-      await sleep(350);
+      await sleep(300);
 
       if (actor === "player") setPlayerDisplayPos(ladderTo);
       else setComputerDisplayPos(ladderTo);
 
-      await sleep(750);
+      await sleep(850);
       setActiveLadder(null);
       setFloatingMessage(null);
     }
@@ -415,12 +415,12 @@ function GameContent() {
           setRun((prev) => prev ? { ...prev, computer_hearts: Math.max(0, prev.computer_hearts - 1) } : null);
         }
       }
-      await sleep(350);
+      await sleep(300);
 
       if (actor === "player") setPlayerDisplayPos(snakeTo);
       else setComputerDisplayPos(snakeTo);
 
-      await sleep(750);
+      await sleep(900);
       setActiveSnake(null);
       setFloatingMessage(null);
     }
@@ -458,7 +458,7 @@ function GameContent() {
     const currentState = localStateRef.current;
     if (currentState.currentTurn !== "player" || checkTerminal(currentState)) return;
 
-    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -25, dur: 0.3 };
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.52 };
     setRolling(true);
     setError(null);
     sounds.playDiceRoll();
@@ -472,7 +472,7 @@ function GameContent() {
       physics: activePhysics,
     });
 
-    await sleep(320);
+    await sleep(550);
     const pDice = rollDice();
     const isOvershot = currentState.playerPosition + pDice > 25;
 
@@ -487,8 +487,9 @@ function GameContent() {
       isOvershoot: isOvershot,
     });
 
-    await sleep(340);
+    await sleep(650);
     setDiceOverlay((prev) => ({ ...prev, show: false }));
+    await sleep(250);
     setAnimating(true);
 
     const fromPos = currentState.playerPosition;
@@ -566,15 +567,15 @@ function GameContent() {
 
     // 2. Autonomous Computer Opponent Turn
     if (stateAfterPlayer.currentTurn === "computer") {
-      await sleep(150);
-      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1600);
-      await sleep(100);
+      await sleep(350);
+      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2000);
+      await sleep(400);
 
       const avaPhysics: ThrowPhysics = {
-        speed: 1.1,
-        tilt: (Math.random() - 0.5) * 26,
-        arc: -25,
-        dur: 0.28,
+        speed: 1.0,
+        tilt: (Math.random() - 0.5) * 20,
+        arc: -24,
+        dur: 0.52,
       };
 
       setComputerRolling(true);
@@ -587,7 +588,7 @@ function GameContent() {
         physics: avaPhysics,
       });
 
-      await sleep(300);
+      await sleep(550);
       const cDice = rollDice();
       const compOvershot = stateAfterPlayer.computerPosition + cDice > 25;
       setComputerRoll(cDice);
@@ -602,8 +603,9 @@ function GameContent() {
         isOvershoot: compOvershot,
       });
 
-      await sleep(320);
+      await sleep(650);
       setDiceOverlay((prev) => ({ ...prev, show: false }));
+      await sleep(250);
 
       const cFrom = stateAfterPlayer.computerPosition;
       const cResult = processTurn(stateAfterPlayer, cDice);
@@ -656,7 +658,7 @@ function GameContent() {
     if (run.current_turn !== "player") return;
     if (isTerminal(run.status)) return;
 
-    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -25, dur: 0.3 };
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.52 };
     setRolling(true);
     setError(null);
     setLastRoll(null);
@@ -689,8 +691,8 @@ function GameContent() {
       }
 
       const elapsed = Date.now() - startTime;
-      if (elapsed < 300) {
-        await sleep(300 - elapsed);
+      if (elapsed < 550) {
+        await sleep(550 - elapsed);
       }
 
       const pRoll = data.playerRoll ?? 1;
@@ -707,8 +709,9 @@ function GameContent() {
         isOvershoot: isOvershot,
       });
 
-      await sleep(340);
+      await sleep(650);
       setDiceOverlay((prev) => ({ ...prev, show: false }));
+      await sleep(250);
       setAnimating(true);
 
       // Animate player pawn movement
@@ -749,15 +752,15 @@ function GameContent() {
 
       // Now sequentially animate Computer Turn if returned
       if (data.computerRoll !== null) {
-        await sleep(150);
-        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1600);
-        await sleep(100);
+        await sleep(350);
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2000);
+        await sleep(400);
 
         const avaPhysics: ThrowPhysics = {
-          speed: 1.1,
-          tilt: (Math.random() - 0.5) * 26,
-          arc: -25,
-          dur: 0.28,
+          speed: 1.0,
+          tilt: (Math.random() - 0.5) * 20,
+          arc: -24,
+          dur: 0.52,
         };
 
         setComputerRolling(true);
@@ -770,7 +773,7 @@ function GameContent() {
           physics: avaPhysics,
         });
 
-        await sleep(300);
+        await sleep(550);
         const compOvershot = (data.computerFrom ?? run.computer_position) + data.computerRoll > 25;
         setComputerRoll(data.computerRoll);
         setComputerRolling(false);
@@ -784,8 +787,9 @@ function GameContent() {
           isOvershoot: compOvershot,
         });
 
-        await sleep(320);
+        await sleep(650);
         setDiceOverlay((prev) => ({ ...prev, show: false }));
+        await sleep(250);
 
         const compFrom = data.computerFrom ?? run.computer_position;
         const compTo = data.computerTo ?? data.run.computer_position;
