@@ -2,11 +2,14 @@
 
 import { BOARD_CONFIG, getLadder, getSnake, getSpecialSquare } from "@/lib/game-engine/board-config";
 import BoardSvgOverlay from "./BoardSvgOverlay";
+import GameAvatar, { AvatarMood } from "./GameAvatar";
 
 interface BoardProps {
   playerPosition: number;
   computerPosition: number;
   playerName: string;
+  playerMood?: AvatarMood;
+  computerMood?: AvatarMood;
   animating?: boolean;
   activeLadder?: number | null;
   activeSnake?: number | null;
@@ -102,6 +105,8 @@ export default function GameBoard({
   playerPosition,
   computerPosition,
   playerName,
+  playerMood = "idle",
+  computerMood = "idle",
   animating = false,
   activeLadder = null,
   activeSnake = null,
@@ -191,43 +196,49 @@ export default function GameBoard({
                       )}
                     </div>
 
-                    {/* Bottom: Player & AI Pawn Counters */}
-                    <div className="flex items-center justify-center gap-1 min-h-[18px] sm:min-h-[24px]">
+                    {/* Bottom: Expressive Character Avatars & Hop Animation */}
+                    <div className="flex items-center justify-center gap-1 min-h-[22px] sm:min-h-[28px] relative">
+                      {/* Player Avatar Pawn */}
                       {isPlayerHere && (
                         <div
                           className={`
-                            w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-[#ffe072] to-[#fec01f] text-black font-heading font-black
-                            flex items-center justify-center text-[9px] sm:text-[10px] md:text-xs border-1.5 sm:border-2 border-white
-                            shadow-[0_2px_8px_rgba(0,0,0,0.8),0_0_10px_rgba(254,192,31,0.9)] transition-all duration-200
+                            transition-all duration-200 relative
                             ${
                               movingPawn === "player"
-                                ? "scale-125 -translate-y-2 ring-4 ring-[#fec01f]/70"
+                                ? "-translate-y-3.5 sm:-translate-y-4 scale-125 z-30 drop-shadow-[0_10px_10px_rgba(254,192,31,0.8)]"
                                 : animating
-                                ? "scale-110"
+                                ? "scale-105"
                                 : "scale-100"
                             }
                           `}
                           title={`You (Square ${square})`}
                         >
-                          P
+                          <GameAvatar type="player" size="pawn" mood={playerMood} />
+                          {/* Hop ground shadow */}
+                          {movingPawn === "player" && (
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/60 rounded-full blur-[1px] animate-pulse" />
+                          )}
                         </div>
                       )}
 
+                      {/* Ava (AI Rival) Avatar Pawn */}
                       {isComputerHere && (
                         <div
                           className={`
-                            w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-br from-[#fb7185] to-[#8d1739] text-white font-heading font-black
-                            flex items-center justify-center text-[9px] sm:text-[10px] md:text-xs border-1.5 sm:border-2 border-white
-                            shadow-[0_2px_8px_rgba(0,0,0,0.8),0_0_10px_rgba(251,113,133,0.9)] transition-all duration-200
+                            transition-all duration-200 relative
                             ${
                               movingPawn === "computer"
-                                ? "scale-125 -translate-y-2 ring-4 ring-rose-400/70"
+                                ? "-translate-y-3.5 sm:-translate-y-4 scale-125 z-30 drop-shadow-[0_10px_10px_rgba(244,63,94,0.8)]"
                                 : "scale-100"
                             }
                           `}
-                          title={`AI Opponent (Square ${square})`}
+                          title={`Ava (AI Rival · Square ${square})`}
                         >
-                          AI
+                          <GameAvatar type="computer" size="pawn" mood={computerMood} />
+                          {/* Hop ground shadow */}
+                          {movingPawn === "computer" && (
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/60 rounded-full blur-[1px] animate-pulse" />
+                          )}
                         </div>
                       )}
                     </div>

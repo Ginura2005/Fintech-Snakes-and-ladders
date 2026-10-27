@@ -9,7 +9,7 @@ import QuizOverlay from "@/components/game/QuizOverlay";
 import TreasureOverlay from "@/components/game/TreasureOverlay";
 import DicePanel from "@/components/game/DicePanel";
 import CompactScoreHeader from "@/components/game/CompactScoreHeader";
-import PlayerPanel from "@/components/game/PlayerPanel";
+import { AvatarMood } from "@/components/game/GameAvatar";
 import EventLog from "@/components/game/EventLog";
 import OnboardingModal from "@/components/game/OnboardingModal";
 import FestivalHeader from "@/components/layout/FestivalHeader";
@@ -101,10 +101,45 @@ function GameContent() {
   const [movingPawn, setMovingPawn] = useState<"player" | "computer" | null>(null);
   const [activeLadder, setActiveLadder] = useState<number | null>(null);
   const [activeSnake, setActiveSnake] = useState<number | null>(null);
-  const [floatingMessage, setFloatingMessage] = useState<{
+    const [floatingMessage, setFloatingMessage] = useState<{
     text: string;
     type: "ladder" | "snake" | "treasure" | "quiz" | "finish";
   } | null>(null);
+
+  // Expressive character avatar moods & Ava dynamic speech reactions
+  const [playerMood, setPlayerMood] = useState<AvatarMood>("idle");
+  const [computerMood, setComputerMood] = useState<AvatarMood>("idle");
+  const [computerReaction, setComputerReaction] = useState<string | null>(null);
+  const reactionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerComputerReaction = (mood: AvatarMood, speech: string, durationMs: number = 2800) => {
+    setComputerMood(mood);
+    setComputerReaction(speech);
+    if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+    reactionTimerRef.current = setTimeout(() => {
+      setComputerReaction(null);
+      setComputerMood("idle");
+    }, durationMs);
+  };
+
+  const triggerPlayerMood = (mood: AvatarMood, durationMs: number = 2500) => {
+    setPlayerMood(mood);
+    setTimeout(() => {
+      setPlayerMood("idle");
+    }, durationMs);
+  };
+
+  const getRandomAvaThinkingLine = () => {
+    const lines = [
+      "My turn! Let's see what I get...",
+      "Calculating the optimal trajectory...",
+      "Aiming for that golden ladder!",
+      "Rolling for the win!",
+      "Let's see if luck is on my side!",
+      "Focusing on the next square!",
+    ];
+    return lines[Math.floor(Math.random() * lines.length)];
+  };
 
   // Overlays
   const [events, setEvents] = useState<string[]>([]);
@@ -269,6 +304,13 @@ function GameContent() {
         text: `🎯 Overshot! Exactly ${25 - from} needed to reach finish.`,
         type: "finish",
       });
+      if (actor === "player") {
+        triggerPlayerMood("worried", 2200);
+        triggerComputerReaction("thinking", "Close one! Exactly " + (25 - from) + " needed for 25!", 2500);
+      } else {
+        triggerPlayerMood("happy", 2200);
+        triggerComputerReaction("worried", "Ah, overshot! Need an exact roll for 25!", 2500);
+      }
       await sleep(1400);
       setFloatingMessage(null);
       setMovingPawn(null);
@@ -298,6 +340,15 @@ function GameContent() {
         type: "ladder",
       });
       sounds.playLadderClimb();
+
+      if (actor === "player") {
+        triggerPlayerMood("celebrating", 2600);
+        triggerComputerReaction("worried", "Whoa, golden ladder shortcut! Great move!", 2600);
+      } else {
+        triggerPlayerMood("worried", 2600);
+        triggerComputerReaction("celebrating", "Boom! Golden ladder boost! 🚀", 2600);
+      }
+
       await sleep(500);
 
       if (actor === "player") setPlayerDisplayPos(ladderTo);
@@ -320,12 +371,32 @@ function GameContent() {
       if (shieldConsumed) {
         sounds.playShieldDeflect();
         setFloatingMessage({ text: "🛡️ Cyber Shield Absorbed Incident!", type: "snake" });
+        if (actor === "player") {
+          triggerPlayerMood("happy", 2400);
+          triggerComputerReaction("thinking", "Smart shield! Deflected the risk snake completely.", 2600);
+        } else {
+          triggerComputerReaction("happy", "Phew! My cyber shield absorbed that hazard!", 2600);
+        }
       } else if (isMajor) {
         sounds.playHeartLost();
         setFloatingMessage({ text: "🐍⚠️ Major Risk Incident: -25 pts & ❤️ lost!", type: "snake" });
+        if (actor === "player") {
+          triggerPlayerMood("worried", 2600);
+          triggerComputerReaction("thinking", "Ouch, major incident! Hang in there!", 2600);
+        } else {
+          triggerPlayerMood("happy", 2600);
+          triggerComputerReaction("worried", "Oh no! Major risk incident! 🐍", 2600);
+        }
       } else {
         sounds.playSnakeSlide();
         setFloatingMessage({ text: "🐍 Ordinary Snake: -10 pts", type: "snake" });
+        if (actor === "player") {
+          triggerPlayerMood("worried", 2500);
+          triggerComputerReaction("thinking", "Oof, tough break on that snake slide!", 2500);
+        } else {
+          triggerPlayerMood("happy", 2500);
+          triggerComputerReaction("worried", "Ugh! Slid down the hazard!", 2500);
+        }
       }
       await sleep(500);
 
@@ -341,9 +412,16 @@ function GameContent() {
     if (finalTo === 25) {
       sounds.playVictory();
       setFloatingMessage({
-        text: actor === "player" ? "🏁 VICTORY! Reached Square 25 (+300 pts)!" : "🤖 Computer reached Square 25!",
+        text: actor === "player" ? "🏁 VICTORY! Reached Square 25 (+300 pts)!" : "🏁 Ava reached Square 25!",
         type: "finish",
       });
+      if (actor === "player") {
+        triggerPlayerMood("celebrating", 4500);
+        triggerComputerReaction("happy", "Incredible match! GG, FinTech Champion! 🏆", 4500);
+      } else {
+        triggerPlayerMood("worried", 4500);
+        triggerComputerReaction("celebrating", "Square 25 reached! Victory is mine! 🏁", 4500);
+      }
       await sleep(1500);
       setFloatingMessage(null);
     }
@@ -421,6 +499,8 @@ function GameContent() {
           difficulty: q.difficulty,
           squareNumber: pResult.toPosition,
         });
+        triggerPlayerMood("thinking", 3000);
+        triggerComputerReaction("thinking", "FinTech checkpoint! Show what you've got!", 2800);
       }
       setAnimating(false);
       return;
@@ -431,6 +511,8 @@ function GameContent() {
     if (treasureEv) {
       sounds.playTreasure();
       setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: pResult.toPosition });
+      triggerPlayerMood("celebrating", 2400);
+      triggerComputerReaction("thinking", "Nice treasure cache! That shield will help protect points.", 2400);
     }
 
     // Check if terminal
@@ -445,7 +527,9 @@ function GameContent() {
 
     // 2. Autonomous Computer Opponent Turn
     if (stateAfterPlayer.currentTurn === "computer") {
-      await sleep(700);
+      await sleep(500);
+      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+      await sleep(400);
       setComputerRolling(true);
       sounds.playDiceRoll();
 
@@ -461,7 +545,7 @@ function GameContent() {
       // Animate computer movement
       await animatePawnMovement("computer", cFrom, cResult.toPosition, cDice, cResult.events);
 
-      const cMsgs = [`🤖 FinTech AI rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
+      const cMsgs = [`Ava rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
       setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
 
       const finalState = cResult.newState;
@@ -541,6 +625,8 @@ function GameContent() {
       // Check for quiz
       if (data.quizQuestion) {
         setQuizQuestion(data.quizQuestion);
+        triggerPlayerMood("thinking", 3000);
+        triggerComputerReaction("thinking", "FinTech checkpoint! Show what you've got!", 2800);
         setAnimating(false);
         setRun(data.run);
         return;
@@ -551,6 +637,8 @@ function GameContent() {
       if (treasureEv) {
         sounds.playTreasure();
         setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: data.run.player_position });
+        triggerPlayerMood("celebrating", 2400);
+        triggerComputerReaction("thinking", "Nice treasure cache! That shield will help protect points.", 2400);
       }
 
       // If game ended on player turn
@@ -563,7 +651,9 @@ function GameContent() {
 
       // Now sequentially animate Computer Turn if returned
       if (data.computerRoll !== null) {
-        await sleep(600);
+        await sleep(400);
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+        await sleep(400);
         setComputerRolling(true);
         sounds.playDiceRoll();
 
@@ -576,7 +666,7 @@ function GameContent() {
         await animatePawnMovement("computer", compFrom, compTo, data.computerRoll, data.computerEvents || []);
 
         const cMsgs: string[] = [
-          `🤖 FinTech AI rolled ${data.computerRoll}`,
+          `Ava rolled ${data.computerRoll}`,
           ...(data.computerEvents || []).map((e) => e.description),
         ];
         setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
@@ -615,6 +705,8 @@ function GameContent() {
 
       if (isCorrect) {
         sounds.playQuizCorrect();
+        triggerPlayerMood("celebrating", 2600);
+        triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
         localStateRef.current.playerScore += BOARD_CONFIG.scoring.quizCorrect;
         localStateRef.current.playerQuizCorrect += 1;
         setEvents((prev) => [
@@ -623,6 +715,8 @@ function GameContent() {
         ]);
       } else {
         sounds.playQuizWrong();
+        triggerPlayerMood("worried", 2600);
+        triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
         setEvents((prev) => [`❌ Incorrect. ${q?.explanation || ""}`, ...prev]);
       }
 
@@ -646,6 +740,8 @@ function GameContent() {
 
       // Trigger computer turn after short delay
       setTimeout(async () => {
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+        await sleep(400);
         setComputerRolling(true);
         sounds.playDiceRoll();
         await sleep(650);
@@ -660,7 +756,7 @@ function GameContent() {
 
         await animatePawnMovement("computer", cFrom, cResult.toPosition, cDice, cResult.events);
 
-        const cMsgs = [`🤖 FinTech AI rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
+        const cMsgs = [`Ava rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
         setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
 
         const finalState = cResult.newState;
@@ -707,12 +803,16 @@ function GameContent() {
       if (res.ok) {
         if (data.isCorrect) {
           sounds.playQuizCorrect();
+          triggerPlayerMood("celebrating", 2600);
+          triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
           setEvents((prev) => [
             `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} pts! ${data.explanation}`,
             ...prev,
           ]);
         } else {
           sounds.playQuizWrong();
+          triggerPlayerMood("worried", 2600);
+          triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
           setEvents((prev) => [`❌ Incorrect. ${data.explanation}`, ...prev]);
         }
 
@@ -725,6 +825,8 @@ function GameContent() {
 
         // Process computer turn
         setTimeout(async () => {
+          triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+          await sleep(400);
           setComputerRolling(true);
           sounds.playDiceRoll();
 
@@ -750,7 +852,7 @@ function GameContent() {
               );
 
               const cMsgs: string[] = [
-                `🤖 FinTech AI rolled ${rollData.computerRoll}`,
+                `Ava rolled ${rollData.computerRoll}`,
                 ...(rollData.computerEvents || []).map((e) => e.description),
               ];
               setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
@@ -873,7 +975,7 @@ function GameContent() {
           </div>
         )}
 
-                {/* Unified Mobile-First Match Header (Player vs AI) */}
+                {/* Unified Mobile-First Match Header (Player vs Ava) */}
         <CompactScoreHeader
           playerName={profile?.display_name || "You"}
           playerScore={run.player_score}
@@ -881,10 +983,13 @@ function GameContent() {
           playerShields={run.player_shields}
           playerPosition={playerDisplayPos}
           playerQuizCorrect={run.player_quiz_correct}
+          playerMood={playerMood}
           computerScore={run.computer_score}
           computerHearts={run.computer_hearts}
           computerShields={run.computer_shields}
           computerPosition={computerDisplayPos}
+          computerMood={computerMood}
+          computerReaction={computerReaction}
           currentTurn={run.current_turn as "player" | "computer"}
           turnSequence={run.turn_sequence}
           isPracticeMode={isPracticeMode}
@@ -898,6 +1003,8 @@ function GameContent() {
               playerPosition={playerDisplayPos}
               computerPosition={computerDisplayPos}
               playerName={profile?.display_name || "You"}
+              playerMood={playerMood}
+              computerMood={computerMood}
               animating={animating}
               activeLadder={activeLadder}
               activeSnake={activeSnake}

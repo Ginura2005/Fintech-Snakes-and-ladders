@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, Shield, Volume2, VolumeX, RotateCcw, MapPin, Sparkles } from "lucide-react";
+import { Heart, Shield, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { sounds } from "@/lib/audio/sound-effects";
+import GameAvatar, { AvatarMood } from "./GameAvatar";
 
 interface CompactScoreHeaderProps {
   playerName: string;
@@ -11,11 +12,14 @@ interface CompactScoreHeaderProps {
   playerShields: number;
   playerPosition: number;
   playerQuizCorrect: number;
+  playerMood?: AvatarMood;
 
   computerScore: number;
   computerHearts: number;
   computerShields: number;
   computerPosition: number;
+  computerMood?: AvatarMood;
+  computerReaction?: string | null;
 
   currentTurn: "player" | "computer";
   turnSequence: number;
@@ -30,10 +34,13 @@ export default function CompactScoreHeader({
   playerShields,
   playerPosition,
   playerQuizCorrect,
+  playerMood = "idle",
   computerScore,
   computerHearts,
   computerShields,
   computerPosition,
+  computerMood = "idle",
+  computerReaction = null,
   currentTurn,
   turnSequence,
   isPracticeMode = false,
@@ -50,13 +57,24 @@ export default function CompactScoreHeader({
   return (
     <div className="w-full max-w-2xl mx-auto mb-3">
       {/* Consolidated Top Match Bar */}
-      <div className="festival-card p-2 sm:p-3 bg-[#0a0a28]/95 border-white/15 backdrop-blur-xl shadow-lg">
+      <div className="festival-card p-2 sm:p-2.5 bg-[#0a0a28]/95 border-white/15 backdrop-blur-xl shadow-lg relative">
+        
+        {/* Ava's Human-like Speech Reaction Bubble */}
+        {computerReaction && (
+          <div className="absolute -bottom-3 right-4 z-30 animate-bounce">
+            <div className="bg-gradient-to-r from-rose-900 to-[#1e0712] border border-rose-400 text-white text-[10px] sm:text-xs font-mono font-bold px-2.5 py-1 rounded-full shadow-[0_4px_15px_rgba(244,63,94,0.5)] flex items-center gap-1.5">
+              <span>💬 Ava:</span>
+              <span className="text-rose-200">"{computerReaction}"</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
           
-          {/* Left: Player Card */}
+          {/* Left: Human Player Card */}
           <div
             className={`
-              flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-xl transition-all duration-300
+              flex items-center gap-2 sm:gap-2.5 p-1.5 sm:p-2 rounded-xl transition-all duration-300
               ${
                 isPlayerTurn
                   ? "bg-[#125252]/40 border border-[#fec01f]/60 shadow-[0_0_12px_rgba(254,192,31,0.25)] ring-1 ring-[#fec01f]"
@@ -64,13 +82,11 @@ export default function CompactScoreHeader({
               }
             `}
           >
-            {/* Avatar Pill */}
+            {/* Expressive Player Avatar */}
             <div className="relative shrink-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#ffe072] to-[#fec01f] text-black font-heading font-black flex items-center justify-center text-xs sm:text-sm border border-white shadow-sm">
-                {playerName[0]?.toUpperCase() || "P"}
-              </div>
+              <GameAvatar type="player" mood={playerMood} size="hud" />
               {isPlayerTurn && (
-                <span className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-[#fec01f] border-2 border-[#0a0a28] animate-ping" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#fec01f] border-2 border-[#0a0a28] animate-ping" />
               )}
             </div>
 
@@ -86,7 +102,7 @@ export default function CompactScoreHeader({
               </div>
 
               {/* Score & Health */}
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
                 <span className="font-mono font-bold text-xs sm:text-sm text-[#fec01f] leading-none">
                   {playerScore.toLocaleString()} <span className="text-[9px] font-normal text-white/50">pts</span>
                 </span>
@@ -120,7 +136,7 @@ export default function CompactScoreHeader({
             </div>
           </div>
 
-          {/* Center: Match Status & Audio Controls */}
+          {/* Center: Turn Status & Audio Controls */}
           <div className="flex flex-col items-center justify-center text-center px-1">
             <span className="font-mono text-[9px] sm:text-[10px] text-white/50 uppercase tracking-widest leading-none mb-1">
               Turn {turnSequence}
@@ -129,25 +145,25 @@ export default function CompactScoreHeader({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={handleToggleMute}
-                className="p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/70 hover:text-white transition-colors"
+                className="p-1 sm:p-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white/70 hover:text-white transition-colors cursor-pointer"
                 title={muted ? "Unmute audio" : "Mute audio"}
                 aria-label={muted ? "Unmute audio" : "Mute audio"}
               >
                 {muted ? (
-                  <VolumeX size={14} className="text-white/40" />
+                  <VolumeX size={13} className="text-white/40" />
                 ) : (
-                  <Volume2 size={14} className="text-[#fec01f]" />
+                  <Volume2 size={13} className="text-[#fec01f]" />
                 )}
               </button>
 
               {isPracticeMode && onResetPractice && (
                 <button
                   onClick={onResetPractice}
-                  className="p-1 sm:p-1.5 rounded-lg bg-teal-950/50 border border-teal-500/30 hover:bg-teal-900/50 text-teal-300 transition-colors"
-                  title="Reset practice game"
+                  className="p-1 sm:p-1.5 rounded-lg bg-teal-950/50 border border-teal-500/30 hover:bg-teal-900/50 text-teal-300 transition-colors cursor-pointer"
+                  title="Reset practice match"
                   aria-label="Reset practice match"
                 >
-                  <RotateCcw size={14} />
+                  <RotateCcw size={13} />
                 </button>
               )}
             </div>
@@ -159,14 +175,14 @@ export default function CompactScoreHeader({
                   : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
               }`}
             >
-              {isPlayerTurn ? "Your Move" : "AI Turn"}
+              {isPlayerTurn ? "Your Move" : "Ava Thinking"}
             </span>
           </div>
 
-          {/* Right: Computer AI Card */}
+          {/* Right: Ava (Human-like AI Rival) Card */}
           <div
             className={`
-              flex items-center justify-end gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-xl transition-all duration-300 text-right
+              flex items-center justify-end gap-2 sm:gap-2.5 p-1.5 sm:p-2 rounded-xl transition-all duration-300 text-right
               ${
                 !isPlayerTurn
                   ? "bg-rose-950/40 border border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.25)] ring-1 ring-rose-500"
@@ -181,12 +197,12 @@ export default function CompactScoreHeader({
                   Sq {computerPosition.toString().padStart(2, "0")}
                 </span>
                 <span className="font-heading font-bold text-white text-xs sm:text-sm truncate leading-none">
-                  FinTech AI
+                  Ava <span className="text-[9px] font-normal text-rose-300/80 font-mono">(AI)</span>
                 </span>
               </div>
 
               {/* Score & Health */}
-              <div className="flex items-center justify-end gap-2 mt-1">
+              <div className="flex items-center justify-end gap-1.5 sm:gap-2 mt-1">
                 {/* Shield badge */}
                 {computerShields > 0 && (
                   <span
@@ -219,13 +235,11 @@ export default function CompactScoreHeader({
               </div>
             </div>
 
-            {/* Avatar Pill */}
+            {/* Expressive Ava Avatar */}
             <div className="relative shrink-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#fb7185] to-[#8d1739] text-white font-heading font-black flex items-center justify-center text-xs sm:text-sm border border-white shadow-sm">
-                AI
-              </div>
+              <GameAvatar type="computer" mood={computerMood} size="hud" />
               {!isPlayerTurn && (
-                <span className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-[#0a0a28] animate-ping" />
+                <span className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-rose-500 border-2 border-[#0a0a28] animate-ping" />
               )}
             </div>
           </div>
