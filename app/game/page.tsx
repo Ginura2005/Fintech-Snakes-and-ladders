@@ -297,21 +297,22 @@ function GameContent() {
   ) => {
     setMovingPawn(actor);
 
-    // 1. Overshoot check
-    const isOvershot = eventsList.some((e) => e.type === "overshoot");
+    // 1. Overshoot check (failsafe: exact landing on 25 required)
+    const isOvershot = eventsList.some((e) => e.type === "overshoot") || (from + diceVal > 25);
     if (isOvershot) {
+      sounds.playShieldDeflect();
       setFloatingMessage({
         text: `🎯 Overshot! Exactly ${25 - from} needed to reach finish.`,
         type: "finish",
       });
       if (actor === "player") {
-        triggerPlayerMood("worried", 2200);
-        triggerComputerReaction("thinking", "Close one! Exactly " + (25 - from) + " needed for 25!", 2500);
+        triggerPlayerMood("worried", 2000);
+        triggerComputerReaction("thinking", "Close one! Exactly " + (25 - from) + " needed for 25!", 2200);
       } else {
-        triggerPlayerMood("happy", 2200);
-        triggerComputerReaction("worried", "Ah, overshot! Need an exact roll for 25!", 2500);
+        triggerPlayerMood("happy", 2000);
+        triggerComputerReaction("worried", "Ah, overshot! Need an exact roll for 25!", 2200);
       }
-      await sleep(1400);
+      await sleep(1000);
       setFloatingMessage(null);
       setMovingPawn(null);
       return;
@@ -326,7 +327,7 @@ function GameContent() {
         setComputerDisplayPos(pos);
       }
       sounds.playPawnStep();
-      await sleep(250);
+      await sleep(185);
     }
 
     // 3. Check for ladder ascent
@@ -373,29 +374,28 @@ function GameContent() {
         setFloatingMessage({ text: "🛡️ Cyber Shield Absorbed Incident!", type: "snake" });
         if (actor === "player") {
           triggerPlayerMood("happy", 2400);
-          triggerComputerReaction("thinking", "Smart shield! Deflected the risk snake completely.", 2600);
+          triggerComputerReaction("thinking", "Smart shield! Deflected the hazard.", 2600);
+          setRun((prev) => prev ? { ...prev, player_shields: Math.max(0, prev.player_shields - 1) } : null);
         } else {
           triggerComputerReaction("happy", "Phew! My cyber shield absorbed that hazard!", 2600);
-        }
-      } else if (isMajor) {
-        sounds.playHeartLost();
-        setFloatingMessage({ text: "🐍⚠️ Major Risk Incident: -25 pts & ❤️ lost!", type: "snake" });
-        if (actor === "player") {
-          triggerPlayerMood("worried", 2600);
-          triggerComputerReaction("thinking", "Ouch, major incident! Hang in there!", 2600);
-        } else {
-          triggerPlayerMood("happy", 2600);
-          triggerComputerReaction("worried", "Oh no! Major risk incident! 🐍", 2600);
+          setRun((prev) => prev ? { ...prev, computer_shields: Math.max(0, prev.computer_shields - 1) } : null);
         }
       } else {
-        sounds.playSnakeSlide();
-        setFloatingMessage({ text: "🐍 Ordinary Snake: -10 pts", type: "snake" });
+        sounds.playHeartLost();
+        setFloatingMessage({
+          text: isMajor ? "🐍⚠️ Major Risk Snake: -25 pts & ❤️ lost!" : "🐍 Snake Hazard: -10 pts & ❤️ lost!",
+          type: "snake",
+        });
         if (actor === "player") {
-          triggerPlayerMood("worried", 2500);
-          triggerComputerReaction("thinking", "Oof, tough break on that snake slide!", 2500);
+          triggerPlayerMood("worried", 2600);
+          triggerComputerReaction("thinking", "Ouch, snake hazard! Lost a heart!", 2600);
+          // Immediately update visible heart in top score bar
+          setRun((prev) => prev ? { ...prev, player_hearts: Math.max(0, prev.player_hearts - 1) } : null);
         } else {
-          triggerPlayerMood("happy", 2500);
-          triggerComputerReaction("worried", "Ugh! Slid down the hazard!", 2500);
+          triggerPlayerMood("happy", 2600);
+          triggerComputerReaction("worried", "Oh no! Slid down the hazard & lost a heart! 🐍", 2600);
+          // Immediately update visible heart in top score bar
+          setRun((prev) => prev ? { ...prev, computer_hearts: Math.max(0, prev.computer_hearts - 1) } : null);
         }
       }
       await sleep(350);
@@ -446,7 +446,7 @@ function GameContent() {
     sounds.playDiceRoll();
 
     // 1. Roll Player Die
-    await sleep(600);
+    await sleep(300);
     const pDice = rollDice();
     setLastRoll(pDice);
     setRolling(false);
@@ -527,13 +527,13 @@ function GameContent() {
 
     // 2. Autonomous Computer Opponent Turn
     if (stateAfterPlayer.currentTurn === "computer") {
-      await sleep(500);
-      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
-      await sleep(400);
+      await sleep(200);
+      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1800);
+      await sleep(150);
       setComputerRolling(true);
       sounds.playDiceRoll();
 
-      await sleep(650);
+      await sleep(280);
       const cDice = rollDice();
       setComputerRoll(cDice);
       setComputerRolling(false);
@@ -651,13 +651,13 @@ function GameContent() {
 
       // Now sequentially animate Computer Turn if returned
       if (data.computerRoll !== null) {
-        await sleep(400);
-        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
-        await sleep(400);
+        await sleep(200);
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 1800);
+        await sleep(150);
         setComputerRolling(true);
         sounds.playDiceRoll();
 
-        await sleep(650);
+        await sleep(280);
         setComputerRoll(data.computerRoll);
         setComputerRolling(false);
 
@@ -1025,6 +1025,22 @@ function GameContent() {
                 playerPosition={playerDisplayPos}
               />
             )}
+
+            {/* Field Point Values Reference Pills (Placed directly below Roll Dice button) */}
+            <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-white/70 pt-0.5">
+              <span className="flex items-center gap-1 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded-full text-teal-300">
+                <span>🪜</span> Ladders (+25)
+              </span>
+              <span className="flex items-center gap-1 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded-full text-rose-300">
+                <span>🐍</span> Snakes (-10/-25 &amp; ❤️)
+              </span>
+              <span className="flex items-center gap-1 bg-amber-950/60 border border-[#fec01f]/30 px-2 py-0.5 rounded-full text-[#fec01f]">
+                <span>📝</span> Quiz (+50)
+              </span>
+              <span className="flex items-center gap-1 bg-orange-950/60 border border-orange-500/30 px-2 py-0.5 rounded-full text-orange-300">
+                <span>💰</span> Treasure (+50 &amp; 🛡️)
+              </span>
+            </div>
 
             {/* Mobile Collapsible Chronicle & Field Intel */}
             <div className="lg:hidden">

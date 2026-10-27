@@ -334,22 +334,6 @@ export default function GameBoard({
           </div>
         </div>
       </div>
-
-      {/* Uncluttered Streamlined Legend Pill Bar */}
-      <div className="mt-2.5 max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-xs font-mono text-white/70">
-        <span className="flex items-center gap-1 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded-full text-teal-300">
-          <span>🪜</span> Ladders (+25)
-        </span>
-        <span className="flex items-center gap-1 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded-full text-rose-300">
-          <span>🐍</span> Snakes (-10/-25)
-        </span>
-        <span className="flex items-center gap-1 bg-amber-950/60 border border-[#fec01f]/30 px-2 py-0.5 rounded-full text-[#fec01f]">
-          <span>📝</span> Quiz (+50)
-        </span>
-        <span className="flex items-center gap-1 bg-orange-950/60 border border-orange-500/30 px-2 py-0.5 rounded-full text-orange-300">
-          <span>💰</span> Treasure (+50 &amp; 🛡️)
-        </span>
-      </div>
     </div>
   );
 }

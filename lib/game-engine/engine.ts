@@ -210,9 +210,8 @@ export function processTurn(
       : BOARD_CONFIG.scoring.ordinarySnake;
     scoreDeltas.push({ actor, event: isMajor ? "major_snake" : "ordinary_snake", delta: snakeScore });
 
-    if (isMajor) {
-      // Check shield
-      const actorShields = actor === "player" ? newState.playerShields : newState.computerShields;
+    // Check shield on all snakes (ordinary and major)
+    const actorShields = actor === "player" ? newState.playerShields : newState.computerShields;
       if (actorShields > 0) {
         // Consume shield
         if (actor === "player") newState.playerShields -= 1;
@@ -268,7 +267,6 @@ export function processTurn(
         }
       }
     }
-  }
 
   // 4. Check for ladder
   const ladder = getLadder(rawPos === fromPos ? -1 : rawPos); // don't apply if we didn't move there

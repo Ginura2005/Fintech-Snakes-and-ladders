@@ -90,7 +90,7 @@ describe("Movement and Turn Transitions", () => {
     expect(result.newState.currentTurn).toBe("computer");
   });
 
-  it("applies ordinary snake and does not deduct a heart", () => {
+  it("applies ordinary snake penalty, slides backward and deducts one heart when no shield available", () => {
     const state: GameState = {
       ...createInitialGameState("run-1", "player-1"),
       playerPosition: 10,
@@ -101,7 +101,8 @@ describe("Movement and Turn Transitions", () => {
     expect(result.newState.playerPosition).toBe(5);
     // Ordinary snake penalty (-10) + dice movement (2*10=20) = 10 pts
     expect(result.newState.playerScore).toBe(10);
-    expect(result.newState.playerHearts).toBe(3); // No heart loss
+    expect(result.newState.playerHearts).toBe(2); // Deducts 1 heart unless shielded
+    expect(result.events.some((e) => e.type === "heart_lost")).toBe(true);
     expect(result.events.some((e) => e.type === "snake_ordinary")).toBe(true);
   });
 
