@@ -128,7 +128,7 @@ async function processRoll(userId: string, supabase: any) {
   const quizEvent = playerResult.events.find((e) => e.type === "quiz_triggered");
   if (quizEvent && playerResult.actor === "player") {
     // Pick a question not already used at this square
-    const { data: prevAttempt } = await serviceClient
+    const { data: prevAttempt } = await db
       .from("quiz_attempts")
       .select("question_id")
       .eq("run_id", run.id)
