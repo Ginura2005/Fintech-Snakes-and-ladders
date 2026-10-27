@@ -147,7 +147,7 @@ export default function Cube3D({
       const angles = TARGET_ANGLES[value] || TARGET_ANGLES[1];
       setRotations({ x: angles.x, y: angles.y });
       setHasLanded(true);
-      const timer = setTimeout(() => setHasLanded(false), 520);
+      const timer = setTimeout(() => setHasLanded(false), 720);
       return () => clearTimeout(timer);
     }
   }, [isRolling, value]);
@@ -198,18 +198,18 @@ export default function Cube3D({
     if (dist > 8) {
       // User swiped / flicked the 3D cube!
       const rawSpeed = (dist / dt) * 1.5;
-      const speed = Math.min(1.8, Math.max(0.7, rawSpeed));
+      const speed = Math.min(1.4, Math.max(0.7, rawSpeed));
       // Side roll tilt from horizontal swipe
-      const tilt = Math.max(-28, Math.min(28, (dx / 4) * 1.3));
+      const tilt = Math.max(-24, Math.min(24, (dx / 5) * 1.2));
       // Upward throw arc
-      const arc = -Math.round(20 + Math.min(25, speed * 12));
-      // Duration: faster for harder throws
-      const dur = Math.max(0.24, Math.min(0.38, 0.32 / speed));
+      const arc = -Math.round(20 + Math.min(18, speed * 8));
+      // Slow, smooth, perceptible tumble duration
+      const dur = Math.max(0.7, Math.min(1.05, 0.85 / speed));
 
       physics = { speed, tilt, arc, dur };
     } else {
-      // Crisp direct tap
-      physics = { speed: 1.0, tilt: 12, arc: -25, dur: 0.3 };
+      // Crisp gentle direct tap
+      physics = { speed: 1.0, tilt: 10, arc: -24, dur: 0.85 };
     }
 
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -260,7 +260,7 @@ export default function Cube3D({
             ? "none"
             : isDragging
             ? "transform 0.05s ease-out"
-            : "transform 0.52s cubic-bezier(0.16, 1, 0.3, 1)",
+            : "transform 0.72s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
         className={`relative w-full h-full ${isRolling ? "animate-dice-tumble" : ""} ${
           hasLanded ? "scale-105" : "scale-100"

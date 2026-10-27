@@ -18,7 +18,7 @@ export default function Cinematic3DDiceOverlay({
   actor,
   rollValue,
   isRolling,
-  physics = { speed: 1, tilt: 10, arc: -24, dur: 0.52 },
+  physics = { speed: 1, tilt: 10, arc: -24, dur: 0.85 },
   isOvershoot = false,
 }: Cinematic3DDiceOverlayProps) {
   const [mounted, setMounted] = useState(show);

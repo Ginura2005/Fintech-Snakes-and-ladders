@@ -86,6 +86,7 @@ function GameContent() {
   const supabase = createClient();
 
   const [isPracticeMode, setIsPracticeMode] = useState<boolean>(false);
+  const [showPracticeBanner, setShowPracticeBanner] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [run, setRun] = useState<GameRun | null>(null);
@@ -210,8 +211,22 @@ function GameContent() {
       "🎲 Roll 1–6 to advance toward Square 25.",
     ]);
     setError(null);
+    const dismissed = typeof window !== "undefined" && sessionStorage.getItem("practice_banner_dismissed");
+    if (!dismissed) {
+      setShowPracticeBanner(true);
+    }
     setLoading(false);
   }, []);
+
+  // Auto-dismiss practice banner timer
+  useEffect(() => {
+    if (showPracticeBanner) {
+      const timer = setTimeout(() => {
+        setShowPracticeBanner(false);
+      }, 5500);
+      return () => clearTimeout(timer);
+    }
+  }, [showPracticeBanner]);
 
   // Check auth and initial load
   useEffect(() => {
@@ -458,10 +473,16 @@ function GameContent() {
     const currentState = localStateRef.current;
     if (currentState.currentTurn !== "player" || checkTerminal(currentState)) return;
 
-    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.52 };
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.85 };
     setRolling(true);
     setError(null);
     sounds.playDiceRoll();
+
+    // Auto-dismiss practice banner on roll
+    if (showPracticeBanner) {
+      setShowPracticeBanner(false);
+      if (typeof window !== "undefined") sessionStorage.setItem("practice_banner_dismissed", "true");
+    }
 
     // 1. Roll Player 3D Die with Cinematic Matte Blur Overlay
     setDiceOverlay({
@@ -472,7 +493,7 @@ function GameContent() {
       physics: activePhysics,
     });
 
-    await sleep(550);
+    await sleep(850);
     const pDice = rollDice();
     const isOvershot = currentState.playerPosition + pDice > 25;
 
@@ -487,9 +508,9 @@ function GameContent() {
       isOvershoot: isOvershot,
     });
 
-    await sleep(650);
+    await sleep(950);
     setDiceOverlay((prev) => ({ ...prev, show: false }));
-    await sleep(250);
+    await sleep(350);
     setAnimating(true);
 
     const fromPos = currentState.playerPosition;
@@ -567,15 +588,15 @@ function GameContent() {
 
     // 2. Autonomous Computer Opponent Turn
     if (stateAfterPlayer.currentTurn === "computer") {
-      await sleep(350);
-      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2000);
       await sleep(400);
+      triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+      await sleep(450);
 
       const avaPhysics: ThrowPhysics = {
         speed: 1.0,
         tilt: (Math.random() - 0.5) * 20,
         arc: -24,
-        dur: 0.52,
+        dur: 0.85,
       };
 
       setComputerRolling(true);
@@ -588,7 +609,7 @@ function GameContent() {
         physics: avaPhysics,
       });
 
-      await sleep(550);
+      await sleep(850);
       const cDice = rollDice();
       const compOvershot = stateAfterPlayer.computerPosition + cDice > 25;
       setComputerRoll(cDice);
@@ -603,9 +624,9 @@ function GameContent() {
         isOvershoot: compOvershot,
       });
 
-      await sleep(650);
+      await sleep(950);
       setDiceOverlay((prev) => ({ ...prev, show: false }));
-      await sleep(250);
+      await sleep(350);
 
       const cFrom = stateAfterPlayer.computerPosition;
       const cResult = processTurn(stateAfterPlayer, cDice);
@@ -658,7 +679,7 @@ function GameContent() {
     if (run.current_turn !== "player") return;
     if (isTerminal(run.status)) return;
 
-    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.52 };
+    const activePhysics = physics || { speed: 1.0, tilt: 10, arc: -24, dur: 0.85 };
     setRolling(true);
     setError(null);
     setLastRoll(null);
@@ -691,8 +712,8 @@ function GameContent() {
       }
 
       const elapsed = Date.now() - startTime;
-      if (elapsed < 550) {
-        await sleep(550 - elapsed);
+      if (elapsed < 850) {
+        await sleep(850 - elapsed);
       }
 
       const pRoll = data.playerRoll ?? 1;
@@ -709,9 +730,9 @@ function GameContent() {
         isOvershoot: isOvershot,
       });
 
-      await sleep(650);
+      await sleep(950);
       setDiceOverlay((prev) => ({ ...prev, show: false }));
-      await sleep(250);
+      await sleep(350);
       setAnimating(true);
 
       // Animate player pawn movement
@@ -752,15 +773,15 @@ function GameContent() {
 
       // Now sequentially animate Computer Turn if returned
       if (data.computerRoll !== null) {
-        await sleep(350);
-        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2000);
         await sleep(400);
+        triggerComputerReaction("thinking", getRandomAvaThinkingLine(), 2200);
+        await sleep(450);
 
         const avaPhysics: ThrowPhysics = {
           speed: 1.0,
           tilt: (Math.random() - 0.5) * 20,
           arc: -24,
-          dur: 0.52,
+          dur: 0.85,
         };
 
         setComputerRolling(true);
@@ -773,7 +794,7 @@ function GameContent() {
           physics: avaPhysics,
         });
 
-        await sleep(550);
+        await sleep(850);
         const compOvershot = (data.computerFrom ?? run.computer_position) + data.computerRoll > 25;
         setComputerRoll(data.computerRoll);
         setComputerRolling(false);
@@ -787,9 +808,9 @@ function GameContent() {
           isOvershoot: compOvershot,
         });
 
-        await sleep(650);
+        await sleep(950);
         setDiceOverlay((prev) => ({ ...prev, show: false }));
-        await sleep(250);
+        await sleep(350);
 
         const compFrom = data.computerFrom ?? run.computer_position;
         const compTo = data.computerTo ?? data.run.computer_position;
@@ -1075,19 +1096,40 @@ function GameContent() {
         activePath="/game"
       />
 
-      {/* Mode Notification Banner */}
+      {/* Mode Notification Banner (Auto-dismisses & persists dismiss state) */}
       {isPracticeMode && (
-        <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-[#0a0a28] border-b border-teal-500/40 px-4 py-2 text-center text-xs font-mono text-teal-200 flex items-center justify-center gap-3">
-          <span className="font-bold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded border border-teal-400/40">
-            Practice Arena
-          </span>
-          <span>Unlimited moves, full audio &amp; physics. Ready to rank?</span>
-          <a
-            href="/"
-            className="text-[#fec01f] font-bold underline hover:text-white transition-colors"
-          >
-            Sign in for Official Tournament Leaderboard →
-          </a>
+        <div
+          className={`transition-all duration-500 ease-out overflow-hidden ${
+            showPracticeBanner
+              ? "max-h-20 opacity-100 border-b border-teal-500/40"
+              : "max-h-0 opacity-0 border-b-0 py-0 pointer-events-none"
+          }`}
+        >
+          <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-[#0a0a28] px-4 py-2 text-center text-xs font-mono text-teal-200 flex items-center justify-center gap-2 sm:gap-3">
+            <span className="font-bold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded border border-teal-400/40 shrink-0">
+              Practice Arena
+            </span>
+            <span className="truncate">Unlimited moves, full audio &amp; physics. Ready to rank?</span>
+            <a
+              href="/"
+              className="text-[#fec01f] font-bold underline hover:text-white transition-colors shrink-0"
+            >
+              Sign in for Official Tournament Leaderboard →
+            </a>
+            <button
+              onClick={() => {
+                setShowPracticeBanner(false);
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("practice_banner_dismissed", "true");
+                }
+              }}
+              className="text-teal-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors ml-1 shrink-0 cursor-pointer"
+              title="Dismiss banner"
+              aria-label="Dismiss banner"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 

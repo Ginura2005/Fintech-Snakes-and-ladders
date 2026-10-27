@@ -290,11 +290,11 @@ code, kbd, pre, .font-mono, .font-caps {
 }
 
 .animate-dice-tumble {
-  animation: dice-3d-tumble var(--throw-dur, 0.52s) cubic-bezier(0.42, 0, 0.58, 1) infinite;
+  animation: dice-3d-tumble var(--throw-dur, 0.85s) cubic-bezier(0.42, 0, 0.58, 1) infinite;
 }
 
 .animate-dice-settle {
-  animation: dice-3d-land 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: dice-3d-land 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .animate-toast-pop {
