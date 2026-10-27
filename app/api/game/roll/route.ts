@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     processingLocks.add(user.id);
 
     try {
-      return await processRoll(user.id);
+      return await processRoll(user.id, supabase);
     } finally {
       processingLocks.delete(user.id);
     }
@@ -54,11 +54,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processRoll(userId: string) {
-  const serviceClient = createServiceClient();
+async function processRoll(userId: string, supabase: any) {
+  const hasServiceKey = Boolean(
+    process.env.SUPABASE_SERVICE_ROLE_KEY &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  );
+  const db = hasServiceKey ? createServiceClient() : supabase;
 
   // Fetch current run
-  const { data: run, error: fetchError } = await serviceClient
+  const { data: run, error: fetchError } = await db
     .from("game_runs")
     .select("*")
     .eq("player_id", userId)
@@ -76,7 +81,7 @@ async function processRoll(userId: string) {
   const currentSequence = run.turn_sequence;
 
   // Check for duplicate (idempotency)
-  const { data: existingMove } = await serviceClient
+  const { data: existingMove } = await db
     .from("game_moves")
     .select("*")
     .eq("run_id", run.id)
@@ -139,7 +144,7 @@ async function processRoll(userId: string) {
   }
 
   // Persist player move
-  await persistTurnResult(serviceClient, run.id, playerResult, currentSequence);
+  await persistTurnResult(db, run.id, playerResult, currentSequence);
 
   let stateAfterPlayerTurn = playerResult.newState;
   let computerResult = null;
@@ -148,7 +153,7 @@ async function processRoll(userId: string) {
   if (!isTerminal(stateAfterPlayerTurn) && stateAfterPlayerTurn.currentTurn === "computer" && !quizEvent) {
     const computerDice = rollDice();
     computerResult = processTurn(stateAfterPlayerTurn, computerDice);
-    await persistTurnResult(serviceClient, run.id, computerResult, stateAfterPlayerTurn.turnSequence);
+    await persistTurnResult(db, run.id, computerResult, stateAfterPlayerTurn.turnSequence);
     stateAfterPlayerTurn = computerResult.newState;
   }
 
@@ -156,7 +161,7 @@ async function processRoll(userId: string) {
   const finalState = stateAfterPlayerTurn;
 
   // Update game_runs
-  const { error: updateError } = await serviceClient
+  const { error: updateError } = await db
     .from("game_runs")
     .update({
       status: finalState.status,
@@ -189,11 +194,11 @@ async function processRoll(userId: string) {
 
   // If game ended and player opted into leaderboard, record entry
   if (isTerminal(finalState)) {
-    await tryRecordLeaderboardEntry(serviceClient, finalState, userId);
+    await tryRecordLeaderboardEntry(db, finalState, userId);
   }
 
   // Refresh run from DB
-  const { data: updatedRun } = await serviceClient
+  const { data: updatedRun } = await db
     .from("game_runs")
     .select("*")
     .eq("id", run.id)

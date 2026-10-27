@@ -109,6 +109,9 @@ export default function GamePage() {
             return;
           }
         }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "Failed to connect to the game server. Please check your database setup.");
       }
       setLoading(false);
     };
@@ -285,13 +288,57 @@ export default function GamePage() {
   }
 
   if (!run) {
+    const isMigrationError =
+      error?.toLowerCase().includes("database tables") ||
+      error?.toLowerCase().includes("schema cache") ||
+      error?.toLowerCase().includes("game_runs");
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white">
-        <div className="text-center">
-          <p className="text-white/70 mb-4">No active match found.</p>
-          <a href="/" className="interactive-btn interactive-btn--primary text-sm font-bold">
-            Return to Festival Home
-          </a>
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white p-4">
+        <div className="max-w-md w-full festival-card p-6 border-white/10 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-2xl">
+            {isMigrationError ? "🛠️" : "⚠️"}
+          </div>
+
+          <h2 className="text-xl font-bold font-mono text-[#fec01f] mb-2">
+            {isMigrationError ? "Database Setup Required" : "Connection Notice"}
+          </h2>
+
+          <p className="text-sm text-white/80 mb-6 leading-relaxed">
+            {error || "No active game found for this account."}
+          </p>
+
+          {isMigrationError && (
+            <div className="bg-[#0a0a28] border border-white/10 rounded-xl p-4 text-left text-xs font-mono text-white/70 mb-6 space-y-2">
+              <p className="font-bold text-white/90">How to initialize:</p>
+              <p>1. Open your Supabase Dashboard SQL Editor.</p>
+              <p>2. Paste and run <span className="text-[#fec01f]">001_initial_schema.sql</span>.</p>
+              <p>3. Return here and click Retry Connection.</p>
+              <a
+                href="https://supabase.com/dashboard/project/vqzyogpdecdqithvnarg/sql/new"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block mt-2 text-[#fec01f] underline hover:text-white"
+              >
+                Open Supabase SQL Editor ↗
+              </a>
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 py-3 rounded-xl bg-[#fec01f] text-black font-mono text-sm font-bold hover:bg-[#fec01f]/90 transition-colors cursor-pointer"
+            >
+              🔄 Retry Connection
+            </button>
+            <a
+              href="/"
+              className="px-5 py-3 rounded-xl border border-white/10 text-white/80 font-mono text-sm font-semibold hover:bg-white/5 transition-colors"
+            >
+              Home
+            </a>
+          </div>
         </div>
       </div>
     );

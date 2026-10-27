@@ -26,7 +26,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const { displayName, leaderboardOptIn } = body;
 
-    const serviceClient = createServiceClient();
+    const hasServiceKey = Boolean(
+      process.env.SUPABASE_SERVICE_ROLE_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    );
+    const db = hasServiceKey ? createServiceClient() : supabase;
 
     // 1. Upsert player profile
     if (displayName) {
@@ -38,7 +43,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { error: profileError } = await serviceClient
+      const { error: profileError } = await db
         .from("player_profiles")
         .upsert(
           {
@@ -52,15 +57,20 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         console.error("Profile upsert error:", profileError);
+        const isMissingTable = profileError.code === "PGRST205" || profileError.message?.includes("schema cache");
         return NextResponse.json(
-          { error: "Failed to create profile" },
+          {
+            error: isMissingTable
+              ? "Database tables have not been created yet. Please execute the SQL migration in your Supabase SQL Editor."
+              : profileError.message || "Failed to create profile",
+          },
           { status: 500 }
         );
       }
     }
 
     // 2. Check for existing run (UNIQUE constraint enforces one run per player)
-    const { data: existingRun, error: fetchError } = await serviceClient
+    const { data: existingRun, error: fetchError } = await db
       .from("game_runs")
       .select("*")
       .eq("player_id", user.id)
@@ -68,8 +78,13 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) {
       console.error("Fetch run error:", fetchError);
+      const isMissingTable = fetchError.code === "PGRST205" || fetchError.message?.includes("schema cache");
       return NextResponse.json(
-        { error: "Database error" },
+        {
+          error: isMissingTable
+            ? "Database tables have not been created yet. Please execute the SQL migration in your Supabase SQL Editor."
+            : fetchError.message || "Database error",
+        },
         { status: 500 }
       );
     }
@@ -85,7 +100,7 @@ export async function POST(request: NextRequest) {
       user.id
     );
 
-    const { data: newRun, error: insertError } = await serviceClient
+    const { data: newRun, error: insertError } = await db
       .from("game_runs")
       .insert({
         id: newState.id,
@@ -113,7 +128,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       // Handle race condition: another request already inserted
       if (insertError.code === "23505") {
-        const { data: raceRun } = await serviceClient
+        const { data: raceRun } = await db
           .from("game_runs")
           .select("*")
           .eq("player_id", user.id)
