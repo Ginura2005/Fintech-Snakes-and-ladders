@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { User } from "@supabase/supabase-js";
-import { Trophy, Menu, X, ArrowUpRight, LogOut, Play, User as UserIcon } from "lucide-react";
+import { Trophy, Menu, X, ArrowUpRight, LogOut, Play, User as UserIcon, Puzzle } from "lucide-react";
 
 interface FestivalHeaderProps {
   user?: User | null;
@@ -80,6 +80,27 @@ export default function FestivalHeader({
             Exhibition
             <ArrowUpRight size={12} className="opacity-60" />
           </a>
+          <Link
+            href="/game?mode=practice"
+            className={`inline-flex items-center gap-1.5 transition-colors py-1 ${
+              activePath === "/game?mode=practice"
+                ? "text-teal-300 font-bold border-b-2 border-teal-300"
+                : "text-teal-300/80 hover:text-teal-200"
+            }`}
+          >
+            Practice Arena
+          </Link>
+          <Link
+            href="/puzzles"
+            className={`inline-flex items-center gap-1.5 transition-colors py-1 ${
+              activePath === "/puzzles"
+                ? "text-[#fec01f] font-bold border-b-2 border-[#fec01f]"
+                : "hover:text-[#fec01f]"
+            }`}
+          >
+            <Puzzle size={13} className="text-[#fec01f]" />
+            Puzzles
+          </Link>
           <Link
             href="/leaderboard"
             className={`inline-flex items-center gap-1.5 transition-colors py-1 ${
@@ -160,6 +181,21 @@ export default function FestivalHeader({
               className="py-2 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors"
             >
               Play Game
+            </Link>
+            <Link
+              href="/game?mode=practice"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 px-3 rounded-lg hover:bg-white/5 text-teal-300 hover:text-teal-200 transition-colors"
+            >
+              Practice Arena
+            </Link>
+            <Link
+              href="/puzzles"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-2"
+            >
+              <Puzzle size={15} className="text-[#fec01f]" />
+              <span>FinTech Puzzles</span>
             </Link>
             <Link
               href="/leaderboard"

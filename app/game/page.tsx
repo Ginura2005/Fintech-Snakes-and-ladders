@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import GameBoard from "@/components/game/Board";
 import QuizOverlay from "@/components/game/QuizOverlay";
 import TreasureOverlay from "@/components/game/TreasureOverlay";
@@ -14,6 +14,16 @@ import OnboardingModal from "@/components/game/OnboardingModal";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { sounds } from "@/lib/audio/sound-effects";
+import {
+  createInitialGameState,
+  processTurn,
+  rollDice,
+  isTerminal as checkTerminal,
+  GameState,
+} from "@/lib/game-engine/engine";
+import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
+import { Volume2, VolumeX, Shield, Trophy, RotateCcw, Play } from "lucide-react";
 
 interface GameRun {
   id: string;
@@ -30,6 +40,7 @@ interface GameRun {
   computer_score: number;
   player_quiz_correct: number;
   player_treasures_collected: number[];
+  computer_treasures_collected?: number[];
   player_quiz_encountered: number[];
   started_at: string;
   completed_at: string | null;
@@ -52,25 +63,49 @@ interface QuizQuestion {
 
 interface TurnResult {
   run: GameRun;
-  playerRoll: number;
+  playerRoll: number | null;
   playerEvents: Array<{ type: string; description: string; fromSquare?: number; toSquare?: number }>;
+  playerFrom?: number | null;
+  playerTo?: number | null;
   computerRoll: number | null;
-  computerEvents: Array<{ type: string; description: string }> | null;
+  computerEvents: Array<{ type: string; description: string; fromSquare?: number; toSquare?: number }> | null;
+  computerFrom?: number | null;
+  computerTo?: number | null;
   quizQuestion: QuizQuestion | null;
   alreadyProcessed?: boolean;
 }
 
-export default function GamePage() {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function GameContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
+  const [isPracticeMode, setIsPracticeMode] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [run, setRun] = useState<GameRun | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Animated display coordinates
+  const [playerDisplayPos, setPlayerDisplayPos] = useState<number>(1);
+  const [computerDisplayPos, setComputerDisplayPos] = useState<number>(1);
+
+  // Interactive dice & animation states
   const [rolling, setRolling] = useState(false);
+  const [computerRolling, setComputerRolling] = useState(false);
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [computerRoll, setComputerRoll] = useState<number | null>(null);
+  const [movingPawn, setMovingPawn] = useState<"player" | "computer" | null>(null);
+  const [activeLadder, setActiveLadder] = useState<number | null>(null);
+  const [activeSnake, setActiveSnake] = useState<number | null>(null);
+  const [floatingMessage, setFloatingMessage] = useState<{
+    text: string;
+    type: "ladder" | "snake" | "treasure" | "quiz" | "finish";
+  } | null>(null);
+
+  // Overlays
   const [events, setEvents] = useState<string[]>([]);
   const [quizQuestion, setQuizQuestion] = useState<QuizQuestion | null>(null);
   const [showTreasure, setShowTreasure] = useState<{ points: number; square: number } | null>(null);
@@ -78,46 +113,115 @@ export default function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [animating, setAnimating] = useState(false);
 
+  // Local Practice Game Engine state
+  const localStateRef = useRef<GameState | null>(null);
+
   const isTerminal = (status: string) =>
     ["player_won", "computer_won", "player_eliminated", "completed"].includes(status);
 
-  // Load user and game state
+  // Initialize Practice Mode
+  const startPracticeGame = useCallback(() => {
+    const initialState = createInitialGameState("practice-" + Date.now(), "guest-pilot");
+    localStateRef.current = initialState;
+    setIsPracticeMode(true);
+    setProfile({
+      display_name: "Practice Pilot",
+      avatar_url: null,
+      leaderboard_opt_in: false,
+    });
+    setRun({
+      id: initialState.id,
+      status: initialState.status,
+      current_turn: initialState.currentTurn,
+      turn_sequence: initialState.turnSequence,
+      player_position: initialState.playerPosition,
+      computer_position: initialState.computerPosition,
+      player_hearts: initialState.playerHearts,
+      computer_hearts: initialState.computerHearts,
+      player_shields: initialState.playerShields,
+      computer_shields: initialState.computerShields,
+      player_score: initialState.playerScore,
+      computer_score: initialState.computerScore,
+      player_quiz_correct: initialState.playerQuizCorrect,
+      player_treasures_collected: initialState.playerTreasuresCollected,
+      computer_treasures_collected: initialState.computerTreasuresCollected,
+      player_quiz_encountered: initialState.playerQuizEncountered,
+      started_at: initialState.startedAt,
+      completed_at: null,
+    });
+    setPlayerDisplayPos(1);
+    setComputerDisplayPos(1);
+    setEvents([
+      "🎮 Practice Arena active. Train your FinTech skills across all 25 squares!",
+      "🎲 Roll 1–6 to advance toward Square 25.",
+    ]);
+    setError(null);
+    setLoading(false);
+  }, []);
+
+  // Check auth and initial load
   useEffect(() => {
     const load = async () => {
+      const modeParam = searchParams.get("mode");
+      if (modeParam === "practice") {
+        startPracticeGame();
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) {
-        router.push("/?signin=required");
+        // If not authenticated, give immediate practice mode option rather than hard kicking
+        startPracticeGame();
         return;
       }
       setUser(user);
 
-      // Fetch current game state
-      const res = await fetch("/api/game/state");
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data.profile);
+      // Fetch official current game state
+      try {
+        const res = await fetch("/api/game/state");
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data.profile);
 
-        if (!data.run) {
-          // No run yet — show onboarding
-          setShowOnboarding(true);
-        } else {
-          setRun(data.run);
-          if (isTerminal(data.run.status)) {
-            router.push("/game/result");
-            return;
+          if (!data.run) {
+            setShowOnboarding(true);
+          } else {
+            setRun(data.run);
+            setPlayerDisplayPos(data.run.player_position);
+            setComputerDisplayPos(data.run.computer_position);
+            if (isTerminal(data.run.status)) {
+              router.push("/game/result");
+              return;
+            }
           }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          // If database tables are not initialized, offer practice mode
+          setError(
+            errData.error ||
+              "Could not connect to official match host. You can play in Practice Arena right now!"
+          );
         }
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        setError(errData.error || "Failed to connect to the game server. Please check your database setup.");
+      } catch {
+        setError("Network connection issue. You can continue in Practice Arena!");
       }
       setLoading(false);
     };
     load();
-  }, [router, supabase.auth]);
+  }, [router, searchParams, startPracticeGame, supabase.auth]);
 
+  // Synchronize display positions when run loads
+  useEffect(() => {
+    if (run && !animating) {
+      setPlayerDisplayPos(run.player_position);
+      setComputerDisplayPos(run.computer_position);
+    }
+  }, [run, animating]);
+
+  // Handle onboarding for ranked matches
   const handleOnboardingComplete = async (displayName: string, leaderboardOptIn: boolean) => {
     setShowOnboarding(false);
     setLoading(true);
@@ -131,16 +235,270 @@ export default function GamePage() {
       if (res.ok) {
         setProfile({ display_name: displayName, avatar_url: null, leaderboard_opt_in: leaderboardOptIn });
         setRun(data.run);
+        setPlayerDisplayPos(data.run.player_position);
+        setComputerDisplayPos(data.run.computer_position);
       } else {
-        setError(data.error || "Failed to start game");
+        setError(data.error || "Failed to start game. Starting in Practice Arena instead.");
+        startPracticeGame();
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network error. Starting in Practice Arena.");
+      startPracticeGame();
     }
     setLoading(false);
   };
 
-  const handleRoll = useCallback(async () => {
+  /**
+   * Smooth step-by-step pawn hopping animation
+   */
+  const animatePawnMovement = async (
+    actor: "player" | "computer",
+    from: number,
+    finalTo: number,
+    diceVal: number,
+    eventsList: Array<{ type: string; description: string; fromSquare?: number; toSquare?: number }>
+  ) => {
+    setMovingPawn(actor);
+
+    // 1. Overshoot check
+    const isOvershot = eventsList.some((e) => e.type === "overshoot");
+    if (isOvershot) {
+      setFloatingMessage({
+        text: `🎯 Overshot! Exactly ${25 - from} needed to reach finish.`,
+        type: "finish",
+      });
+      await sleep(1400);
+      setFloatingMessage(null);
+      setMovingPawn(null);
+      return;
+    }
+
+    // 2. Normal forward stepping
+    const rawLanding = Math.min(25, from + diceVal);
+    for (let pos = from + 1; pos <= rawLanding; pos++) {
+      if (actor === "player") {
+        setPlayerDisplayPos(pos);
+      } else {
+        setComputerDisplayPos(pos);
+      }
+      sounds.playPawnStep();
+      await sleep(200);
+    }
+
+    // 3. Check for ladder ascent
+    const ladderEv = eventsList.find((e) => e.type === "ladder");
+    if (ladderEv) {
+      const ladderFrom = ladderEv.fromSquare || rawLanding;
+      const ladderTo = ladderEv.toSquare || finalTo;
+      setActiveLadder(ladderFrom);
+      setFloatingMessage({
+        text: `🪜 Ladder Boost! +${BOARD_CONFIG.scoring.ladder} pts`,
+        type: "ladder",
+      });
+      sounds.playLadderClimb();
+      await sleep(500);
+
+      if (actor === "player") setPlayerDisplayPos(ladderTo);
+      else setComputerDisplayPos(ladderTo);
+
+      await sleep(600);
+      setActiveLadder(null);
+      setFloatingMessage(null);
+    }
+
+    // 4. Check for snake slide
+    const snakeEv = eventsList.find((e) => e.type === "snake_ordinary" || e.type === "snake_major");
+    if (snakeEv) {
+      const snakeFrom = snakeEv.fromSquare || rawLanding;
+      const snakeTo = snakeEv.toSquare || finalTo;
+      const isMajor = snakeEv.type === "snake_major";
+      setActiveSnake(snakeFrom);
+
+      const shieldConsumed = eventsList.some((e) => e.type === "shield_consumed");
+      if (shieldConsumed) {
+        sounds.playShieldDeflect();
+        setFloatingMessage({ text: "🛡️ Cyber Shield Absorbed Incident!", type: "snake" });
+      } else if (isMajor) {
+        sounds.playHeartLost();
+        setFloatingMessage({ text: "🐍⚠️ Major Risk Incident: -25 pts & ❤️ lost!", type: "snake" });
+      } else {
+        sounds.playSnakeSlide();
+        setFloatingMessage({ text: "🐍 Ordinary Snake: -10 pts", type: "snake" });
+      }
+      await sleep(500);
+
+      if (actor === "player") setPlayerDisplayPos(snakeTo);
+      else setComputerDisplayPos(snakeTo);
+
+      await sleep(600);
+      setActiveSnake(null);
+      setFloatingMessage(null);
+    }
+
+    // 5. Check for finish line victory
+    if (finalTo === 25) {
+      sounds.playVictory();
+      setFloatingMessage({
+        text: actor === "player" ? "🏁 VICTORY! Reached Square 25 (+300 pts)!" : "🤖 Computer reached Square 25!",
+        type: "finish",
+      });
+      await sleep(1500);
+      setFloatingMessage(null);
+    }
+
+    // Confirm final positioning
+    if (actor === "player") setPlayerDisplayPos(finalTo);
+    else setComputerDisplayPos(finalTo);
+
+    setMovingPawn(null);
+  };
+
+  /**
+   * Execute Turn (Practice Mode using pure engine)
+   */
+  const handlePracticeRoll = async () => {
+    if (!localStateRef.current || rolling || animating || quizQuestion) return;
+    const currentState = localStateRef.current;
+    if (currentState.currentTurn !== "player" || checkTerminal(currentState)) return;
+
+    setRolling(true);
+    setError(null);
+    sounds.playDiceRoll();
+
+    // 1. Roll Player Die
+    await sleep(600);
+    const pDice = rollDice();
+    setLastRoll(pDice);
+    setRolling(false);
+    setAnimating(true);
+
+    const fromPos = currentState.playerPosition;
+    const pResult = processTurn(currentState, pDice);
+    localStateRef.current = pResult.newState;
+
+    // Animate player movement
+    await animatePawnMovement("player", fromPos, pResult.toPosition, pDice, pResult.events);
+
+    // Update log
+    const pMsgs = pResult.events.map((e) => e.description);
+    setEvents((prev) => [...pMsgs.reverse(), ...prev].slice(0, 25));
+
+    // Update run state for HUD
+    const stateAfterPlayer = pResult.newState;
+    setRun({
+      id: stateAfterPlayer.id,
+      status: stateAfterPlayer.status,
+      current_turn: stateAfterPlayer.currentTurn,
+      turn_sequence: stateAfterPlayer.turnSequence,
+      player_position: stateAfterPlayer.playerPosition,
+      computer_position: stateAfterPlayer.computerPosition,
+      player_hearts: stateAfterPlayer.playerHearts,
+      computer_hearts: stateAfterPlayer.computerHearts,
+      player_shields: stateAfterPlayer.playerShields,
+      computer_shields: stateAfterPlayer.computerShields,
+      player_score: stateAfterPlayer.playerScore,
+      computer_score: stateAfterPlayer.computerScore,
+      player_quiz_correct: stateAfterPlayer.playerQuizCorrect,
+      player_treasures_collected: stateAfterPlayer.playerTreasuresCollected,
+      computer_treasures_collected: stateAfterPlayer.computerTreasuresCollected,
+      player_quiz_encountered: stateAfterPlayer.playerQuizEncountered,
+      started_at: stateAfterPlayer.startedAt,
+      completed_at: stateAfterPlayer.completedAt,
+    });
+
+    // Check if FinTech quiz triggered
+    const quizEv = pResult.events.find((e) => e.type === "quiz_triggered");
+    if (quizEv) {
+      const q = getRandomQuestion();
+      if (q) {
+        setQuizQuestion({
+          id: q.id,
+          question: q.question,
+          options: q.options,
+          category: q.category,
+          difficulty: q.difficulty,
+          squareNumber: pResult.toPosition,
+        });
+      }
+      setAnimating(false);
+      return;
+    }
+
+    // Check treasure
+    const treasureEv = pResult.events.find((e) => e.type === "treasure_collected");
+    if (treasureEv) {
+      sounds.playTreasure();
+      setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: pResult.toPosition });
+    }
+
+    // Check if terminal
+    if (checkTerminal(stateAfterPlayer)) {
+      setAnimating(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("practice_run", JSON.stringify(stateAfterPlayer));
+      }
+      setTimeout(() => router.push("/game/result?mode=practice"), 2200);
+      return;
+    }
+
+    // 2. Autonomous Computer Opponent Turn
+    if (stateAfterPlayer.currentTurn === "computer") {
+      await sleep(700);
+      setComputerRolling(true);
+      sounds.playDiceRoll();
+
+      await sleep(650);
+      const cDice = rollDice();
+      setComputerRoll(cDice);
+      setComputerRolling(false);
+
+      const cFrom = stateAfterPlayer.computerPosition;
+      const cResult = processTurn(stateAfterPlayer, cDice);
+      localStateRef.current = cResult.newState;
+
+      // Animate computer movement
+      await animatePawnMovement("computer", cFrom, cResult.toPosition, cDice, cResult.events);
+
+      const cMsgs = [`🤖 FinTech AI rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
+      setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
+
+      const finalState = cResult.newState;
+      setRun({
+        id: finalState.id,
+        status: finalState.status,
+        current_turn: finalState.currentTurn,
+        turn_sequence: finalState.turnSequence,
+        player_position: finalState.playerPosition,
+        computer_position: finalState.computerPosition,
+        player_hearts: finalState.playerHearts,
+        computer_hearts: finalState.computerHearts,
+        player_shields: finalState.playerShields,
+        computer_shields: finalState.computerShields,
+        player_score: finalState.playerScore,
+        computer_score: finalState.computerScore,
+        player_quiz_correct: finalState.playerQuizCorrect,
+        player_treasures_collected: finalState.playerTreasuresCollected,
+        computer_treasures_collected: finalState.computerTreasuresCollected,
+        player_quiz_encountered: finalState.playerQuizEncountered,
+        started_at: finalState.startedAt,
+        completed_at: finalState.completedAt,
+      });
+
+      if (checkTerminal(finalState)) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("practice_run", JSON.stringify(finalState));
+        }
+        setTimeout(() => router.push("/game/result?mode=practice"), 2200);
+      }
+    }
+
+    setAnimating(false);
+  };
+
+  /**
+   * Execute Turn (Ranked Mode via Server API)
+   */
+  const handleRankedRoll = useCallback(async () => {
     if (!run || rolling || animating || quizQuestion) return;
     if (run.current_turn !== "player") return;
     if (isTerminal(run.status)) return;
@@ -149,6 +507,7 @@ export default function GamePage() {
     setError(null);
     setLastRoll(null);
     setComputerRoll(null);
+    sounds.playDiceRoll();
 
     try {
       const res = await fetch("/api/game/roll", {
@@ -165,56 +524,176 @@ export default function GamePage() {
       }
 
       setLastRoll(data.playerRoll);
-      setRun(data.run);
+      setRolling(false);
+      setAnimating(true);
 
-      // Build event messages
-      const msgs: string[] = [];
-      for (const e of data.playerEvents || []) {
-        msgs.push(e.description);
-      }
-      if (data.computerRoll !== null) {
-        setComputerRoll(data.computerRoll);
-        msgs.push(`🤖 Computer rolled ${data.computerRoll}`);
-        for (const e of data.computerEvents || []) {
-          msgs.push(e.description);
-        }
-      }
-      setEvents((prev) => [...msgs.reverse(), ...prev].slice(0, 20));
+      // Animate player pawn movement
+      const playerFrom = data.playerFrom ?? run.player_position;
+      const playerTo = data.playerTo ?? data.run.player_position;
+      await animatePawnMovement("player", playerFrom, playerTo, data.playerRoll ?? 1, data.playerEvents || []);
+
+      // Build player events
+      const pMsgs: string[] = (data.playerEvents || []).map((e) => e.description);
+      setEvents((prev) => [...pMsgs.reverse(), ...prev].slice(0, 25));
 
       // Check for quiz
       if (data.quizQuestion) {
-        setAnimating(true);
-        setTimeout(() => {
-          setQuizQuestion(data.quizQuestion);
-          setAnimating(false);
-        }, 600);
+        setQuizQuestion(data.quizQuestion);
+        setAnimating(false);
+        setRun(data.run);
+        return;
       }
 
       // Check for treasure
-      const treasureEvent = data.playerEvents?.find((e) => e.type === "treasure_collected");
-      if (treasureEvent && !data.quizQuestion) {
-        setAnimating(true);
-        setTimeout(() => {
-          setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: data.run.player_position });
-          setAnimating(false);
-        }, 600);
+      const treasureEv = data.playerEvents?.find((e) => e.type === "treasure_collected");
+      if (treasureEv) {
+        sounds.playTreasure();
+        setShowTreasure({ points: BOARD_CONFIG.treasure.points, square: data.run.player_position });
       }
 
-      // Navigate to result if game over
+      // If game ended on player turn
       if (isTerminal(data.run.status)) {
-        setTimeout(() => {
-          router.push("/game/result");
-        }, 2000);
+        setRun(data.run);
+        setAnimating(false);
+        setTimeout(() => router.push("/game/result"), 2200);
+        return;
+      }
+
+      // Now sequentially animate Computer Turn if returned
+      if (data.computerRoll !== null) {
+        await sleep(600);
+        setComputerRolling(true);
+        sounds.playDiceRoll();
+
+        await sleep(650);
+        setComputerRoll(data.computerRoll);
+        setComputerRolling(false);
+
+        const compFrom = data.computerFrom ?? run.computer_position;
+        const compTo = data.computerTo ?? data.run.computer_position;
+        await animatePawnMovement("computer", compFrom, compTo, data.computerRoll, data.computerEvents || []);
+
+        const cMsgs: string[] = [
+          `🤖 FinTech AI rolled ${data.computerRoll}`,
+          ...(data.computerEvents || []).map((e) => e.description),
+        ];
+        setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
+      }
+
+      setRun(data.run);
+
+      if (isTerminal(data.run.status)) {
+        setTimeout(() => router.push("/game/result"), 2200);
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network communication error. Please try rolling again.");
     }
 
     setRolling(false);
+    setAnimating(false);
   }, [run, rolling, animating, quizQuestion, router]);
 
+  const handleRoll = () => {
+    if (isPracticeMode) {
+      handlePracticeRoll();
+    } else {
+      handleRankedRoll();
+    }
+  };
+
+  /**
+   * Handle Quiz Submission (for both Ranked and Practice modes)
+   */
   const handleQuizAnswer = async (questionId: string, squareNumber: number, selectedOption: number) => {
     setQuizQuestion(null);
+
+    if (isPracticeMode && localStateRef.current) {
+      const q = getQuizQuestion(questionId);
+      const isCorrect = q ? q.correctIndex === selectedOption : false;
+
+      if (isCorrect) {
+        sounds.playQuizCorrect();
+        localStateRef.current.playerScore += BOARD_CONFIG.scoring.quizCorrect;
+        localStateRef.current.playerQuizCorrect += 1;
+        setEvents((prev) => [
+          `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} pts! ${q?.explanation || ""}`,
+          ...prev,
+        ]);
+      } else {
+        sounds.playQuizWrong();
+        setEvents((prev) => [`❌ Incorrect. ${q?.explanation || ""}`, ...prev]);
+      }
+
+      // Pass turn to computer
+      localStateRef.current.currentTurn = "computer";
+      localStateRef.current.turnSequence += 1;
+
+      // Update HUD
+      const st = localStateRef.current;
+      setRun((prev) =>
+        prev
+          ? {
+              ...prev,
+              player_score: st.playerScore,
+              player_quiz_correct: st.playerQuizCorrect,
+              current_turn: "computer",
+              turn_sequence: st.turnSequence,
+            }
+          : null
+      );
+
+      // Trigger computer turn after short delay
+      setTimeout(async () => {
+        setComputerRolling(true);
+        sounds.playDiceRoll();
+        await sleep(650);
+
+        const cDice = rollDice();
+        setComputerRoll(cDice);
+        setComputerRolling(false);
+
+        const cFrom = localStateRef.current!.computerPosition;
+        const cResult = processTurn(localStateRef.current!, cDice);
+        localStateRef.current = cResult.newState;
+
+        await animatePawnMovement("computer", cFrom, cResult.toPosition, cDice, cResult.events);
+
+        const cMsgs = [`🤖 FinTech AI rolled ${cDice}`, ...cResult.events.map((e) => e.description)];
+        setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
+
+        const finalState = cResult.newState;
+        setRun({
+          id: finalState.id,
+          status: finalState.status,
+          current_turn: finalState.currentTurn,
+          turn_sequence: finalState.turnSequence,
+          player_position: finalState.playerPosition,
+          computer_position: finalState.computerPosition,
+          player_hearts: finalState.playerHearts,
+          computer_hearts: finalState.computerHearts,
+          player_shields: finalState.playerShields,
+          computer_shields: finalState.computerShields,
+          player_score: finalState.playerScore,
+          computer_score: finalState.computerScore,
+          player_quiz_correct: finalState.playerQuizCorrect,
+          player_treasures_collected: finalState.playerTreasuresCollected,
+          computer_treasures_collected: finalState.computerTreasuresCollected,
+          player_quiz_encountered: finalState.playerQuizEncountered,
+          started_at: finalState.startedAt,
+          completed_at: finalState.completedAt,
+        });
+
+        if (checkTerminal(finalState)) {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("practice_run", JSON.stringify(finalState));
+          }
+          setTimeout(() => router.push("/game/result?mode=practice"), 2200);
+        }
+      }, 700);
+      return;
+    }
+
+    // Ranked API flow
     try {
       const res = await fetch("/api/game/quiz", {
         method: "POST",
@@ -224,12 +703,18 @@ export default function GamePage() {
       const data = await res.json();
 
       if (res.ok) {
-        const msg = data.isCorrect
-          ? `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} points! ${data.explanation}`
-          : `❌ Incorrect. ${data.explanation}`;
-        setEvents((prev) => [msg, ...prev].slice(0, 20));
+        if (data.isCorrect) {
+          sounds.playQuizCorrect();
+          setEvents((prev) => [
+            `✅ Correct! +${BOARD_CONFIG.scoring.quizCorrect} pts! ${data.explanation}`,
+            ...prev,
+          ]);
+        } else {
+          sounds.playQuizWrong();
+          setEvents((prev) => [`❌ Incorrect. ${data.explanation}`, ...prev]);
+        }
 
-        // Refresh run state
+        // Refresh state
         const stateRes = await fetch("/api/game/state");
         if (stateRes.ok) {
           const stateData = await stateRes.json();
@@ -238,27 +723,48 @@ export default function GamePage() {
 
         // Process computer turn
         setTimeout(async () => {
+          setComputerRolling(true);
+          sounds.playDiceRoll();
+
           const rollRes = await fetch("/api/game/roll", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
           });
+
           if (rollRes.ok) {
             const rollData: TurnResult = await rollRes.json();
-            setRun(rollData.run);
+            setComputerRolling(false);
+
             if (rollData.computerRoll !== null) {
               setComputerRoll(rollData.computerRoll);
-              const cMsgs: string[] = [`🤖 Computer rolled ${rollData.computerRoll}`];
-              for (const e of rollData.computerEvents || []) cMsgs.push(e.description);
-              setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 20));
+              const compFrom = run?.computer_position ?? 1;
+              const compTo = rollData.run.computer_position;
+              await animatePawnMovement(
+                "computer",
+                compFrom,
+                compTo,
+                rollData.computerRoll,
+                rollData.computerEvents || []
+              );
+
+              const cMsgs: string[] = [
+                `🤖 FinTech AI rolled ${rollData.computerRoll}`,
+                ...(rollData.computerEvents || []).map((e) => e.description),
+              ];
+              setEvents((prev) => [...cMsgs.reverse(), ...prev].slice(0, 25));
             }
+
+            setRun(rollData.run);
             if (isTerminal(rollData.run.status)) {
-              setTimeout(() => router.push("/game/result"), 2000);
+              setTimeout(() => router.push("/game/result"), 2200);
             }
+          } else {
+            setComputerRolling(false);
           }
-        }, 1000);
+        }, 800);
       }
     } catch {
-      setError("Quiz submission failed. Please try again.");
+      setError("Quiz submission encountered a network error.");
     }
   };
 
@@ -288,55 +794,35 @@ export default function GamePage() {
   }
 
   if (!run) {
-    const isMigrationError =
-      error?.toLowerCase().includes("database tables") ||
-      error?.toLowerCase().includes("schema cache") ||
-      error?.toLowerCase().includes("game_runs");
-
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white p-4">
         <div className="max-w-md w-full festival-card p-6 border-white/10 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-2xl">
-            {isMigrationError ? "🛠️" : "⚠️"}
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-3xl">
+            🎮
           </div>
 
           <h2 className="text-xl font-bold font-mono text-[#fec01f] mb-2">
-            {isMigrationError ? "Database Setup Required" : "Connection Notice"}
+            Arena Launch Console
           </h2>
 
           <p className="text-sm text-white/80 mb-6 leading-relaxed">
-            {error || "No active game found for this account."}
+            {error || "Ready to experience the digital Snakes and Ladders arena?"}
           </p>
 
-          {isMigrationError && (
-            <div className="bg-[#0a0a28] border border-white/10 rounded-xl p-4 text-left text-xs font-mono text-white/70 mb-6 space-y-2">
-              <p className="font-bold text-white/90">How to initialize:</p>
-              <p>1. Open your Supabase Dashboard SQL Editor.</p>
-              <p>2. Paste and run <span className="text-[#fec01f]">001_initial_schema.sql</span>.</p>
-              <p>3. Return here and click Retry Connection.</p>
-              <a
-                href="https://supabase.com/dashboard/project/vqzyogpdecdqithvnarg/sql/new"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block mt-2 text-[#fec01f] underline hover:text-white"
-              >
-                Open Supabase SQL Editor ↗
-              </a>
-            </div>
-          )}
-
-          <div className="flex gap-3">
+          <div className="space-y-3">
             <button
-              onClick={() => window.location.reload()}
-              className="flex-1 py-3 rounded-xl bg-[#fec01f] text-black font-mono text-sm font-bold hover:bg-[#fec01f]/90 transition-colors cursor-pointer"
+              onClick={startPracticeGame}
+              className="w-full py-3.5 rounded-xl interactive-btn interactive-btn--primary font-mono text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(254,192,31,0.4)]"
             >
-              🔄 Retry Connection
+              <Play size={18} />
+              <span>Launch Practice Arena Now</span>
             </button>
+
             <a
               href="/"
-              className="px-5 py-3 rounded-xl border border-white/10 text-white/80 font-mono text-sm font-semibold hover:bg-white/5 transition-colors"
+              className="block w-full py-3 rounded-xl border border-white/10 text-white/80 font-mono text-xs font-semibold hover:bg-white/5 transition-colors"
             >
-              Home
+              Return Home
             </a>
           </div>
         </div>
@@ -354,6 +840,22 @@ export default function GamePage() {
         onSignOut={handleSignOut}
         activePath="/game"
       />
+
+      {/* Mode Notification Banner */}
+      {isPracticeMode && (
+        <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-[#0a0a28] border-b border-teal-500/40 px-4 py-2 text-center text-xs font-mono text-teal-200 flex items-center justify-center gap-3">
+          <span className="font-bold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded border border-teal-400/40">
+            Practice Arena
+          </span>
+          <span>Unlimited moves, full audio &amp; physics. Ready to rank?</span>
+          <a
+            href="/"
+            className="text-[#fec01f] font-bold underline hover:text-white transition-colors"
+          >
+            Sign in for Official Tournament Leaderboard →
+          </a>
+        </div>
+      )}
 
       <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {/* Error notification */}
@@ -373,24 +875,40 @@ export default function GamePage() {
           {/* Main Board & Controls */}
           <div className="space-y-5">
             {/* Arena Board */}
-            <div className="festival-card p-4 sm:p-6 bg-[#090924]/80">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+            <div className="festival-card p-3 sm:p-5 bg-[#090924]/85 shadow-[0_16px_50px_rgba(0,0,0,0.7)]">
+              <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#fec01f] animate-ping" />
-                  <span className="font-mono text-xs uppercase tracking-widest text-white/80 font-bold">
-                    Official Match Arena
+                  <span className="font-mono text-xs uppercase tracking-widest text-white/90 font-bold">
+                    {isPracticeMode ? "Practice Match Arena" : "Official Tournament Arena"}
                   </span>
                 </div>
-                <span className="font-mono text-xs text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded">
-                  Turn {run.turn_sequence}
-                </span>
+                <div className="flex items-center gap-2">
+                  {isPracticeMode && (
+                    <button
+                      onClick={startPracticeGame}
+                      className="font-mono text-[11px] text-teal-300 hover:text-teal-100 flex items-center gap-1 bg-teal-950/50 border border-teal-500/30 px-2 py-0.5 rounded"
+                      title="Reset practice match"
+                    >
+                      <RotateCcw size={11} />
+                      Reset
+                    </button>
+                  )}
+                  <span className="font-mono text-xs text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded">
+                    Turn {run.turn_sequence}
+                  </span>
+                </div>
               </div>
 
               <GameBoard
-                playerPosition={run.player_position}
-                computerPosition={run.computer_position}
+                playerPosition={playerDisplayPos}
+                computerPosition={computerDisplayPos}
                 playerName={profile?.display_name || "You"}
                 animating={animating}
+                activeLadder={activeLadder}
+                activeSnake={activeSnake}
+                movingPawn={movingPawn}
+                floatingMessage={floatingMessage}
               />
             </div>
 
@@ -399,11 +917,12 @@ export default function GamePage() {
               <DicePanel
                 isPlayerTurn={run.current_turn === "player"}
                 rolling={rolling}
+                computerRolling={computerRolling}
                 lastRoll={lastRoll}
                 computerRoll={computerRoll}
                 onRoll={handleRoll}
                 disabled={!!quizQuestion || animating}
-                playerPosition={run.player_position}
+                playerPosition={playerDisplayPos}
               />
             )}
           </div>
@@ -416,7 +935,7 @@ export default function GamePage() {
               hearts={run.player_hearts}
               shields={run.player_shields}
               score={run.player_score}
-              position={run.player_position}
+              position={playerDisplayPos}
               quizCorrect={run.player_quiz_correct}
               isCurrentTurn={run.current_turn === "player"}
               tokenColor="teal"
@@ -424,11 +943,11 @@ export default function GamePage() {
 
             {/* Computer Opponent HUD */}
             <PlayerPanel
-              label="Autonomous FinTech AI"
+              label="FinTech Autonomous AI"
               hearts={run.computer_hearts}
               shields={run.computer_shields}
               score={run.computer_score}
-              position={run.computer_position}
+              position={computerDisplayPos}
               quizCorrect={0}
               isCurrentTurn={run.current_turn === "computer"}
               tokenColor="burgundy"
@@ -465,7 +984,7 @@ export default function GamePage() {
 
       {/* Quiz Overlay */}
       {quizQuestion && (
-        <QuizOverlay question={questionIdFix(quizQuestion)} onAnswer={handleQuizAnswer} />
+        <QuizOverlay question={quizQuestion} onAnswer={handleQuizAnswer} />
       )}
 
       {/* Treasure Overlay */}
@@ -483,7 +1002,19 @@ export default function GamePage() {
   );
 }
 
-// Helper to ensure question structure
-function questionIdFix(q: QuizQuestion) {
-  return q;
+export default function GamePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-mono text-sm text-white/70">Initializing FinTech Arena…</p>
+          </div>
+        </div>
+      }
+    >
+      <GameContent />
+    </Suspense>
+  );
 }

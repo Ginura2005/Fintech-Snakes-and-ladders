@@ -16,6 +16,7 @@ import {
   HelpCircle,
   Award,
   Sparkles,
+  Puzzle,
 } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
@@ -184,6 +185,14 @@ export default function HomePage() {
                 )}
 
                 <Link
+                  href="/game?mode=practice"
+                  className="interactive-btn bg-teal-950/80 hover:bg-teal-900/90 border border-teal-400/60 text-teal-200 text-base font-semibold py-4 px-7 w-full sm:w-auto shadow-[0_0_25px_rgba(45,212,191,0.25)] flex items-center justify-center gap-2"
+                >
+                  <Play size={18} className="text-teal-300 fill-current" />
+                  <span>Practice Arena</span>
+                </Link>
+
+                <Link
                   href="/leaderboard"
                   className="interactive-btn interactive-btn--outline text-base font-semibold py-4 px-7 w-full sm:w-auto"
                 >
@@ -340,6 +349,65 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================
+            LINKEDIN PUZZLES ARENA SHOWCASE
+            ======================================================== */}
+        <section className="py-16 sm:py-24 border-b border-white/10 relative overflow-hidden bg-gradient-to-b from-white/[0.02] to-transparent">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+              <div>
+                <span className="section-badge section-badge-primary mb-2">
+                  DAILY BRAIN ARENA
+                </span>
+                <h2 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-white mt-1">
+                  LinkedIn Puzzles — FinTech Edition
+                </h2>
+                <p className="text-white/70 text-sm sm:text-base mt-2 max-w-xl">
+                  Quick coffee-break brain workouts inspired by LinkedIn&apos;s daily games.
+                  Solve Queens, Tango, Pinpoint, Crossclimb, Zip, and Mini Sudoku.
+                </p>
+              </div>
+
+              <Link
+                href="/puzzles"
+                className="interactive-btn interactive-btn--primary text-sm font-bold uppercase tracking-wider py-3 px-6 shrink-0 flex items-center gap-2 shadow-[0_0_20px_rgba(254,192,31,0.25)]"
+              >
+                <Puzzle size={16} />
+                <span>Play Puzzles Hub</span>
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {[
+                { id: "queens", icon: "👑", title: "Queens", badge: "Hit #1", sub: "Logic Placement" },
+                { id: "tango", icon: "☀️", title: "Tango", badge: "Binary", sub: "Sun & Moon" },
+                { id: "pinpoint", icon: "🎯", title: "Pinpoint", badge: "Trivia", sub: "5 Mystery Clues" },
+                { id: "crossclimb", icon: "🪜", title: "Crossclimb", badge: "Ladder", sub: "Word Climb" },
+                { id: "zip", icon: "⚡", title: "Zip", badge: "Single Path", sub: "Waypoint Maze" },
+                { id: "mini-sudoku", icon: "🔢", title: "Sudoku", badge: "6x6 Grid", sub: "Fast Logic" },
+              ].map((p, idx) => (
+                <Link
+                  key={idx}
+                  href={`/puzzles?game=${p.id}`}
+                  className="festival-card p-4 flex flex-col items-center text-center group hover:border-[#fec01f]/60 hover:scale-105 transition-all"
+                >
+                  <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{p.icon}</span>
+                  <span className="font-heading font-bold text-sm text-white group-hover:text-[#fec01f] transition-colors">
+                    {p.title}
+                  </span>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#fec01f] font-semibold mt-0.5">
+                    {p.badge}
+                  </span>
+                  <span className="text-[11px] text-white/50 mt-1 line-clamp-1">
+                    {p.sub}
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
