@@ -7,6 +7,8 @@ import {
   isTerminal,
   GameState,
 } from "@/lib/game-engine/engine";
+import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { generateDynamicBoard } from "@/lib/game-engine/procedural-generator";
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
 
 export const dynamic = "force-dynamic";
@@ -117,13 +119,14 @@ async function processRoll(userId: string, supabase: any) {
     completedAt: run.completed_at,
   };
 
+  const boardConfig = run.board_seed ? generateDynamicBoard(Number(run.board_seed)).config : BOARD_CONFIG;
   const initialActor = engineState.currentTurn;
 
   // Roll die (server-side crypto random)
   const firstDice = rollDice();
 
   // Process first turn
-  const firstResult = processTurn(engineState, firstDice);
+  const firstResult = processTurn(engineState, firstDice, undefined, boardConfig);
 
   // Check if quiz was triggered
   let quizQuestion = null;
@@ -154,7 +157,7 @@ async function processRoll(userId: string, supabase: any) {
   // If initial turn was player, no quiz was triggered, and it's now computer's turn:
   if (initialActor === "player" && !quizEvent && !isTerminal(stateAfterTurn) && stateAfterTurn.currentTurn === "computer") {
     const computerDice = rollDice();
-    secondResult = processTurn(stateAfterTurn, computerDice);
+    secondResult = processTurn(stateAfterTurn, computerDice, undefined, boardConfig);
     await persistTurnResult(db, run.id, secondResult, stateAfterTurn.turnSequence);
     stateAfterTurn = secondResult.newState;
   }

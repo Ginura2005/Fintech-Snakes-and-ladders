@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, Shield, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { Heart, Shield, Volume2, VolumeX, RotateCcw, Shuffle } from "lucide-react";
 import { sounds } from "@/lib/audio/sound-effects";
 import GameAvatar, { AvatarMood } from "./GameAvatar";
 
@@ -25,6 +25,8 @@ interface CompactScoreHeaderProps {
   turnSequence: number;
   isPracticeMode?: boolean;
   onResetPractice?: () => void;
+  onShuffleBoard?: () => void;
+  boardSeed?: number | null;
 }
 
 export default function CompactScoreHeader({
@@ -45,6 +47,8 @@ export default function CompactScoreHeader({
   turnSequence,
   isPracticeMode = false,
   onResetPractice,
+  onShuffleBoard,
+  boardSeed = null,
 }: CompactScoreHeaderProps) {
   const [muted, setMuted] = useState(sounds.getMuted());
   const isPlayerTurn = currentTurn === "player";
@@ -139,7 +143,7 @@ export default function CompactScoreHeader({
           {/* Center: Turn Status & Audio Controls */}
           <div className="flex flex-col items-center justify-center text-center px-0.5 shrink-0">
             <span className="font-mono text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest leading-none mb-0.5">
-              Turn {turnSequence}
+              Turn {turnSequence}{boardSeed ? ` · #${boardSeed}` : ""}
             </span>
 
             <div className="flex items-center gap-1">
@@ -164,6 +168,18 @@ export default function CompactScoreHeader({
                   aria-label="Reset practice match"
                 >
                   <RotateCcw size={12} />
+                </button>
+              )}
+
+              {isPracticeMode && onShuffleBoard && (
+                <button
+                  onClick={onShuffleBoard}
+                  className="p-1 sm:p-1.5 rounded-lg bg-[#fec01f]/15 border border-[#fec01f]/40 hover:bg-[#fec01f]/25 text-[#fec01f] transition-all cursor-pointer flex items-center gap-1 active:scale-95 shadow-[0_0_8px_rgba(254,192,31,0.2)]"
+                  title="Generate a random board layout (snakes, ladders, hazards & treasures)"
+                  aria-label="Shuffle arena board"
+                >
+                  <Shuffle size={12} />
+                  <span className="hidden sm:inline text-[9px] font-mono font-bold">Shuffle</span>
                 </button>
               )}
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { BOARD_CONFIG, getLadder, getSnake, getSpecialSquare } from "@/lib/game-engine/board-config";
+import { BOARD_CONFIG, getLadder, getSnake, getSpecialSquare, BoardConfig } from "@/lib/game-engine/board-config";
 import BoardSvgOverlay, { SQUARE_CENTERS } from "./BoardSvgOverlay";
 import GameAvatar, { AvatarMood } from "./GameAvatar";
 
@@ -15,6 +15,8 @@ interface BoardProps {
   activeSnake?: number | null;
   movingPawn?: "player" | "computer" | null;
   floatingMessage?: { text: string; type: "ladder" | "snake" | "treasure" | "quiz" | "finish" } | null;
+  /** Dynamic or procedural board configuration */
+  boardConfig?: BoardConfig;
 }
 
 // 5×5 Serpentine Grid layout
@@ -32,11 +34,10 @@ function buildBoardLayout(): number[][] {
 
 const BOARD_GRID = buildBoardLayout();
 
-function getCellMetadata(square: number) {
-  const ladder = getLadder(square);
-  const snake = getSnake(square);
-  const special = getSpecialSquare(square);
-
+function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
+  const ladder = getLadder(square, config);
+  const snake = getSnake(square, config);
+  const special = getSpecialSquare(square, config);
   if (square === 25) {
     return {
       type: "finish",
@@ -112,7 +113,9 @@ export default function GameBoard({
   activeSnake = null,
   movingPawn = null,
   floatingMessage = null,
+  boardConfig = BOARD_CONFIG,
 }: BoardProps) {
+  const activeConfig = boardConfig;
   // Center coordinates for character pawns on 1000x1000 board
   const playerCoord = SQUARE_CENTERS[playerPosition] || SQUARE_CENTERS[1];
   const computerCoord = SQUARE_CENTERS[computerPosition] || SQUARE_CENTERS[1];
@@ -178,7 +181,7 @@ export default function GameBoard({
         {/* Aspect-Square Canvas for Synchronized SVG Overlay & Grid */}
         <div className="relative w-full aspect-square">
           {/* Visual SVG Overlay: 3D Golden Ladders & Curved Snakes */}
-          <BoardSvgOverlay activeLadder={activeLadder} activeSnake={activeSnake} />
+          <BoardSvgOverlay activeLadder={activeLadder} activeSnake={activeSnake} ladders={activeConfig.ladders} snakes={activeConfig.snakes} />
 
           {/* Clean 5x5 Grid Cells */}
           <div className="grid grid-cols-5 grid-rows-5 gap-1 sm:gap-1.5 w-full h-full relative z-10">
@@ -186,7 +189,7 @@ export default function GameBoard({
               row.map((square) => {
                 const isPlayerHere = playerPosition === square;
                 const isComputerHere = computerPosition === square;
-                const meta = getCellMetadata(square);
+                const meta = getCellMetadata(square, activeConfig);
 
                 return (
                   <div

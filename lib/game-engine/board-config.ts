@@ -52,7 +52,13 @@ export interface BoardConfig {
   treasure: TreasureConfig;
 }
 
-export const BOARD_CONFIG: BoardConfig = {
+/**
+ * The original hardcoded classic board — used as the default for all
+ * tournament/ranked matches where no procedural seed has been applied.
+ * Also used as the source of truth for scoring & treasure rules when
+ * generating dynamic boards.
+ */
+export const CLASSIC_BOARD_CONFIG: BoardConfig = {
   version: CONFIG_VERSION,
   boardSize: 25,
   startHearts: 3,
@@ -155,18 +161,32 @@ export function validateBoardConfig(config: BoardConfig): void {
   }
 }
 
-// Validate on module load
-validateBoardConfig(BOARD_CONFIG);
+// ─── Active Board Config ──────────────────────────────────────────────────────
 
-// Lookup helpers
-export function getLadder(position: number): LadderConfig | undefined {
-  return BOARD_CONFIG.ladders.find((l) => l.from === position);
+/**
+ * The active board config used by the engine.
+ *
+ * In classic/ranked mode this is identical to `CLASSIC_BOARD_CONFIG`.
+ * In Practice Mode or daily-seed mode the game page overrides this
+ * by passing a dynamically generated config directly to `processTurn`.
+ *
+ * @deprecated For engine calls, prefer passing `boardConfig` explicitly
+ * to `processTurn(state, dice, answer, boardConfig)`.
+ */
+export const BOARD_CONFIG: BoardConfig = CLASSIC_BOARD_CONFIG;
+
+// Validate the classic config at module load time
+validateBoardConfig(CLASSIC_BOARD_CONFIG);
+
+// Lookup helpers (operate on the active config — kept for backward compat)
+export function getLadder(position: number, config: BoardConfig = BOARD_CONFIG): LadderConfig | undefined {
+  return config.ladders.find((l) => l.from === position);
 }
 
-export function getSnake(position: number): SnakeConfig | undefined {
-  return BOARD_CONFIG.snakes.find((s) => s.from === position);
+export function getSnake(position: number, config: BoardConfig = BOARD_CONFIG): SnakeConfig | undefined {
+  return config.snakes.find((s) => s.from === position);
 }
 
-export function getSpecialSquare(position: number): SpecialSquareConfig | undefined {
-  return BOARD_CONFIG.specialSquares.find((sq) => sq.square === position);
+export function getSpecialSquare(position: number, config: BoardConfig = BOARD_CONFIG): SpecialSquareConfig | undefined {
+  return config.specialSquares.find((sq) => sq.square === position);
 }

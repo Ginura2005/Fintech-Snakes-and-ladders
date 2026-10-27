@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { BOARD_CONFIG, LadderConfig, SnakeConfig } from "@/lib/game-engine/board-config";
 
 /**
  * Grid coordinates in 1000x1000 viewBox:
@@ -45,12 +45,21 @@ export const SQUARE_CENTERS: Record<number, { x: number; y: number; col: number;
 interface BoardSvgOverlayProps {
   activeLadder?: number | null;
   activeSnake?: number | null;
+  /** Optional override ladders - pass the generated board ladders for procedural/daily-seed mode */
+  ladders?: LadderConfig[];
+  /** Optional override snakes - pass the generated board snakes for procedural/daily-seed mode */
+  snakes?: SnakeConfig[];
 }
 
 export default function BoardSvgOverlay({
   activeLadder,
   activeSnake,
+  ladders: laddersOverride,
+  snakes: snakesOverride,
 }: BoardSvgOverlayProps) {
+  // Use provided overrides, or fall back to the classic board config
+  const ladders = laddersOverride ?? BOARD_CONFIG.ladders;
+  const snakes = snakesOverride ?? BOARD_CONFIG.snakes;
   // Build serpentine track path
   const serpentinePath = `
     M 100 900 
@@ -118,7 +127,7 @@ export default function BoardSvgOverlay({
       />
 
       {/* ── 2. Visual Ladders ── */}
-      {BOARD_CONFIG.ladders.map((ladder) => {
+      {ladders.map((ladder) => {
         const p1 = SQUARE_CENTERS[ladder.from];
         const p2 = SQUARE_CENTERS[ladder.to];
         if (!p1 || !p2) return null;
@@ -224,7 +233,7 @@ export default function BoardSvgOverlay({
       })}
 
       {/* ── 3. Visual Snakes ── */}
-      {BOARD_CONFIG.snakes.map((snake) => {
+      {snakes.map((snake) => {
         const head = SQUARE_CENTERS[snake.from];
         const tail = SQUARE_CENTERS[snake.to];
         if (!head || !tail) return null;

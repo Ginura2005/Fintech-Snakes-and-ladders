@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createInitialGameState } from "@/lib/game-engine/engine";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { getDailySeed } from "@/lib/game-engine/procedural-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -100,30 +101,43 @@ export async function POST(request: NextRequest) {
       user.id
     );
 
-    const { data: newRun, error: insertError } = await db
+    const dailySeed = getDailySeed();
+
+    const insertPayload: Record<string, unknown> = {
+      id: newState.id,
+      player_id: user.id,
+      config_version: BOARD_CONFIG.version,
+      board_seed: dailySeed,
+      status: "in_progress",
+      current_turn: "player",
+      turn_sequence: 0,
+      player_position: 1,
+      computer_position: 1,
+      player_hearts: BOARD_CONFIG.startHearts,
+      computer_hearts: BOARD_CONFIG.startHearts,
+      player_shields: 0,
+      computer_shields: 0,
+      player_score: 0,
+      computer_score: 0,
+      player_quiz_correct: 0,
+      player_treasures_collected: [],
+      computer_treasures_collected: [],
+      player_quiz_encountered: [],
+    };
+
+    let { data: newRun, error: insertError } = await db
       .from("game_runs")
-      .insert({
-        id: newState.id,
-        player_id: user.id,
-        config_version: BOARD_CONFIG.version,
-        status: "in_progress",
-        current_turn: "player",
-        turn_sequence: 0,
-        player_position: 1,
-        computer_position: 1,
-        player_hearts: BOARD_CONFIG.startHearts,
-        computer_hearts: BOARD_CONFIG.startHearts,
-        player_shields: 0,
-        computer_shields: 0,
-        player_score: 0,
-        computer_score: 0,
-        player_quiz_correct: 0,
-        player_treasures_collected: [],
-        computer_treasures_collected: [],
-        player_quiz_encountered: [],
-      })
+      .insert(insertPayload)
       .select()
       .single();
+
+    // Resilient fallback if board_seed column migration hasn't run yet in database
+    if (insertError && (insertError.code === "PGRST204" || insertError.message?.includes("board_seed"))) {
+      delete insertPayload.board_seed;
+      const retry = await db.from("game_runs").insert(insertPayload).select().single();
+      newRun = retry.data;
+      insertError = retry.error;
+    }
 
     if (insertError) {
       // Handle race condition: another request already inserted

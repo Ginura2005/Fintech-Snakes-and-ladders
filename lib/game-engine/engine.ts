@@ -9,6 +9,7 @@ import {
   getLadder,
   getSnake,
   getSpecialSquare,
+  BoardConfig,
 } from "./board-config";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -102,10 +103,11 @@ export function rollDice(): number {
 
 export function computeNewPosition(
   currentPosition: number,
-  diceValue: number
+  diceValue: number,
+  boardConfig: BoardConfig = BOARD_CONFIG
 ): { position: number; overshot: boolean } {
   const rawPosition = currentPosition + diceValue;
-  if (rawPosition > BOARD_CONFIG.boardSize) {
+  if (rawPosition > boardConfig.boardSize) {
     // Must land exactly; overshoot stays in place
     return { position: currentPosition, overshot: true };
   }
@@ -118,11 +120,19 @@ export function computeNewPosition(
  * Process one complete turn for the given actor.
  * Returns a TurnResult with new state and all events.
  * PURE — no side effects, no I/O.
+ *
+ * @param state       Current game state
+ * @param diceValue   Result of the dice roll (1-6)
+ * @param quizAnswer  Optional quiz answer from the player
+ * @param boardConfig Optional dynamic board config (defaults to BOARD_CONFIG /
+ *                    classic board). Pass the generated config for procedural
+ *                    Practice Mode or daily-seed ranked matches.
  */
 export function processTurn(
   state: GameState,
   diceValue: number,
-  quizAnswer?: { questionId: string; selectedOption: number; isCorrect: boolean }
+  quizAnswer?: { questionId: string; selectedOption: number; isCorrect: boolean },
+  boardConfig: BoardConfig = BOARD_CONFIG
 ): TurnResult {
   if (state.status !== "in_progress") {
     throw new Error(`Cannot process turn for status: ${state.status}`);
@@ -138,7 +148,7 @@ export function processTurn(
   const fromPos = actor === "player" ? state.playerPosition : state.computerPosition;
 
   // 1. Movement
-  const { position: rawPos, overshot } = computeNewPosition(fromPos, diceValue);
+  const { position: rawPos, overshot } = computeNewPosition(fromPos, diceValue, boardConfig);
 
   if (overshot) {
     events.push({
@@ -160,13 +170,13 @@ export function processTurn(
   }
 
   // Award movement points for forward dice movement
-  const movementScore = diceValue * BOARD_CONFIG.scoring.forwardMovementPerSquare;
+  const movementScore = diceValue * boardConfig.scoring.forwardMovementPerSquare;
   scoreDeltas.push({ actor, event: "forward_movement", delta: movementScore });
 
   let finalPos = rawPos;
 
   // 2. Check for finish
-  if (rawPos === BOARD_CONFIG.boardSize) {
+  if (rawPos === boardConfig.boardSize) {
     events.push({ type: "finish", description: "Reached the finish!" });
     finalPos = rawPos;
     // Apply position
@@ -177,7 +187,7 @@ export function processTurn(
     }
     // Score events
     applyScoreDeltas(newState, scoreDeltas);
-    newState = applyEndOfGame(newState, actor, events, scoreDeltas);
+    newState = applyEndOfGame(newState, actor, events, scoreDeltas, boardConfig);
     newState.completedAt = new Date().toISOString();
     newState.turnSequence += 1;
     return {
@@ -192,7 +202,7 @@ export function processTurn(
   }
 
   // 3. Check for snake
-  const snake = getSnake(rawPos);
+  const snake = getSnake(rawPos, boardConfig);
   if (snake) {
     finalPos = snake.to;
     const isMajor = snake.type === "major";
@@ -206,8 +216,8 @@ export function processTurn(
     });
 
     const snakeScore = isMajor
-      ? BOARD_CONFIG.scoring.majorSnake
-      : BOARD_CONFIG.scoring.ordinarySnake;
+      ? boardConfig.scoring.majorSnake
+      : boardConfig.scoring.ordinarySnake;
     scoreDeltas.push({ actor, event: isMajor ? "major_snake" : "ordinary_snake", delta: snakeScore });
 
     // Check shield on all snakes (ordinary and major)
@@ -250,7 +260,7 @@ export function processTurn(
             events.push({ type: "eliminated", description: "Computer eliminated! Player wins!" });
             newState.computerPosition = finalPos;
             applyScoreDeltas(newState, scoreDeltas);
-            newState = applyEndOfGame(newState, "player", events, scoreDeltas);
+            newState = applyEndOfGame(newState, "player", events, scoreDeltas, boardConfig);
             newState.status = "player_won";
             newState.completedAt = new Date().toISOString();
             newState.turnSequence += 1;
@@ -269,8 +279,8 @@ export function processTurn(
     }
 
   // 4. Check for ladder
-  const ladder = getLadder(rawPos === fromPos ? -1 : rawPos); // don't apply if we didn't move there
-  const ladderCheck = getSnake(rawPos) ? null : getLadder(rawPos);
+  const ladder = getLadder(rawPos === fromPos ? -1 : rawPos, boardConfig); // don't apply if we didn't move there
+  const ladderCheck = getSnake(rawPos, boardConfig) ? null : getLadder(rawPos, boardConfig);
   if (ladderCheck && !snake) {
     const lad = ladderCheck;
     finalPos = lad.to;
@@ -280,11 +290,11 @@ export function processTurn(
       fromSquare: rawPos,
       toSquare: lad.to,
     });
-    scoreDeltas.push({ actor, event: "ladder", delta: BOARD_CONFIG.scoring.ladder });
+    scoreDeltas.push({ actor, event: "ladder", delta: boardConfig.scoring.ladder });
   }
 
   // 5. Check special squares (only at final position, not on snake/ladder squares)
-  const specialSquare = getSpecialSquare(finalPos);
+  const specialSquare = getSpecialSquare(finalPos, boardConfig);
   if (specialSquare) {
     if (specialSquare.type === "treasure") {
       const alreadyCollected =
@@ -293,15 +303,15 @@ export function processTurn(
           : newState.computerTreasuresCollected.includes(finalPos);
 
       if (!alreadyCollected) {
-        scoreDeltas.push({ actor, event: "treasure", delta: BOARD_CONFIG.treasure.points });
+        scoreDeltas.push({ actor, event: "treasure", delta: boardConfig.treasure.points });
         events.push({
           type: "treasure_collected",
-          description: `💰 Treasure! +${BOARD_CONFIG.treasure.points} points!`,
+          description: `💰 Treasure! +${boardConfig.treasure.points} points!`,
         });
 
-        if (BOARD_CONFIG.treasure.shieldAwarded) {
+        if (boardConfig.treasure.shieldAwarded) {
           const currentShields = actor === "player" ? newState.playerShields : newState.computerShields;
-          if (currentShields < BOARD_CONFIG.treasure.maxShields) {
+          if (currentShields < boardConfig.treasure.maxShields) {
             if (actor === "player") newState.playerShields += 1;
             else newState.computerShields += 1;
             events.push({ type: "normal_move", description: "🛡️ Shield awarded!" });
@@ -328,7 +338,7 @@ export function processTurn(
         newState.playerQuizEncountered = [...newState.playerQuizEncountered, finalPos];
         events.push({
           type: "quiz_triggered",
-          description: `📝 FinTech Quiz! Answer correctly for +${BOARD_CONFIG.scoring.quizCorrect} points!`,
+          description: `📝 FinTech Quiz! Answer correctly for +${boardConfig.scoring.quizCorrect} points!`,
         });
       }
     }
@@ -336,7 +346,7 @@ export function processTurn(
 
   // Apply quiz answer if provided
   if (quizAnswer && quizAnswer.isCorrect && actor === "player") {
-    scoreDeltas.push({ actor: "player", event: "quiz_correct", delta: BOARD_CONFIG.scoring.quizCorrect });
+    scoreDeltas.push({ actor: "player", event: "quiz_correct", delta: boardConfig.scoring.quizCorrect });
     newState.playerQuizCorrect += 1;
   }
 
@@ -381,25 +391,26 @@ function applyEndOfGame(
   state: GameState,
   winner: Actor,
   events: TurnEvent[],
-  scoreDeltas: ScoreDelta[]
+  scoreDeltas: ScoreDelta[],
+  boardConfig: BoardConfig = BOARD_CONFIG
 ): GameState {
   // Hearts remaining bonus — for player only
-  const heartBonus = state.playerHearts * BOARD_CONFIG.scoring.heartRemaining;
+  const heartBonus = state.playerHearts * boardConfig.scoring.heartRemaining;
   if (heartBonus > 0) {
     scoreDeltas.push({ actor: "player", event: "hearts_remaining", delta: heartBonus });
     state.playerScore = Math.max(0, state.playerScore + heartBonus);
   }
 
   if (winner === "player") {
-    const finishBonus = BOARD_CONFIG.scoring.reachingFinish;
-    const victoryBonus = BOARD_CONFIG.scoring.defeatingComputer;
+    const finishBonus = boardConfig.scoring.reachingFinish;
+    const victoryBonus = boardConfig.scoring.defeatingComputer;
     scoreDeltas.push({ actor: "player", event: "reaching_finish", delta: finishBonus });
     scoreDeltas.push({ actor: "player", event: "defeating_computer", delta: victoryBonus });
     state.playerScore = Math.max(0, state.playerScore + finishBonus + victoryBonus);
     state.status = "player_won";
     events.push({ type: "finish", description: "🎉 Player wins!" });
   } else {
-    const finishBonus = BOARD_CONFIG.scoring.reachingFinish;
+    const finishBonus = boardConfig.scoring.reachingFinish;
     scoreDeltas.push({ actor: "computer", event: "reaching_finish", delta: finishBonus });
     state.computerScore = Math.max(0, state.computerScore + finishBonus);
     state.status = "computer_won";

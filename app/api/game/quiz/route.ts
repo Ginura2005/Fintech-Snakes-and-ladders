@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getQuizQuestion } from "@/lib/game-engine/quiz-bank";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { generateDynamicBoard } from "@/lib/game-engine/procedural-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Fetch run
     const { data: run, error: runError } = await serviceClient
       .from("game_runs")
-      .select("id, status, player_quiz_correct, player_quiz_encountered, player_score, turn_sequence")
+      .select("id, status, player_quiz_correct, player_quiz_encountered, player_score, turn_sequence, board_seed")
       .eq("player_id", user.id)
       .single();
 
@@ -73,8 +74,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Question not found" }, { status: 404 });
     }
 
-    // Validate square is a quiz square
-    const specialSquares = BOARD_CONFIG.specialSquares;
+    // Determine board config (dynamic if seeded, classic otherwise)
+    const boardConfig = (run as any)?.board_seed
+      ? generateDynamicBoard(Number((run as any).board_seed)).config
+      : BOARD_CONFIG;
+    const specialSquares = boardConfig.specialSquares;
     const isValidQuizSquare = specialSquares.some(
       (sq) => sq.square === squareNumber && sq.type === "quiz"
     );
@@ -89,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isCorrect = selectedOption === question.correctIndex;
-    const scoreDelta = isCorrect ? BOARD_CONFIG.scoring.quizCorrect : 0;
+    const scoreDelta = isCorrect ? boardConfig.scoring.quizCorrect : 0;
     const newScore = Math.max(0, (run.player_score || 0) + scoreDelta);
     const newQuizCorrect = (run.player_quiz_correct || 0) + (isCorrect ? 1 : 0);
 

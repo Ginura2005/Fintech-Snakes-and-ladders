@@ -16,7 +16,8 @@ import EventLog from "@/components/game/EventLog";
 import OnboardingModal from "@/components/game/OnboardingModal";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
-import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
+import { BOARD_CONFIG, BoardConfig } from "@/lib/game-engine/board-config";
+import { generateDynamicBoard } from "@/lib/game-engine/procedural-generator";
 import { sounds } from "@/lib/audio/sound-effects";
 import {
   createInitialGameState,
@@ -86,6 +87,8 @@ function GameContent() {
   const supabase = createClient();
 
   const [isPracticeMode, setIsPracticeMode] = useState<boolean>(false);
+  const [activeBoardConfig, setActiveBoardConfig] = useState<BoardConfig>(BOARD_CONFIG);
+  const [boardSeed, setBoardSeed] = useState<number | null>(null);
   const [showPracticeBanner, setShowPracticeBanner] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -174,8 +177,17 @@ function GameContent() {
   const isTerminal = (status: string) =>
     ["player_won", "computer_won", "player_eliminated", "completed"].includes(status);
 
-  // Initialize Practice Mode
-  const startPracticeGame = useCallback(() => {
+  // Initialize Practice Mode (optionally with procedural seed)
+  const startPracticeGame = useCallback((seed?: number) => {
+    let config = BOARD_CONFIG;
+    if (seed !== undefined) {
+      config = generateDynamicBoard(seed).config;
+      setBoardSeed(seed);
+    } else {
+      setBoardSeed(null);
+    }
+    setActiveBoardConfig(config);
+
     const initialState = createInitialGameState("practice-" + Date.now(), "guest-pilot");
     localStateRef.current = initialState;
     setIsPracticeMode(true);
@@ -207,7 +219,9 @@ function GameContent() {
     setPlayerDisplayPos(1);
     setComputerDisplayPos(1);
     setEvents([
-      "🎮 Practice Arena active. Train your FinTech skills across all 25 squares!",
+      seed !== undefined
+        ? `✨ Arena reshuffled! Board seed #${seed} generated with dynamic layout.`
+        : "🎮 Practice Arena active. Train your FinTech skills across all 25 squares!",
       "🎲 Roll 1–6 to advance toward Square 25.",
     ]);
     setError(null);
@@ -217,6 +231,12 @@ function GameContent() {
     }
     setLoading(false);
   }, []);
+
+  const shufflePracticeBoard = useCallback(() => {
+    const newSeed = Math.floor(Math.random() * 900000) + 100000;
+    sounds.playDiceRoll();
+    startPracticeGame(newSeed);
+  }, [startPracticeGame]);
 
   // Auto-dismiss practice banner timer
   useEffect(() => {
@@ -259,6 +279,12 @@ function GameContent() {
             setShowOnboarding(true);
           } else {
             setRun(data.run);
+            if (data.run.board_seed) {
+              const seedNum = Number(data.run.board_seed);
+              const gen = generateDynamicBoard(seedNum);
+              setActiveBoardConfig(gen.config);
+              setBoardSeed(seedNum);
+            }
             setPlayerDisplayPos(data.run.player_position);
             setComputerDisplayPos(data.run.computer_position);
             if (isTerminal(data.run.status)) {
@@ -304,6 +330,12 @@ function GameContent() {
       if (res.ok) {
         setProfile({ display_name: displayName, avatar_url: null, leaderboard_opt_in: leaderboardOptIn });
         setRun(data.run);
+        if (data.run.board_seed) {
+          const seedNum = Number(data.run.board_seed);
+          const gen = generateDynamicBoard(seedNum);
+          setActiveBoardConfig(gen.config);
+          setBoardSeed(seedNum);
+        }
         setPlayerDisplayPos(data.run.player_position);
         setComputerDisplayPos(data.run.computer_position);
       } else {
@@ -514,7 +546,7 @@ function GameContent() {
     setAnimating(true);
 
     const fromPos = currentState.playerPosition;
-    const pResult = processTurn(currentState, pDice);
+    const pResult = processTurn(currentState, pDice, undefined, activeBoardConfig);
     localStateRef.current = pResult.newState;
 
     // Animate player movement
@@ -629,7 +661,7 @@ function GameContent() {
       await sleep(350);
 
       const cFrom = stateAfterPlayer.computerPosition;
-      const cResult = processTurn(stateAfterPlayer, cDice);
+      const cResult = processTurn(stateAfterPlayer, cDice, undefined, activeBoardConfig);
       localStateRef.current = cResult.newState;
 
       // Animate computer movement
@@ -902,7 +934,7 @@ function GameContent() {
         setComputerRolling(false);
 
         const cFrom = localStateRef.current!.computerPosition;
-        const cResult = processTurn(localStateRef.current!, cDice);
+        const cResult = processTurn(localStateRef.current!, cDice, undefined, activeBoardConfig);
         localStateRef.current = cResult.newState;
 
         await animatePawnMovement("computer", cFrom, cResult.toPosition, cDice, cResult.events);
@@ -1066,7 +1098,7 @@ function GameContent() {
 
           <div className="space-y-3">
             <button
-              onClick={startPracticeGame}
+              onClick={() => startPracticeGame()}
               className="w-full py-3.5 rounded-xl interactive-btn interactive-btn--primary font-mono text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(254,192,31,0.4)]"
             >
               <Play size={18} />
@@ -1165,7 +1197,9 @@ function GameContent() {
           currentTurn={run.current_turn as "player" | "computer"}
           turnSequence={run.turn_sequence}
           isPracticeMode={isPracticeMode}
-          onResetPractice={isPracticeMode ? startPracticeGame : undefined}
+          onResetPractice={isPracticeMode ? () => startPracticeGame() : undefined}
+          onShuffleBoard={isPracticeMode ? shufflePracticeBoard : undefined}
+          boardSeed={boardSeed}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 sm:gap-6 items-start">
@@ -1182,6 +1216,7 @@ function GameContent() {
               activeSnake={activeSnake}
               movingPawn={movingPawn}
               floatingMessage={floatingMessage}
+              boardConfig={activeBoardConfig}
             />
 
             {/* Dice Control Console */}
