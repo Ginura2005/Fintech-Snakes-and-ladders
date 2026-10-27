@@ -136,6 +136,11 @@ export default function FestivalFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/puzzles" className="hover:text-[#fec01f] transition-colors">
+                  LinkedIn Puzzles Arena
+                </Link>
+              </li>
+              <li>
                 <Link href="/leaderboard" className="hover:text-[#fec01f] transition-colors">
                   Live Festival Leaderboard
                 </Link>

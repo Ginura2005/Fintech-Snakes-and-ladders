@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
@@ -39,7 +39,7 @@ interface Profile {
   leaderboard_opt_in: boolean;
 }
 
-export default function ResultPage() {
+function ResultContent() {
   const router = useRouter();
   const supabase = createClient();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -57,8 +57,40 @@ export default function ResultPage() {
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [updatingOptIn, setUpdatingOptIn] = useState(false);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     const load = async () => {
+      const modeParam = searchParams.get("mode");
+      if (modeParam === "practice" || (typeof window !== "undefined" && sessionStorage.getItem("practice_run"))) {
+        const raw = sessionStorage.getItem("practice_run");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            setRun({
+              status: parsed.status,
+              player_score: parsed.playerScore ?? parsed.player_score ?? 0,
+              player_hearts: parsed.playerHearts ?? parsed.player_hearts ?? 0,
+              player_shields: parsed.playerShields ?? parsed.player_shields ?? 0,
+              player_quiz_correct: parsed.playerQuizCorrect ?? parsed.player_quiz_correct ?? 0,
+              player_position: parsed.playerPosition ?? parsed.player_position ?? 25,
+              player_treasures_collected: parsed.playerTreasuresCollected ?? parsed.player_treasures_collected ?? [],
+              started_at: parsed.startedAt ?? parsed.started_at ?? new Date().toISOString(),
+              completed_at: parsed.completedAt ?? parsed.completed_at ?? new Date().toISOString(),
+              duration_seconds: parsed.durationSeconds ?? parsed.duration_seconds ?? 45,
+            });
+            setProfile({
+              display_name: "Practice Pilot",
+              leaderboard_opt_in: false,
+            });
+            setLoading(false);
+            return;
+          } catch (e) {
+            console.error("Failed to parse practice run", e);
+          }
+        }
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -91,7 +123,7 @@ export default function ResultPage() {
       setLoading(false);
     };
     load();
-  }, [router, supabase.auth]);
+  }, [router, searchParams, supabase.auth]);
 
   const handleGenerateLink = async () => {
     setGeneratingLink(true);
@@ -443,7 +475,13 @@ export default function ResultPage() {
         </div>
 
         {/* Back navigation */}
-        <div className="flex gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row gap-4 pt-2">
+          <Link
+            href="/game?mode=practice"
+            className="flex-1 py-3 rounded-xl interactive-btn bg-teal-950/80 hover:bg-teal-900 border border-teal-400/50 text-teal-200 font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5"
+          >
+            <span>🔄 Play Again (Practice)</span>
+          </Link>
           <Link
             href="/"
             className="flex-1 py-3 rounded-xl border border-white/15 bg-white/5 text-white/80 font-mono text-xs uppercase tracking-wider text-center hover:text-white hover:border-[#fec01f] transition-colors"
@@ -461,5 +499,22 @@ export default function ResultPage() {
 
       <FestivalFooter />
     </div>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-mono text-sm text-white/70">Loading Match Result…</p>
+          </div>
+        </div>
+      }
+    >
+      <ResultContent />
+    </Suspense>
   );
 }

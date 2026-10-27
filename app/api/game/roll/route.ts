@@ -117,22 +117,24 @@ async function processRoll(userId: string, supabase: any) {
     completedAt: run.completed_at,
   };
 
-  // Roll die (server-side crypto random)
-  const diceValue = rollDice();
+  const initialActor = engineState.currentTurn;
 
-  // Process player turn
-  const playerResult = processTurn(engineState, diceValue);
+  // Roll die (server-side crypto random)
+  const firstDice = rollDice();
+
+  // Process first turn
+  const firstResult = processTurn(engineState, firstDice);
 
   // Check if quiz was triggered
   let quizQuestion = null;
-  const quizEvent = playerResult.events.find((e) => e.type === "quiz_triggered");
-  if (quizEvent && playerResult.actor === "player") {
+  const quizEvent = firstResult.events.find((e) => e.type === "quiz_triggered");
+  if (quizEvent && initialActor === "player") {
     // Pick a question not already used at this square
     const { data: prevAttempt } = await db
       .from("quiz_attempts")
       .select("question_id")
       .eq("run_id", run.id)
-      .eq("square_number", playerResult.toPosition)
+      .eq("square_number", firstResult.toPosition)
       .maybeSingle();
 
     if (!prevAttempt) {
@@ -143,22 +145,22 @@ async function processRoll(userId: string, supabase: any) {
     }
   }
 
-  // Persist player move
-  await persistTurnResult(db, run.id, playerResult, currentSequence);
+  // Persist first move
+  await persistTurnResult(db, run.id, firstResult, currentSequence);
 
-  let stateAfterPlayerTurn = playerResult.newState;
-  let computerResult = null;
+  let stateAfterTurn = firstResult.newState;
+  let secondResult: any = null;
 
-  // If game continues and it's now computer's turn, process computer automatically
-  if (!isTerminal(stateAfterPlayerTurn) && stateAfterPlayerTurn.currentTurn === "computer" && !quizEvent) {
+  // If initial turn was player, no quiz was triggered, and it's now computer's turn:
+  if (initialActor === "player" && !quizEvent && !isTerminal(stateAfterTurn) && stateAfterTurn.currentTurn === "computer") {
     const computerDice = rollDice();
-    computerResult = processTurn(stateAfterPlayerTurn, computerDice);
-    await persistTurnResult(db, run.id, computerResult, stateAfterPlayerTurn.turnSequence);
-    stateAfterPlayerTurn = computerResult.newState;
+    secondResult = processTurn(stateAfterTurn, computerDice);
+    await persistTurnResult(db, run.id, secondResult, stateAfterTurn.turnSequence);
+    stateAfterTurn = secondResult.newState;
   }
 
   // Final state to persist
-  const finalState = stateAfterPlayerTurn;
+  const finalState = stateAfterTurn;
 
   // Update game_runs
   const { error: updateError } = await db
@@ -204,12 +206,19 @@ async function processRoll(userId: string, supabase: any) {
     .eq("id", run.id)
     .single();
 
+  const playerTurnData = initialActor === "player" ? firstResult : null;
+  const computerTurnData = initialActor === "computer" ? firstResult : secondResult;
+
   return NextResponse.json({
     run: updatedRun,
-    playerRoll: diceValue,
-    playerEvents: playerResult.events,
-    computerRoll: computerResult ? (computerResult as any).diceValue : null,
-    computerEvents: computerResult ? (computerResult as any).events : null,
+    playerRoll: playerTurnData ? playerTurnData.diceValue : null,
+    playerEvents: playerTurnData ? playerTurnData.events : null,
+    playerFrom: playerTurnData ? playerTurnData.fromPosition : null,
+    playerTo: playerTurnData ? playerTurnData.toPosition : null,
+    computerRoll: computerTurnData ? computerTurnData.diceValue : null,
+    computerEvents: computerTurnData ? computerTurnData.events : null,
+    computerFrom: computerTurnData ? computerTurnData.fromPosition : null,
+    computerTo: computerTurnData ? computerTurnData.toPosition : null,
     quizQuestion: quizQuestion
       ? {
           id: quizQuestion.id,
@@ -217,7 +226,7 @@ async function processRoll(userId: string, supabase: any) {
           difficulty: quizQuestion.difficulty,
           question: quizQuestion.question,
           options: quizQuestion.options, // shuffling happens client-side for display; correctIndex sent to server only
-          squareNumber: playerResult.toPosition,
+          squareNumber: firstResult.toPosition,
         }
       : null,
   });
