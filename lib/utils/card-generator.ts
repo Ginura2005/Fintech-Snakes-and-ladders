@@ -122,46 +122,29 @@ export async function generateResultCardBlob(
   // Vertical layout adjustments
   const yStart = options.format === "story" ? 140 : 68;
 
-  // 2. Official Presenters & Festival Banner
+  // 2. Official Festival Header
   ctx.save();
   ctx.textAlign = "center";
-  ctx.font = "bold 15px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "#FEC01F";
-  ctx.letterSpacing = "2px";
-  ctx.fillText("FINTECH FORUM SRI LANKA  ×  MINISTRY OF DIGITAL ECONOMY", width / 2, yStart + 22);
 
   // Logo or Festival Title
   if (festivalLogo) {
     const logoW = 340;
     const logoH = 68;
-    ctx.drawImage(festivalLogo, width / 2 - logoW / 2, yStart + 40, logoW, logoH);
+    ctx.drawImage(festivalLogo, width / 2 - logoW / 2, yStart + 15, logoW, logoH);
   } else {
     ctx.font = "900 36px system-ui, -apple-system, sans-serif";
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", width / 2, yStart + 80);
+    ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", width / 2, yStart + 55);
   }
 
   // Event Location & Dates
   ctx.font = "600 18px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-  ctx.fillText("Shangri-La Colombo, Sri Lanka  ·  2–3 November 2026", width / 2, yStart + 128);
-
-  // Tournament Badge
-  const badgeY = yStart + 150;
-  drawRoundedRect(ctx, width / 2 - 210, badgeY, 420, 36, 18);
-  ctx.fillStyle = "rgba(254, 192, 31, 0.14)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(254, 192, 31, 0.6)";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  ctx.fillStyle = "#FEC01F";
-  ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
-  ctx.fillText("OFFICIAL ARENA TOURNAMENT CERTIFICATE", width / 2, badgeY + 23);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.fillText("Shangri-La Colombo  ·  2–3 November 2026", width / 2, yStart + 105);
   ctx.restore();
 
   // 3. Main Glassmorphic Result Plaque
-  const cardY = badgeY + 60;
+  const cardY = yStart + 130;
   const cardWidth = 920;
   const cardHeight = options.format === "story" ? 680 : 540;
   const cardX = (width - cardWidth) / 2;

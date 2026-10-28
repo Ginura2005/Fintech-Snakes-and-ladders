@@ -101,13 +101,8 @@ export default function LeaderboardPage() {
 
       <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         {/* Presenter & Collaboration Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#fec01f]/10 border border-[#fec01f]/30 mb-3 text-xs font-mono text-[#fec01f]">
-            <Award size={13} className="text-[#fec01f]" />
-            <span>FinTech Forum Sri Lanka  ×  Ministry of Digital Economy</span>
-          </div>
-
-          <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight text-white mt-1">
+        <div className="text-center mb-10 pt-2">
+          <h1 className="font-heading text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
             Festival Hall of Fame
           </h1>
 

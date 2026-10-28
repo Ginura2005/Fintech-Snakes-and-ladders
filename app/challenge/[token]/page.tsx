@@ -101,7 +101,7 @@ export default function ChallengePage() {
         <div className="max-w-md w-full space-y-5 relative z-10">
           {/* Challenge result card */}
           <div className="festival-panel p-8 text-center border-2 border-[#fec01f]/40 bg-[#0a0a28]/95 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-            <div className="relative h-10 w-44 mx-auto mb-4">
+            <div className="relative h-10 w-44 mx-auto mb-2">
               <Image
                 src="/long-logo-removebg-preview.png"
                 alt="Sri Lanka FinTech Festival"
@@ -110,11 +110,6 @@ export default function ChallengePage() {
                 priority
               />
             </div>
-
-            <span className="section-badge section-badge-primary text-[10px] mb-3">
-              <Sparkles size={12} className="text-[#fec01f]" />
-              FESTIVAL ARENA CHALLENGE
-            </span>
 
             <div className="my-3 flex items-center justify-center animate-float-gentle">
               {isWin ? (
