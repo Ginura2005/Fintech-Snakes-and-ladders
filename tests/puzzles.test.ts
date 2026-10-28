@@ -252,9 +252,14 @@ describe("Pinpoint Puzzles Verification", () => {
       expect(item.educationalFact.length).toBeGreaterThan(10);
     }
 
-    // Daily pack selector
-    const dailyPack = getDailyPinpointPack();
-    expect(dailyPack.clues.length).toBe(5);
+    // Daily pack selector with difficulty
+    const easyPack = getDailyPinpointPack("Easy");
+    expect(easyPack.difficulty).toBe("Easy");
+    expect(easyPack.clues.length).toBe(5);
+
+    const hardPack = getDailyPinpointPack("Hard");
+    expect(hardPack.difficulty).toBe("Hard");
+    expect(hardPack.clues.length).toBe(5);
 
     // Fuzzy matching test
     const testPack = PINPOINT_KNOWLEDGE_BASE[0];
@@ -292,9 +297,11 @@ describe("Crossclimb Puzzles Verification", () => {
   });
 
   it("procedural Crossclimb engine generates ladders with verified Hamming distance = 1", () => {
-    for (const seed of [101, 202, 303, 404]) {
-      const level = generateCrossclimbLevel("Medium", seed);
-      expect(level.ladderWords.length).toBeGreaterThanOrEqual(3);
+    for (const diff of ["Easy", "Medium", "Hard"] as const) {
+      const level = generateCrossclimbLevel(diff, 12345);
+      if (diff === "Easy") expect(level.ladderWords.length).toBe(4);
+      if (diff === "Medium") expect(level.ladderWords.length).toBe(5);
+      if (diff === "Hard") expect(level.ladderWords.length).toBeGreaterThanOrEqual(6);
 
       // Summit top word to first rung
       expect(getHammingDistance(level.topWord.word, level.ladderWords[0].word)).toBe(1);
@@ -308,9 +315,9 @@ describe("Crossclimb Puzzles Verification", () => {
         expect(d).toBe(1);
       }
 
-      // Last rung to summit bottom word
-      const last = level.ladderWords[level.ladderWords.length - 1].word;
-      expect(getHammingDistance(last, level.bottomWord.word)).toBe(1);
+      // Last rung to bottom word
+      const lastWord = level.ladderWords[level.ladderWords.length - 1].word;
+      expect(getHammingDistance(lastWord, level.bottomWord.word)).toBe(1);
     }
   });
 });
@@ -484,18 +491,25 @@ describe("Puzzle Challenge Points & Arena Score Contribution", () => {
     expect(p1.breakdown.cleanBonus).toBe(0);
     expect(p1.breakdown.streakBonus).toBe(0);
 
-    // Hard difficulty with full bonuses (<120s, 0 mistakes, streak > 1)
+    // Medium difficulty with speed bonus (<120s) and streak bonus (>1)
+    const pMed = calculatePuzzlePoints("Medium", 80, 1, 3);
+    expect(pMed.pointsEarned).toBe(40); // 25 base + 10 speed + 5 streak
+    expect(pMed.breakdown.basePoints).toBe(25);
+    expect(pMed.breakdown.speedBonus).toBe(10);
+    expect(pMed.breakdown.streakBonus).toBe(5);
+
+    // Hard difficulty with full bonuses (<150s, 0 mistakes, streak > 1)
     const p2 = calculatePuzzlePoints("Hard", 85, 0, 5);
-    expect(p2.pointsEarned).toBe(40);
-    expect(p2.breakdown.basePoints).toBe(25);
-    expect(p2.breakdown.speedBonus).toBe(5);
-    expect(p2.breakdown.cleanBonus).toBe(5);
+    expect(p2.pointsEarned).toBe(70); // 40 base + 15 speed + 10 clean + 5 streak
+    expect(p2.breakdown.basePoints).toBe(40);
+    expect(p2.breakdown.speedBonus).toBe(15);
+    expect(p2.breakdown.cleanBonus).toBe(10);
     expect(p2.breakdown.streakBonus).toBe(5);
 
     // Medium grid size (7x7 Queens) with clean bonus only
     const p3 = calculatePuzzlePoints(7, 180, 0, 1);
-    expect(p3.pointsEarned).toBe(25); // 20 base + 5 clean
-    expect(p3.breakdown.basePoints).toBe(20);
+    expect(p3.pointsEarned).toBe(30); // 25 base + 5 clean
+    expect(p3.breakdown.basePoints).toBe(25);
     expect(p3.breakdown.cleanBonus).toBe(5);
   });
 
@@ -528,6 +542,22 @@ describe("Puzzle Challenge Points & Arena Score Contribution", () => {
         totalPuzzlePoints: 45,
       })
     ).toBe(20);
+
+    // 2 hard clears: +30 points
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 2,
+        currentStreak: 2,
+        lastPlayedDate: "2026-10-28",
+        completedLevels: {
+          "queens-Hard": true,
+          "tango-Hard": true,
+        },
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 120,
+      })
+    ).toBe(30);
 
     // 4 unique game types: +40 points
     expect(

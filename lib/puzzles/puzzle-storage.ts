@@ -87,10 +87,10 @@ export function savePuzzleStats(stats: PuzzleStatsData): void {
 }
 
 /**
- * Calculates challenge points for a puzzle clear.
- * Base: 15-25 pts depending on difficulty.
- * Bonuses: +5 speed (under 120s), +5 clean (0 mistakes), +5 streak (> 1 day).
- * Total: 15-40 pts per puzzle ("just a bit, not too much").
+ * Calculates challenge points for a puzzle clear based on difficulty.
+ * - Easy: Base 15 pts (+5 speed, +5 clean, +5 streak) -> max 30 pts
+ * - Medium: Base 25 pts (+10 speed, +5 clean, +5 streak) -> max 45 pts
+ * - Hard / Expert: Base 40 pts (+15 speed, +10 clean, +5 streak) -> max 70 pts
  */
 export function calculatePuzzlePoints(
   difficultyOrLevel: string | number,
@@ -108,28 +108,40 @@ export function calculatePuzzlePoints(
 } {
   const diffStr = String(difficultyOrLevel ?? "").toLowerCase();
   let basePoints = 15;
+  let maxSpeedBonus = 5;
+  let speedThreshold = 120;
+  let maxCleanBonus = 5;
+
   if (
     diffStr.includes("expert") ||
     diffStr.includes("hard") ||
     diffStr.includes("9") ||
     diffStr.includes("8")
   ) {
-    basePoints = 25;
+    basePoints = 40;
+    maxSpeedBonus = 15;
+    speedThreshold = 150;
+    maxCleanBonus = 10;
   } else if (
     diffStr.includes("medium") ||
-    diffStr.includes("7") ||
-    diffStr.includes("6")
+    diffStr.includes("7")
   ) {
-    basePoints = 20;
+    basePoints = 25;
+    maxSpeedBonus = 10;
+    speedThreshold = 120;
+    maxCleanBonus = 5;
   } else {
     basePoints = 15;
+    maxSpeedBonus = 5;
+    speedThreshold = 120;
+    maxCleanBonus = 5;
   }
 
-  // Speed bonus: +5 pts if under 2 minutes
-  const speedBonus = secondsElapsed > 0 && secondsElapsed <= 120 ? 5 : 0;
+  // Speed bonus
+  const speedBonus = secondsElapsed > 0 && secondsElapsed <= speedThreshold ? maxSpeedBonus : 0;
 
-  // Clean run bonus: +5 pts if no mistakes were logged
-  const cleanBonus = typeof mistakesCount === "number" && mistakesCount === 0 ? 5 : 0;
+  // Clean run bonus
+  const cleanBonus = typeof mistakesCount === "number" && mistakesCount === 0 ? maxCleanBonus : 0;
 
   // Streak loyalty bonus: +5 pts if streak > 1
   const streakBonus = streak > 1 ? 5 : 0;
@@ -144,19 +156,40 @@ export function calculatePuzzlePoints(
 
 /**
  * Calculates the modest Arena Game bonus contributed by puzzle challenges.
- * Grants +10 points per unique puzzle challenge solved, capped strictly at +50 points max.
- * ("just a bit. Not too much.")
+ * Differentiates by difficulty: Easy (+5), Medium (+10), Hard (+15).
+ * Capped strictly at +50 points max ("just a bit. Not too much.")
  */
 export function getArenaPuzzleBonus(providedStats?: PuzzleStatsData): number {
   const stats = providedStats || getPuzzleStats();
   const completedKeys = Object.keys(stats.completedLevels || {});
-  const uniqueTypes = new Set(completedKeys.map((k) => k.split("-")[0]));
 
+  let difficultyBonus = 0;
+  for (const key of completedKeys) {
+    const lower = key.toLowerCase();
+    if (
+      lower.includes("hard") ||
+      lower.includes("expert") ||
+      lower.endsWith("-8") ||
+      lower.endsWith("-9")
+    ) {
+      difficultyBonus += 15;
+    } else if (
+      lower.includes("medium") ||
+      lower.endsWith("-7") ||
+      lower.endsWith("-6")
+    ) {
+      difficultyBonus += 10;
+    } else {
+      difficultyBonus += 5;
+    }
+  }
+
+  const uniqueTypes = new Set(completedKeys.map((k) => k.split("-")[0]));
   const typeBonus = uniqueTypes.size * 10;
   const winsBonus = Math.min(50, (stats.totalWins || 0) * 5);
 
   // Maximum cap of 50 points (equivalent to 1 FinTech quiz answer)
-  return Math.min(50, Math.max(typeBonus, winsBonus));
+  return Math.min(50, Math.max(difficultyBonus, typeBonus, winsBonus));
 }
 
 export function recordPuzzleWin(

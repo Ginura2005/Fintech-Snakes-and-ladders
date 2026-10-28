@@ -16,10 +16,18 @@ import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
+const PINPOINT_DIFFICULTIES: Array<"Easy" | "Medium" | "Hard"> = [
+  "Easy",
+  "Medium",
+  "Hard",
+];
+
 export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "pinpoint")!;
-  const [packIndex, setPackIndex] = useState(0);
-  const currentPack: PinpointExpandedPack = PINPOINT_KNOWLEDGE_BASE[packIndex];
+  const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Medium");
+  const [currentPack, setCurrentPack] = useState<PinpointExpandedPack>(() =>
+    getDailyPinpointPack("Medium")
+  );
 
   // Game state
   const [revealedCount, setRevealedCount] = useState(1);
@@ -38,8 +46,11 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
-  // Reset on pack change
-  useEffect(() => {
+  // Handle difficulty switch
+  const handleDifficultyChange = (diff: "Easy" | "Medium" | "Hard") => {
+    setDifficulty(diff);
+    const newPack = getRandomPinpointPack(diff, Date.now());
+    setCurrentPack(newPack);
     setRevealedCount(1);
     setUserGuess("");
     setGuesses([]);
@@ -49,7 +60,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     setHasStarted(false);
     setHintShown(false);
     setIsNewBestTime(false);
-  }, [packIndex]);
+    if (!isMuted) sounds.playClick();
+  };
 
   // Timer
   useEffect(() => {
@@ -75,7 +87,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
 
       const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
         "pinpoint",
-        currentPack.topic,
+        difficulty,
         secondsElapsed,
         guesses.length
       );
@@ -117,8 +129,17 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
   };
 
   const handleNewPuzzle = () => {
-    const nextIdx = (packIndex + 1) % PINPOINT_KNOWLEDGE_BASE.length;
-    setPackIndex(nextIdx);
+    const newPack = getRandomPinpointPack(difficulty, Date.now());
+    setCurrentPack(newPack);
+    setRevealedCount(1);
+    setUserGuess("");
+    setGuesses([]);
+    setIsWon(false);
+    setShowWinModal(false);
+    setSecondsElapsed(0);
+    setHasStarted(false);
+    setHintShown(false);
+    setIsNewBestTime(false);
   };
 
   const handleToggleSound = () => {
@@ -150,9 +171,9 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     <div className="max-w-xl mx-auto space-y-6">
       <PuzzleHeader
         meta={meta}
-        levelNames={PINPOINT_KNOWLEDGE_BASE.map((p) => p.topic)}
-        currentLevelIndex={packIndex}
-        onSelectLevel={setPackIndex}
+        levelNames={[currentPack.topic]}
+        currentLevelIndex={0}
+        onSelectLevel={() => {}}
         secondsElapsed={secondsElapsed}
         movesCount={guesses.length}
         mistakesCount={guesses.length}
@@ -163,6 +184,27 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
+
+      {/* Difficulty Tabs */}
+      <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 max-w-sm mx-auto">
+        {PINPOINT_DIFFICULTIES.map((diff) => (
+          <button
+            key={diff}
+            onClick={() => handleDifficultyChange(diff)}
+            className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+              difficulty === diff
+                ? diff === "Easy"
+                  ? "bg-emerald-500 text-black shadow-md shadow-emerald-500/20"
+                  : diff === "Medium"
+                  ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                  : "bg-rose-500 text-white shadow-md shadow-rose-500/20"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            {diff}
+          </button>
+        ))}
+      </div>
 
       {/* Clues Card Container */}
       <div className="space-y-3">
@@ -315,8 +357,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
           pointsEarned={pointsEarned}
           arenaBonusPoints={arenaBonusPoints}
           educationalFact={currentPack.educationalFact}
-          hasNextLevel={packIndex < PINPOINT_KNOWLEDGE_BASE.length - 1}
-          onNextLevel={() => setPackIndex((p) => p + 1)}
+          hasNextLevel={true}
+          onNextLevel={() => handleDifficultyChange(difficulty)}
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}

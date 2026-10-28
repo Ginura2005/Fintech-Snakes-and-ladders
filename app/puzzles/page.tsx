@@ -15,6 +15,7 @@ import ZipGame from "@/components/puzzles/ZipGame";
 import MiniSudokuGame from "@/components/puzzles/MiniSudokuGame";
 import { PuzzleId } from "@/components/puzzles/puzzleTypes";
 import { signInWithGoogle } from "@/lib/auth/google-sign-in";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 function PuzzlesContent() {
   const searchParams = useSearchParams();
@@ -101,8 +102,8 @@ export default function PuzzlesPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#06061f] flex items-center justify-center text-[#fec01f] font-mono text-sm">
-          Loading FinTech Puzzles Arena...
+        <div className="min-h-screen bg-[#06061f] flex items-center justify-center">
+          <LoadingSpinner size="lg" label="Loading FinTech Puzzles Arena..." />
         </div>
       }
     >

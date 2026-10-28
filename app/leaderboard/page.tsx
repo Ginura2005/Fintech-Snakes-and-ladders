@@ -7,6 +7,7 @@ import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, Map
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface LeaderboardEntry {
   rank: number;
@@ -146,8 +147,28 @@ export default function LeaderboardPage() {
         <TournamentCountdown />
 
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin" />
+          <div className="space-y-8 animate-fadeIn">
+            {/* Podium Skeleton */}
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto items-end pt-8">
+              <Skeleton className="h-44 rounded-2xl" />
+              <Skeleton className="h-56 rounded-2xl border-[#fec01f]/30" />
+              <Skeleton className="h-40 rounded-2xl" />
+            </div>
+            {/* Table Skeleton */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                    <Skeleton className="w-32 h-4" />
+                  </div>
+                  <Skeleton className="w-20 h-5" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : entries.length === 0 ? (
           <div className="festival-panel p-12 text-center text-white/60 max-w-md mx-auto">

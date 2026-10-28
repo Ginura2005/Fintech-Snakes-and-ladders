@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminRequest } from "@/lib/admin/admin-auth";
+import { verifyAdminRequest, logAdminAction } from "@/lib/admin/admin-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * Essential for festival operations (device crashes, booth resets, support tickets).
  */
 export async function POST(request: NextRequest) {
-  const { isAdmin } = await verifyAdminRequest(request);
+  const { isAdmin, email: actorEmail } = await verifyAdminRequest(request);
   if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized: Administrator privileges required" }, { status: 403 });
   }
@@ -66,6 +66,12 @@ export async function POST(request: NextRequest) {
     if (deleteError) {
       console.error("Reset run error:", deleteError);
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    }
+
+    if (actorEmail) {
+      await logAdminAction(actorEmail, "reset_run", "run", targetRunId || "unknown", {
+        playerId: targetPlayerId,
+      });
     }
 
     return NextResponse.json({

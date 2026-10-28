@@ -21,6 +21,9 @@ import {
   Lock,
   ArrowLeft,
   User as UserIcon,
+  Crown,
+  Megaphone,
+  History,
 } from "lucide-react";
 
 import CommandCenterTab from "@/components/admin/CommandCenterTab";
@@ -29,6 +32,9 @@ import LeaderboardTab from "@/components/admin/LeaderboardTab";
 import QuizBankTab from "@/components/admin/QuizBankTab";
 import BoardSimulatorTab from "@/components/admin/BoardSimulatorTab";
 import PuzzlesTab from "@/components/admin/PuzzlesTab";
+import RolesManagementTab from "@/components/admin/RolesManagementTab";
+import FestivalOperationsTab from "@/components/admin/FestivalOperationsTab";
+import AuditLogsTab from "@/components/admin/AuditLogsTab";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 
 export default function AdminDashboardPage() {
@@ -322,6 +328,9 @@ export default function AdminDashboardPage() {
     { id: "command_center", label: "Command Center", icon: LayoutDashboard },
     { id: "runs", label: "Arena Runs & Support", icon: Gamepad2, count: runs.length },
     { id: "leaderboard", label: "Tournament Podium", icon: Trophy, count: leaderboard.length },
+    { id: "roles", label: "Team & Roles", icon: Crown },
+    { id: "operations", label: "Broadcast & Ops", icon: Megaphone },
+    { id: "audit", label: "Audit Log", icon: History },
     { id: "quizzes", label: "FinTech Quiz Bank", icon: HelpCircle, count: quizzes.length },
     { id: "simulator", label: "Board Seed Engine", icon: Dices },
     { id: "puzzles", label: "Puzzles Hub", icon: Puzzle, count: 6 },
@@ -454,6 +463,21 @@ export default function AdminDashboardPage() {
             onRefresh={fetchAllData}
             onExportCsv={handleExportCsv}
           />
+        )}
+
+        {activeTab === "roles" && (
+          <RolesManagementTab
+            currentUserRole={adminRole}
+            currentUserEmail={user?.email}
+          />
+        )}
+
+        {activeTab === "operations" && (
+          <FestivalOperationsTab onRefreshRuns={fetchAllData} />
+        )}
+
+        {activeTab === "audit" && (
+          <AuditLogsTab />
         )}
 
         {activeTab === "quizzes" && (

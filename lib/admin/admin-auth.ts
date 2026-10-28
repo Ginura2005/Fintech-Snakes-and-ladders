@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
+export type AdminRole = "superadmin" | "admin" | "arbiter" | "booth_staff";
+
 export interface AdminVerificationResult {
   isAdmin: boolean;
   email: string | null;
-  role: string | null;
+  role: AdminRole | null;
   userId: string | null;
 }
 
@@ -15,7 +17,7 @@ export interface AdminVerificationResult {
  */
 export async function isUserAdminByEmail(
   email: string | null | undefined
-): Promise<{ isAdmin: boolean; role: string | null }> {
+): Promise<{ isAdmin: boolean; role: AdminRole | null }> {
   if (!email || typeof email !== "string") {
     return { isAdmin: false, role: null };
   }
@@ -36,7 +38,7 @@ export async function isUserAdminByEmail(
     }
 
     if (data && data.email) {
-      return { isAdmin: true, role: data.role || "admin" };
+      return { isAdmin: true, role: (data.role as AdminRole) || "admin" };
     }
 
     return { isAdmin: false, role: null };
@@ -51,7 +53,8 @@ export async function isUserAdminByEmail(
  * administrator whose account exists in the `admin_users` database table.
  */
 export async function verifyAdminRequest(
-  request?: NextRequest
+  request?: NextRequest,
+  requiredRole?: AdminRole
 ): Promise<AdminVerificationResult> {
   // 1. Check service-role Authorization header (for internal automation / testing)
   if (request) {
@@ -91,19 +94,76 @@ export async function verifyAdminRequest(
     // Verify privilege against the database table
     const { isAdmin, role } = await isUserAdminByEmail(user.email);
 
+    if (!isAdmin || !role) {
+      return {
+        isAdmin: false,
+        email: user.email,
+        role: null,
+        userId: user.id,
+      };
+    }
+
+    // If a specific minimum role is required:
+    if (requiredRole && !hasSufficientRole(role, requiredRole)) {
+      return {
+        isAdmin: false,
+        email: user.email,
+        role,
+        userId: user.id,
+      };
+    }
+
     return {
-      isAdmin,
+      isAdmin: true,
       email: user.email,
       role,
       userId: user.id,
     };
   } catch (err: any) {
-    // Expected in standalone unit tests without Next.js request context
     return {
       isAdmin: false,
       email: null,
       role: null,
       userId: null,
     };
+  }
+}
+
+/**
+ * Role hierarchy:
+ * superadmin > admin > arbiter > booth_staff
+ */
+export function hasSufficientRole(currentRole: AdminRole, requiredRole: AdminRole): boolean {
+  const levels: Record<AdminRole, number> = {
+    superadmin: 4,
+    admin: 3,
+    arbiter: 2,
+    booth_staff: 1,
+  };
+
+  return (levels[currentRole] || 0) >= (levels[requiredRole] || 0);
+}
+
+/**
+ * Logs an administrative action into the `admin_audit_logs` database table.
+ */
+export async function logAdminAction(
+  actorEmail: string,
+  action: string,
+  targetType: "run" | "user" | "role" | "announcement" | "settings" | "leaderboard",
+  targetId?: string,
+  details: Record<string, any> = {}
+): Promise<void> {
+  try {
+    const db = createServiceClient();
+    await db.from("admin_audit_logs").insert({
+      actor_email: actorEmail,
+      action,
+      target_type: targetType,
+      target_id: targetId || null,
+      details,
+    });
+  } catch (err) {
+    console.error("Failed to write to admin_audit_logs:", err);
   }
 }

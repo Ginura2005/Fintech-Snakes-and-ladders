@@ -9,6 +9,7 @@ import { Play, Trophy, Sparkles, Heart, Star, Link as LinkIcon, Dices, Gem, Mess
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import { signInWithGoogle } from "@/lib/auth/google-sign-in";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface CardData {
   displayName: string;
@@ -65,7 +66,7 @@ export default function ChallengePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#06061f] flex items-center justify-center">
-        <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner size="lg" label="Loading Arena Challenge..." />
       </div>
     );
   }

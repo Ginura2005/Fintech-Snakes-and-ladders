@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { isUserAdminByEmail, verifyAdminRequest } from "@/lib/admin/admin-auth";
+import { isUserAdminByEmail, verifyAdminRequest, hasSufficientRole } from "@/lib/admin/admin-auth";
 import { NextRequest } from "next/server";
 
 describe("Database-Driven Admin Authorization Engine", () => {
@@ -12,6 +12,24 @@ describe("Database-Driven Admin Authorization Engine", () => {
 
     const res3 = await isUserAdminByEmail(undefined);
     expect(res3.isAdmin).toBe(false);
+  });
+
+  it("validates role hierarchy permissions correctly", () => {
+    expect(hasSufficientRole("superadmin", "superadmin")).toBe(true);
+    expect(hasSufficientRole("superadmin", "admin")).toBe(true);
+    expect(hasSufficientRole("superadmin", "arbiter")).toBe(true);
+    expect(hasSufficientRole("superadmin", "booth_staff")).toBe(true);
+
+    expect(hasSufficientRole("admin", "superadmin")).toBe(false);
+    expect(hasSufficientRole("admin", "admin")).toBe(true);
+    expect(hasSufficientRole("admin", "arbiter")).toBe(true);
+
+    expect(hasSufficientRole("arbiter", "admin")).toBe(false);
+    expect(hasSufficientRole("arbiter", "arbiter")).toBe(true);
+    expect(hasSufficientRole("arbiter", "booth_staff")).toBe(true);
+
+    expect(hasSufficientRole("booth_staff", "arbiter")).toBe(false);
+    expect(hasSufficientRole("booth_staff", "booth_staff")).toBe(true);
   });
 
   it("rejects unauthenticated requests by default", async () => {

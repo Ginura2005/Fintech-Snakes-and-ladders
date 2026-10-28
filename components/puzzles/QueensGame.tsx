@@ -153,9 +153,10 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         if (!isMuted) sounds.playVictory();
 
         // Record win
+        const difficultyName = DIFFICULTY_SIZES[sizeIndex].label.split(" ")[1];
         const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
           "queens",
-          currentSize.toString(),
+          difficultyName,
           secondsElapsed,
           mistakesCount
         );
@@ -329,6 +330,32 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
+
+      {/* Difficulty Tabs */}
+      <div className="flex items-center justify-center gap-1.5 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 max-w-md mx-auto">
+        {DIFFICULTY_SIZES.map((d, idx) => (
+          <button
+            key={d.label}
+            onClick={() => {
+              setSizeIndex(idx);
+              if (!isMuted) sounds.playClick();
+            }}
+            className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] sm:text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+              sizeIndex === idx
+                ? idx === 0
+                  ? "bg-emerald-500 text-black shadow-md shadow-emerald-500/20"
+                  : idx === 1
+                  ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                  : idx === 2
+                  ? "bg-rose-500 text-white shadow-md shadow-rose-500/20"
+                  : "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
 
       {/* Control bar: Mode toggles + Auto-X */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10">

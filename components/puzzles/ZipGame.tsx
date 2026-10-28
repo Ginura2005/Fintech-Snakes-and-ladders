@@ -88,9 +88,10 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
+      const diffName = ZIP_SIZES[sizeIndex].label.split(" ")[1];
       const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
         "zip",
-        currentSize.toString(),
+        diffName,
         secondsElapsed
       );
       setIsNewBestTime(isBest);
@@ -198,6 +199,30 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
+
+      {/* Difficulty Tabs */}
+      <div className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 max-w-sm mx-auto">
+        {ZIP_SIZES.map((s, idx) => (
+          <button
+            key={s.label}
+            onClick={() => {
+              setSizeIndex(idx);
+              if (!isMuted) sounds.playClick();
+            }}
+            className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+              sizeIndex === idx
+                ? idx === 0
+                  ? "bg-emerald-500 text-black shadow-md shadow-emerald-500/20"
+                  : idx === 1
+                  ? "bg-amber-500 text-black shadow-md shadow-amber-500/20"
+                  : "bg-rose-500 text-white shadow-md shadow-rose-500/20"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
 
       {/* Progress Bar & Live Coverage */}
       <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">

@@ -30,6 +30,7 @@ import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
 
 interface GameRun {
@@ -262,7 +263,7 @@ function ResultContent() {
   if (loading || !run) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-        <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner size="lg" label="Computing Arena Results..." />
       </div>
     );
   }

@@ -28,6 +28,7 @@ import {
 } from "@/lib/game-engine/engine";
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
 import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
   Volume2,
   VolumeX,
@@ -1110,10 +1111,7 @@ function GameContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-mono text-sm text-white/70">Connecting to Arena Host…</p>
-        </div>
+        <LoadingSpinner size="lg" label="Connecting to Arena Host..." />
       </div>
     );
   }

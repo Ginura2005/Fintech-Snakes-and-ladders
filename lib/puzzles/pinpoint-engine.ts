@@ -11,6 +11,7 @@
 import { mulberry32, getDailyPuzzleSeed } from "./prng";
 
 export interface PinpointExpandedPack {
+  difficulty?: "Easy" | "Medium" | "Hard";
   id: number;
   topic: string;
   category: string;
@@ -23,6 +24,7 @@ export interface PinpointExpandedPack {
 export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   {
     id: 1,
+    difficulty: "Easy",
     topic: "Digital Payment Rails",
     category: "Payment Methods",
     acceptedAnswers: [
@@ -49,6 +51,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 2,
+    difficulty: "Easy",
     topic: "Global FinTech Giants",
     category: "FinTech Unicorns",
     acceptedAnswers: [
@@ -74,6 +77,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 3,
+    difficulty: "Hard",
     topic: "Blockchain Consensus",
     category: "Consensus Mechanisms",
     acceptedAnswers: [
@@ -99,6 +103,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 4,
+    difficulty: "Easy",
     topic: "Sri Lankan Banking Pillars",
     category: "Commercial Banks in Sri Lanka",
     acceptedAnswers: [
@@ -124,6 +129,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 5,
+    difficulty: "Hard",
     topic: "Distributed Block Anatomy",
     category: "Components of a Blockchain Block",
     acceptedAnswers: [
@@ -148,6 +154,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 6,
+    difficulty: "Medium",
     topic: "Cross-Border Settlement",
     category: "Cross-Border Payment Protocols",
     acceptedAnswers: [
@@ -172,6 +179,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 7,
+    difficulty: "Medium",
     topic: "Central Banking Primitives",
     category: "Monetary Policy Instruments",
     acceptedAnswers: [
@@ -195,6 +203,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 8,
+    difficulty: "Medium",
     topic: "Financial Cyber Defense",
     category: "Cybersecurity Controls",
     acceptedAnswers: [
@@ -219,6 +228,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 9,
+    difficulty: "Easy",
     topic: "Digital Wallets in Sri Lanka",
     category: "Sri Lankan FinTech Apps",
     acceptedAnswers: [
@@ -243,6 +253,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 10,
+    difficulty: "Hard",
     topic: "Global Payment Messaging",
     category: "Financial Messaging Protocols",
     acceptedAnswers: [
@@ -267,6 +278,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 11,
+    difficulty: "Easy",
     topic: "Colombo Stock Exchange",
     category: "Capital Market Terms",
     acceptedAnswers: [
@@ -291,6 +303,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 12,
+    difficulty: "Medium",
     topic: "Trade Finance Instruments",
     category: "Trade Finance",
     acceptedAnswers: [
@@ -314,6 +327,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 13,
+    difficulty: "Medium",
     topic: "Credit Rating Agencies",
     category: "Credit Rating Agencies",
     acceptedAnswers: [
@@ -337,6 +351,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 14,
+    difficulty: "Medium",
     topic: "Core Banking Platforms",
     category: "Core Banking Systems",
     acceptedAnswers: [
@@ -360,6 +375,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 15,
+    difficulty: "Easy",
     topic: "Merchant Acquiring & POS",
     category: "Merchant Payment Terminals",
     acceptedAnswers: [
@@ -384,6 +400,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 16,
+    difficulty: "Medium",
     topic: "Open Banking & API Economy",
     category: "Open Banking Standards",
     acceptedAnswers: [
@@ -407,6 +424,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 17,
+    difficulty: "Hard",
     topic: "Central Bank Monetary Policy",
     category: "Monetary Policy Instruments",
     acceptedAnswers: [
@@ -430,6 +448,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 18,
+    difficulty: "Hard",
     topic: "Algorithmic Trading Strategies",
     category: "Algorithmic Trading",
     acceptedAnswers: [
@@ -453,6 +472,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 19,
+    difficulty: "Medium",
     topic: "Fraud Detection & Prevention",
     category: "Fraud Prevention Controls",
     acceptedAnswers: [
@@ -477,6 +497,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 20,
+    difficulty: "Hard",
     topic: "Decentralized Finance Primitives",
     category: "DeFi Primitives",
     acceptedAnswers: [
@@ -500,6 +521,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 21,
+    difficulty: "Easy",
     topic: "Personal Wealth Metrics",
     category: "Personal Finance Metrics",
     acceptedAnswers: [
@@ -523,6 +545,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 22,
+    difficulty: "Medium",
     topic: "Digital Identity & Trust",
     category: "Digital Identity Systems",
     acceptedAnswers: [
@@ -547,6 +570,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 23,
+    difficulty: "Medium",
     topic: "Insurance Technology",
     category: "InsurTech Concepts",
     acceptedAnswers: [
@@ -570,6 +594,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 24,
+    difficulty: "Easy",
     topic: "Stablecoins & Central Bank Currencies",
     category: "Digital Currencies",
     acceptedAnswers: [
@@ -594,6 +619,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 25,
+    difficulty: "Medium",
     topic: "Anti-Money Laundering Safeguards",
     category: "AML Compliance Tools",
     acceptedAnswers: [
@@ -618,6 +644,7 @@ export const PINPOINT_KNOWLEDGE_BASE: PinpointExpandedPack[] = [
   },
   {
     id: 26,
+    difficulty: "Easy",
     topic: "Microfinance & Financial Inclusion",
     category: "Financial Inclusion Tools",
     acceptedAnswers: [
@@ -671,19 +698,29 @@ export const checkPinpointGuess = checkPinpointMatch;
 /**
  * Gets the daily puzzle pack based on the calendar day.
  */
-export function getDailyPinpointPack(date = new Date()): PinpointExpandedPack {
+export function getDailyPinpointPack(
+  difficulty: "Easy" | "Medium" | "Hard" = "Medium",
+  date = new Date()
+): PinpointExpandedPack {
   const seed = getDailyPuzzleSeed(date);
-  const index = seed % PINPOINT_KNOWLEDGE_BASE.length;
-  return PINPOINT_KNOWLEDGE_BASE[index];
+  const matching = PINPOINT_KNOWLEDGE_BASE.filter((p) => p.difficulty === difficulty);
+  const pool = matching.length > 0 ? matching : PINPOINT_KNOWLEDGE_BASE;
+  const index = seed % pool.length;
+  return pool[index];
 }
 
 /**
  * Gets a random puzzle pack based on a seed.
  */
-export function getRandomPinpointPack(seed = Date.now()): PinpointExpandedPack {
+export function getRandomPinpointPack(
+  difficulty: "Easy" | "Medium" | "Hard" = "Medium",
+  seed = Date.now()
+): PinpointExpandedPack {
   const rng = mulberry32(seed);
-  const index = Math.floor(rng() * PINPOINT_KNOWLEDGE_BASE.length);
-  return PINPOINT_KNOWLEDGE_BASE[index];
+  const matching = PINPOINT_KNOWLEDGE_BASE.filter((p) => p.difficulty === difficulty);
+  const pool = matching.length > 0 ? matching : PINPOINT_KNOWLEDGE_BASE;
+  const index = Math.floor(rng() * pool.length);
+  return pool[index];
 }
 
 /**
