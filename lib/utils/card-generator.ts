@@ -157,7 +157,7 @@ export async function generateResultCardBlob(
 
   ctx.fillStyle = "#FEC01F";
   ctx.font = "bold 14px system-ui, -apple-system, sans-serif";
-  ctx.fillText("★ OFFICIAL ARENA TOURNAMENT CERTIFICATE ★", width / 2, badgeY + 23);
+  ctx.fillText("OFFICIAL ARENA TOURNAMENT CERTIFICATE", width / 2, badgeY + 23);
   ctx.restore();
 
   // 3. Main Glassmorphic Result Plaque

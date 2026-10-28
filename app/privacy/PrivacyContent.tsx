@@ -16,6 +16,7 @@ import {
   UserCheck,
   FileText,
   CheckCircle2,
+  XCircle,
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
@@ -382,28 +383,40 @@ export default function PrivacyContent() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-white/80">
                   <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold block mb-1">✕ NEVER SOLD OR RENTED</span>
+                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
+                      <XCircle size={14} className="shrink-0" />
+                      <span>NEVER SOLD OR RENTED</span>
+                    </span>
                     <span>
                       We never sell, lease, transfer, or exchange your Google user data with any advertising
                       network, data broker, or commercial third party.
                     </span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold block mb-1">✕ NO AD TARGETING</span>
+                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
+                      <XCircle size={14} className="shrink-0" />
+                      <span>NO AD TARGETING</span>
+                    </span>
                     <span>
                       Your Google profile data is never used to serve targeted advertisements, retargeting
                       campaigns, or behavioral user profiling.
                     </span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold block mb-1">✕ NO AI/ML TRAINING</span>
+                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
+                      <XCircle size={14} className="shrink-0" />
+                      <span>NO AI/ML TRAINING</span>
+                    </span>
                     <span>
                       We do not feed your Google personal information or user credentials into generative AI
                       or machine learning training models.
                     </span>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-teal-400 font-bold block mb-1">✓ STRICTLY ESSENTIAL</span>
+                    <span className="text-teal-400 font-bold flex items-center gap-1.5 mb-1">
+                      <CheckCircle2 size={14} className="shrink-0" />
+                      <span>STRICTLY ESSENTIAL</span>
+                    </span>
                     <span>
                       Google authentication is used exclusively to verify identity, establish secure sessions,
                       and enforce the one-official-run game rule.

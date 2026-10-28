@@ -12,6 +12,7 @@ import {
   Volume2,
   VolumeX,
   Shuffle,
+  X,
 } from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
 import PuzzleIcon from "./PuzzleIcon";
@@ -230,8 +231,9 @@ export default function PuzzleHeader({
               <button
                 onClick={() => setShowRules(false)}
                 className="text-white/50 hover:text-white p-1 rounded-md hover:bg-white/10"
+                aria-label="Close rules"
               >
-                ✕
+                <X size={15} />
               </button>
             </div>
 

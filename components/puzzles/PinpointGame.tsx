@@ -164,7 +164,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-white/50 px-1">
           <span>Revealed Clues ({revealedCount} / 5)</span>
           <span className="text-[#fec01f] font-bold">
-            {revealedCount === 1 ? "Top 5-Star Rank" : `${6 - revealedCount}★ Rating`}
+            {revealedCount === 1 ? "Top 5-Star Rank" : `${6 - revealedCount}-Star Rating`}
           </span>
         </div>
 

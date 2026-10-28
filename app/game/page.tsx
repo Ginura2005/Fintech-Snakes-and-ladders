@@ -27,7 +27,21 @@ import {
   GameState,
 } from "@/lib/game-engine/engine";
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
-import { Volume2, VolumeX, Shield, Trophy, RotateCcw, Play } from "lucide-react";
+import {
+  Volume2,
+  VolumeX,
+  Shield,
+  Trophy,
+  RotateCcw,
+  Play,
+  TrendingUp,
+  AlertTriangle,
+  HelpCircle,
+  Gem,
+  Gamepad2,
+  History,
+  X,
+} from "lucide-react";
 
 interface GameRun {
   id: string;
@@ -224,9 +238,9 @@ function GameContent() {
     setComputerDisplayPos(1);
     setEvents([
       seed !== undefined
-        ? `✨ Arena reshuffled! Board seed #${seed} generated with dynamic layout.`
-        : "🎮 Practice Arena active. Train your FinTech skills across all 25 squares!",
-      "🎲 Roll 1–6 to advance toward Square 25.",
+        ? `Arena reshuffled! Board seed #${seed} generated with dynamic layout.`
+        : "Practice Arena active. Train your FinTech skills across all 25 squares!",
+      "Roll 1–6 to advance toward Square 25.",
     ]);
     setError(null);
     const dismissed = typeof window !== "undefined" && sessionStorage.getItem("practice_banner_dismissed");
@@ -370,7 +384,7 @@ function GameContent() {
     if (isOvershot) {
       sounds.playShieldDeflect();
       setFloatingMessage({
-        text: `🎯 Overshot! Exactly ${25 - from} needed to reach finish.`,
+        text: `Overshot! Exactly ${25 - from} needed to reach finish.`,
         type: "finish",
       });
       if (actor === "player") {
@@ -405,7 +419,7 @@ function GameContent() {
       const ladderTo = ladderEv.toSquare || finalTo;
       setActiveLadder(ladderFrom);
       setFloatingMessage({
-        text: `🪜 Ladder Boost! +${activeBoardConfig.scoring.ladder} pts`,
+        text: `Ladder Boost! +${activeBoardConfig.scoring.ladder} pts`,
         type: "ladder",
       });
       sounds.playLadderClimb();
@@ -416,7 +430,7 @@ function GameContent() {
         triggerComputerReaction("worried", "Whoa, golden ladder shortcut! Great move!", 2600);
       } else {
         triggerPlayerMood("worried", 2600);
-        triggerComputerReaction("celebrating", "Boom! Golden ladder boost! 🚀", 2600);
+        triggerComputerReaction("celebrating", "Boom! Golden ladder boost!", 2600);
       }
 
       await sleep(300);
@@ -441,7 +455,7 @@ function GameContent() {
       if (shieldConsumed) {
         sounds.playShieldDeflect();
         if (actor === "player") triggerHaptic([30, 30, 30]);
-        setFloatingMessage({ text: "🛡️ Cyber Shield Absorbed Incident!", type: "snake" });
+        setFloatingMessage({ text: "Cyber Shield Absorbed Incident!", type: "snake" });
         if (actor === "player") {
           triggerPlayerMood("happy", 2400);
           triggerComputerReaction("thinking", "Smart shield! Deflected the hazard.", 2600);
@@ -454,7 +468,7 @@ function GameContent() {
         sounds.playHeartLost();
         if (actor === "player") triggerHaptic([80, 50, 90]);
         setFloatingMessage({
-          text: isMajor ? "🐍⚠️ Major Risk Snake: -25 pts & ❤️ lost!" : "🐍 Snake Hazard: -10 pts & ❤️ lost!",
+          text: isMajor ? "Major Risk Snake: -25 pts & heart lost!" : "Snake Hazard: -10 pts & heart lost!",
           type: "snake",
         });
         if (actor === "player") {
@@ -464,7 +478,7 @@ function GameContent() {
           setRun((prev) => prev ? { ...prev, player_hearts: Math.max(0, prev.player_hearts - 1) } : null);
         } else {
           triggerPlayerMood("happy", 2600);
-          triggerComputerReaction("worried", "Oh no! Slid down the hazard & lost a heart! 🐍", 2600);
+          triggerComputerReaction("worried", "Oh no! Slid down the hazard & lost a heart!", 2600);
           // Immediately update visible heart in top score bar
           setRun((prev) => prev ? { ...prev, computer_hearts: Math.max(0, prev.computer_hearts - 1) } : null);
         }
@@ -483,15 +497,15 @@ function GameContent() {
     if (finalTo === 25) {
       sounds.playVictory();
       setFloatingMessage({
-        text: actor === "player" ? "🏁 VICTORY! Reached Square 25 (+300 pts)!" : "🏁 Ava reached Square 25!",
+        text: actor === "player" ? "VICTORY! Reached Square 25 (+300 pts)!" : "Ava reached Square 25!",
         type: "finish",
       });
       if (actor === "player") {
         triggerPlayerMood("celebrating", 4500);
-        triggerComputerReaction("happy", "Incredible match! GG, FinTech Champion! 🏆", 4500);
+        triggerComputerReaction("happy", "Incredible match! GG, FinTech Champion!", 4500);
       } else {
         triggerPlayerMood("worried", 4500);
-        triggerComputerReaction("celebrating", "Square 25 reached! Victory is mine! 🏁", 4500);
+        triggerComputerReaction("celebrating", "Square 25 reached! Victory is mine!", 4500);
       }
       await sleep(1500);
       setFloatingMessage(null);
@@ -903,7 +917,7 @@ function GameContent() {
         localStateRef.current.playerScore += activeBoardConfig.scoring.quizCorrect;
         localStateRef.current.playerQuizCorrect += 1;
         setEvents((prev) => [
-          `✅ Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${q?.explanation || ""}`,
+          `Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${q?.explanation || ""}`,
           ...prev,
         ]);
       } else {
@@ -911,7 +925,7 @@ function GameContent() {
         triggerHaptic(60);
         triggerPlayerMood("worried", 2600);
         triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
-        setEvents((prev) => [`❌ Incorrect. ${q?.explanation || ""}`, ...prev]);
+        setEvents((prev) => [`Incorrect. ${q?.explanation || ""}`, ...prev]);
       }
 
       // Pass turn to computer
@@ -1001,7 +1015,7 @@ function GameContent() {
           triggerPlayerMood("celebrating", 2600);
           triggerComputerReaction("happy", "FinTech genius! Flawless answer!", 2600);
           setEvents((prev) => [
-            `✅ Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${data.explanation}`,
+            `Correct! +${activeBoardConfig.scoring.quizCorrect} pts! ${data.explanation}`,
             ...prev,
           ]);
         } else {
@@ -1009,7 +1023,7 @@ function GameContent() {
           triggerHaptic(60);
           triggerPlayerMood("worried", 2600);
           triggerComputerReaction("thinking", "Tricky question! You'll get the next one.", 2600);
-          setEvents((prev) => [`❌ Incorrect. ${data.explanation}`, ...prev]);
+          setEvents((prev) => [`Incorrect. ${data.explanation}`, ...prev]);
         }
 
         // Refresh state
@@ -1097,8 +1111,8 @@ function GameContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white p-4">
         <div className="max-w-md w-full festival-card p-6 border-white/10 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-4 text-3xl">
-            🎮
+          <div className="w-14 h-14 rounded-2xl bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center mx-auto mb-4 text-[#fec01f]">
+            <Gamepad2 size={28} />
           </div>
 
           <h2 className="text-xl font-bold font-mono text-[#fec01f] mb-2">
@@ -1172,7 +1186,7 @@ function GameContent() {
               title="Dismiss banner"
               aria-label="Dismiss banner"
             >
-              ✕
+              <X size={14} />
             </button>
           </div>
         </div>
@@ -1185,9 +1199,9 @@ function GameContent() {
             <span>{error}</span>
             <button
               onClick={() => setError(null)}
-              className="text-red-400 hover:text-red-200 ml-4 font-bold"
+              className="text-red-400 hover:text-red-200 ml-4 font-bold flex items-center justify-center"
             >
-              ✕
+              <X size={14} />
             </button>
           </div>
         )}
@@ -1248,17 +1262,21 @@ function GameContent() {
 
             {/* Field Point Values Reference Pills (Placed directly below Roll Dice button) */}
             <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-white/70 pt-0.5">
-              <span className="flex items-center gap-1 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded-full text-teal-300">
-                <span>🪜</span> Ladders (+25)
+              <span className="flex items-center gap-1.5 bg-teal-950/60 border border-teal-500/30 px-2.5 py-1 rounded-full text-teal-300">
+                <TrendingUp size={12} />
+                <span>Ladders (+25)</span>
               </span>
-              <span className="flex items-center gap-1 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded-full text-rose-300">
-                <span>🐍</span> Snakes (-10/-25 &amp; ❤️)
+              <span className="flex items-center gap-1.5 bg-rose-950/60 border border-rose-500/30 px-2.5 py-1 rounded-full text-rose-300">
+                <AlertTriangle size={12} />
+                <span>Snakes (-10/-25 &amp; Heart)</span>
               </span>
-              <span className="flex items-center gap-1 bg-amber-950/60 border border-[#fec01f]/30 px-2 py-0.5 rounded-full text-[#fec01f]">
-                <span>📝</span> Quiz (+50)
+              <span className="flex items-center gap-1.5 bg-amber-950/60 border border-[#fec01f]/30 px-2.5 py-1 rounded-full text-[#fec01f]">
+                <HelpCircle size={12} />
+                <span>Quiz (+50)</span>
               </span>
-              <span className="flex items-center gap-1 bg-orange-950/60 border border-orange-500/30 px-2 py-0.5 rounded-full text-orange-300">
-                <span>💰</span> Treasure (+50 &amp; 🛡️)
+              <span className="flex items-center gap-1.5 bg-orange-950/60 border border-orange-500/30 px-2.5 py-1 rounded-full text-orange-300">
+                <Gem size={12} />
+                <span>Treasure (+50 &amp; Shield)</span>
               </span>
             </div>
 
@@ -1268,7 +1286,7 @@ function GameContent() {
                 onClick={() => setShowMobileIntel(!showMobileIntel)}
                 className="w-full py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 text-xs font-mono uppercase tracking-wider text-white/70 flex items-center justify-between hover:bg-white/10 transition-colors"
               >
-                <span>📜 Match Chronicle &amp; Field Guide ({events.length})</span>
+                <span className="flex items-center gap-1.5"><History size={13} className="text-[#fec01f]" /><span>Match Chronicle &amp; Field Guide ({events.length})</span></span>
                 <span>{showMobileIntel ? "▲ Hide" : "▼ Show"}</span>
               </button>
               {showMobileIntel && (
@@ -1284,7 +1302,7 @@ function GameContent() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
-                      <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; ❤️</span>
+                      <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; Heart</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
@@ -1313,7 +1331,7 @@ function GameContent() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
-                <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; ❤️</span>
+                <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; Heart</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3.5 h-3.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
