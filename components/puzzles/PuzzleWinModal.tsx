@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Sparkles } from "lucide-react";
+import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Sparkles, Star } from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
+import PuzzleIcon from "./PuzzleIcon";
 
 interface PuzzleWinModalProps {
   meta: PuzzleMeta;
