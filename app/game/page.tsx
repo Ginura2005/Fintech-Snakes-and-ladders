@@ -185,15 +185,11 @@ function GameContent() {
   const isTerminal = (status: string) =>
     ["player_won", "computer_won", "player_eliminated", "completed"].includes(status);
 
-  // Initialize Practice Mode (optionally with procedural seed)
+  // Initialize Practice Mode (every player/session gets a unique procedural board)
   const startPracticeGame = useCallback((seed?: number) => {
-    let config = BOARD_CONFIG;
-    if (seed !== undefined) {
-      config = generateDynamicBoard(seed).config;
-      setBoardSeed(seed);
-    } else {
-      setBoardSeed(null);
-    }
+    const activeSeed = seed !== undefined ? seed : Math.floor(Math.random() * 900000) + 100000;
+    const { config } = generateDynamicBoard(activeSeed);
+    setBoardSeed(activeSeed);
     setActiveBoardConfig(config);
 
     const initialState = createInitialGameState("practice-" + Date.now(), "guest-pilot");

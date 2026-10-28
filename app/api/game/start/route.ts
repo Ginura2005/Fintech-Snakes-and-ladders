@@ -101,13 +101,16 @@ export async function POST(request: NextRequest) {
       user.id
     );
 
-    const dailySeed = getDailySeed();
+    // Generate a unique 32-bit integer seed so every player gets their own board placement
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    const matchSeed = (randomArray[0] % 2000000000) + 1;
 
     const insertPayload: Record<string, unknown> = {
       id: newState.id,
       player_id: user.id,
       config_version: BOARD_CONFIG.version,
-      board_seed: dailySeed,
+      board_seed: matchSeed,
       status: "in_progress",
       current_turn: "player",
       turn_sequence: 0,

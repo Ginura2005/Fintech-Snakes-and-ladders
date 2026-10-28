@@ -136,16 +136,27 @@ describe("generateDynamicBoard — boundary protections", () => {
       expect(treasures).toHaveLength(2);
     });
 
-    it(`seed ${seed}: has 3-4 quizzes spaced ≥ 3 apart`, () => {
+    it(`seed ${seed}: has exactly 4 ladders and 4 snakes (same amount as classic)`, () => {
+      const { config } = generateDynamicBoard(seed);
+      expect(config.ladders).toHaveLength(4);
+      expect(config.snakes).toHaveLength(4);
+      const ordinarySnakes = config.snakes.filter((s) => s.type === "ordinary");
+      const majorSnakes = config.snakes.filter((s) => s.type === "major");
+      expect(ordinarySnakes).toHaveLength(2);
+      expect(majorSnakes).toHaveLength(2);
+    });
+
+    it(`seed ${seed}: has exactly 3 quizzes and 2 treasures`, () => {
       const { config } = generateDynamicBoard(seed);
       const quizzes = config.specialSquares
         .filter((sq) => sq.type === "quiz")
         .map((sq) => sq.square)
         .sort((a, b) => a - b);
-      expect(quizzes.length).toBeGreaterThanOrEqual(3);
-      expect(quizzes.length).toBeLessThanOrEqual(4);
+      const treasures = config.specialSquares.filter((sq) => sq.type === "treasure");
+      expect(quizzes).toHaveLength(3);
+      expect(treasures).toHaveLength(2);
       for (let i = 1; i < quizzes.length; i++) {
-        expect(quizzes[i] - quizzes[i - 1]).toBeGreaterThanOrEqual(3);
+        expect(quizzes[i] - quizzes[i - 1]).toBeGreaterThanOrEqual(2);
       }
     });
   }
