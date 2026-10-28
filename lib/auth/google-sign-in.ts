@@ -33,7 +33,7 @@ declare global {
 
 const DEFAULT_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  "477119360228-rae306kdivbu2ovs0bc7fh8r6rqm7r2f.apps.googleusercontent.com";
+  "952048375622-dt322h6v6moj1r84504c19962vne8965.apps.googleusercontent.com";
 
 interface SignInOptions {
   nextUrl?: string;

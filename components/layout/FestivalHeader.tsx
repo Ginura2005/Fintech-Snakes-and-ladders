@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { User } from "@supabase/supabase-js";
@@ -15,6 +15,7 @@ import {
   Puzzle,
   User as UserIcon,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 
 interface FestivalHeaderProps {
@@ -33,6 +34,30 @@ export default function FestivalHeader({
   activePath = "/",
 }: FestivalHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user?.email) {
+      setIsAdmin(false);
+      return;
+    }
+
+    let isMounted = true;
+    fetch("/api/admin/check")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted) {
+          setIsAdmin(Boolean(data?.isAdmin));
+        }
+      })
+      .catch(() => {
+        if (isMounted) setIsAdmin(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.email]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#06061f]/90 backdrop-blur-xl">
@@ -107,6 +132,21 @@ export default function FestivalHeader({
             <ExternalLink size={14} className="shrink-0 opacity-70" />
             <span>Festival</span>
           </a>
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                activePath === "/admin"
+                  ? "bg-[#8d1739]/30 text-[#fec01f] border border-[#fec01f]/50 font-bold shadow-sm"
+                  : "text-[#fec01f] bg-[#8d1739]/20 hover:bg-[#8d1739]/35 border border-[#8d1739]/40"
+              }`}
+              title="Admin Mission Control"
+            >
+              <ShieldCheck size={14} className="shrink-0 text-[#fec01f]" />
+              <span>Admin</span>
+            </Link>
+          )}
         </nav>
 
         {/* User Status / Action Buttons — Proportioned, balanced height */}
@@ -216,6 +256,17 @@ export default function FestivalHeader({
               <Trophy size={16} className="text-[#fec01f]" />
               <span>Leaderboard</span>
             </Link>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-2.5 px-3 rounded-lg bg-[#8d1739]/20 border border-[#8d1739]/40 text-[#fec01f] font-bold transition-colors flex items-center gap-2.5"
+              >
+                <ShieldCheck size={16} />
+                <span>Admin Mission Control</span>
+              </Link>
+            )}
             <a
               href="https://fintechfestival.lk"
               target="_blank"
