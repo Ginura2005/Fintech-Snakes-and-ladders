@@ -27,6 +27,10 @@ import {
   generateMiniSudokuLevel,
   countMiniSudokuSolutions,
 } from "@/lib/puzzles/mini-sudoku-engine";
+import {
+  calculatePuzzlePoints,
+  getArenaPuzzleBonus,
+} from "@/lib/puzzles/puzzle-storage";
 
 function getHammingDistance(w1: string, w2: string) {
   if (w1.length !== w2.length) return 99;
@@ -464,5 +468,118 @@ describe("Mini Sudoku Puzzles Verification", () => {
       const solCount = countMiniSudokuSolutions(level.givens);
       expect(solCount).toBe(1);
     }
+  });
+});
+
+/* =====================================================================
+   7. CHALLENGE POINTS & ARENA SCORE CONTRIBUTION
+   ===================================================================== */
+describe("Puzzle Challenge Points & Arena Score Contribution", () => {
+  it("calculates modest challenge points based on difficulty, speed, accuracy, and streak", () => {
+    // Easy difficulty with no bonuses
+    const p1 = calculatePuzzlePoints("Easy", 150, 2, 1);
+    expect(p1.pointsEarned).toBe(15);
+    expect(p1.breakdown.basePoints).toBe(15);
+    expect(p1.breakdown.speedBonus).toBe(0);
+    expect(p1.breakdown.cleanBonus).toBe(0);
+    expect(p1.breakdown.streakBonus).toBe(0);
+
+    // Hard difficulty with full bonuses (<120s, 0 mistakes, streak > 1)
+    const p2 = calculatePuzzlePoints("Hard", 85, 0, 5);
+    expect(p2.pointsEarned).toBe(40);
+    expect(p2.breakdown.basePoints).toBe(25);
+    expect(p2.breakdown.speedBonus).toBe(5);
+    expect(p2.breakdown.cleanBonus).toBe(5);
+    expect(p2.breakdown.streakBonus).toBe(5);
+
+    // Medium grid size (7x7 Queens) with clean bonus only
+    const p3 = calculatePuzzlePoints(7, 180, 0, 1);
+    expect(p3.pointsEarned).toBe(25); // 20 base + 5 clean
+    expect(p3.breakdown.basePoints).toBe(20);
+    expect(p3.breakdown.cleanBonus).toBe(5);
+  });
+
+  it("scales Arena match score contribution modestly and strictly caps at +50 pts", () => {
+    // Empty stats: 0 points
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 0,
+        currentStreak: 0,
+        lastPlayedDate: null,
+        completedLevels: {},
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 0,
+      })
+    ).toBe(0);
+
+    // 2 unique game types solved: +20 points
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 2,
+        currentStreak: 2,
+        lastPlayedDate: "2026-10-28",
+        completedLevels: {
+          "queens-6": true,
+          "tango-Easy": true,
+        },
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 45,
+      })
+    ).toBe(20);
+
+    // 4 unique game types: +40 points
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 4,
+        currentStreak: 4,
+        lastPlayedDate: "2026-10-28",
+        completedLevels: {
+          "queens-6": true,
+          "tango-Easy": true,
+          "pinpoint-Easy": true,
+          "crossclimb-Easy": true,
+        },
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 95,
+      })
+    ).toBe(40);
+
+    // All 6 unique game types solved: strictly capped at +50 points
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 6,
+        currentStreak: 6,
+        lastPlayedDate: "2026-10-28",
+        completedLevels: {
+          "queens-6": true,
+          "tango-Easy": true,
+          "pinpoint-Easy": true,
+          "crossclimb-Easy": true,
+          "zip-Easy": true,
+          "mini-sudoku-Easy": true,
+        },
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 160,
+      })
+    ).toBe(50);
+
+    // 50 total wins in the same game: capped strictly at 50 points ("not too much")
+    expect(
+      getArenaPuzzleBonus({
+        totalWins: 50,
+        currentStreak: 10,
+        lastPlayedDate: "2026-10-28",
+        completedLevels: {
+          "queens-6": true,
+        },
+        bestTimes: {},
+        soundMuted: false,
+        totalPuzzlePoints: 1000,
+      })
+    ).toBe(50);
   });
 });

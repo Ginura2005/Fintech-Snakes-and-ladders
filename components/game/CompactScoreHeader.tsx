@@ -27,6 +27,7 @@ interface CompactScoreHeaderProps {
   onResetPractice?: () => void;
   onShuffleBoard?: () => void;
   boardSeed?: number | null;
+  puzzleBonus?: number;
 }
 
 export default function CompactScoreHeader({
@@ -49,6 +50,7 @@ export default function CompactScoreHeader({
   onResetPractice,
   onShuffleBoard,
   boardSeed = null,
+  puzzleBonus = 0,
 }: CompactScoreHeaderProps) {
   const [muted, setMuted] = useState(sounds.getMuted());
   const isPlayerTurn = currentTurn === "player";
@@ -113,6 +115,16 @@ export default function CompactScoreHeader({
                 <span className="font-mono font-bold text-[10px] sm:text-sm text-[#fec01f] leading-none shrink-0">
                   {playerScore.toLocaleString()} <span className="text-[8px] sm:text-[9px] font-normal text-white/50">pts</span>
                 </span>
+
+                {/* Puzzle Bonus Intel Badge */}
+                {puzzleBonus > 0 && (
+                  <span
+                    className="flex items-center gap-0.5 text-[8px] sm:text-[9px] font-mono font-bold text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 px-1 py-0.5 rounded shrink-0 leading-none shadow-sm"
+                    title={`🧩 +${puzzleBonus} pts contributed from solving daily logic challenges`}
+                  >
+                    +{puzzleBonus} 🧩
+                  </span>
+                )}
 
                 {/* Hearts */}
                 <div className="flex items-center gap-0.5 shrink-0" title={`${playerHearts} hearts remaining`}>

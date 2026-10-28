@@ -43,10 +43,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      // body empty or non-json
+    }
+    const puzzleBonus = Math.min(50, Math.max(0, Math.floor(Number(body?.puzzleBonus) || 0)));
+
     processingLocks.add(user.id);
 
     try {
-      return await processRoll(user.id, supabase);
+      return await processRoll(user.id, supabase, puzzleBonus);
     } finally {
       processingLocks.delete(user.id);
     }
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processRoll(userId: string, supabase: any) {
+async function processRoll(userId: string, supabase: any, puzzleBonus: number = 0) {
   const hasServiceKey = Boolean(
     process.env.SUPABASE_SERVICE_ROLE_KEY &&
     process.env.SUPABASE_SERVICE_ROLE_KEY !== process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
@@ -164,6 +172,28 @@ async function processRoll(userId: string, supabase: any) {
 
   // Final state to persist
   const finalState = stateAfterTurn;
+
+  // Award modest Arena Challenge Bonus if game ended and bonus hasn't already been recorded
+  if (isTerminal(finalState) && puzzleBonus > 0) {
+    const { data: existingBonus } = await db
+      .from("score_ledger")
+      .select("id")
+      .eq("run_id", run.id)
+      .eq("event", "puzzle_bonus")
+      .maybeSingle();
+
+    if (!existingBonus) {
+      finalState.playerScore += puzzleBonus;
+      await db.from("score_ledger").insert({
+        run_id: run.id,
+        turn_sequence: finalState.turnSequence,
+        actor: "player",
+        event: "puzzle_bonus",
+        delta: puzzleBonus,
+        balance_after: finalState.playerScore,
+      });
+    }
+  }
 
   // Update game_runs
   const { error: updateError } = await db

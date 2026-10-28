@@ -29,6 +29,7 @@ import VictoryConfetti from "@/components/game/VictoryConfetti";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
+import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
 
 interface GameRun {
   status: string;
@@ -65,10 +66,12 @@ function ResultContent() {
   const [downloadingStory, setDownloadingStory] = useState(false);
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [updatingOptIn, setUpdatingOptIn] = useState(false);
+  const [puzzleBonus, setPuzzleBonus] = useState(0);
 
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    setPuzzleBonus(getArenaPuzzleBonus());
     const load = async () => {
       const modeParam = searchParams.get("mode");
       if (modeParam === "practice" || (typeof window !== "undefined" && sessionStorage.getItem("practice_run"))) {
@@ -337,6 +340,12 @@ function ResultContent() {
                 <Trophy size={13} />
                 <span>Rank #{rank} on Live Festival Leaderboard</span>
               </p>
+            )}
+            {puzzleBonus > 0 && (
+              <div className="mt-3 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-[#00f0ff]/10 border border-[#00f0ff]/25 text-[#00f0ff] font-mono text-[11px] font-semibold">
+                <span>🧩</span>
+                <span>Includes +{puzzleBonus} Arena Logic Challenge Bonus</span>
+              </div>
             )}
           </div>
 

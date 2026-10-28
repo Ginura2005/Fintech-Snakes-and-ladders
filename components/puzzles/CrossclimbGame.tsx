@@ -48,6 +48,8 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
   const [showWinModal, setShowWinModal] = useState(false);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
   // Reset on level change
   useEffect(() => {
@@ -108,13 +110,15 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
-      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
         "crossclimb",
         difficulty,
         secondsElapsed
       );
       setIsNewBestTime(isBest);
       setCurrentStreak(newStreak);
+      setPointsEarned(pts);
+      setArenaBonusPoints(arenaPts);
     }
   }, [isLadderFullyConnected, isTopSolved, isBottomSolved, isWon, difficulty, secondsElapsed, isMuted]);
 
@@ -398,6 +402,8 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
           secondsElapsed={secondsElapsed}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           hasNextLevel={diffIndex < CLIMB_DIFFICULTIES.length - 1}
           onNextLevel={() => setDiffIndex((p) => p + 1)}
           onReplay={handleReset}

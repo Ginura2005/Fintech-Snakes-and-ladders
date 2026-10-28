@@ -35,6 +35,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
   const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
   // Reset on pack change
   useEffect(() => {
@@ -71,13 +73,16 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
-      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
         "pinpoint",
         currentPack.topic,
-        secondsElapsed
+        secondsElapsed,
+        guesses.length
       );
       setIsNewBestTime(isBest);
       setCurrentStreak(newStreak);
+      setPointsEarned(pts);
+      setArenaBonusPoints(arenaPts);
     } else {
       // Wrong guess
       if (!isMuted) sounds.playSnakeSlide();
@@ -307,6 +312,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
           mistakesCount={guesses.length}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           educationalFact={currentPack.educationalFact}
           hasNextLevel={packIndex < PINPOINT_KNOWLEDGE_BASE.length - 1}
           onNextLevel={() => setPackIndex((p) => p + 1)}

@@ -42,6 +42,8 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
   const [mistakesCount, setMistakesCount] = useState(0);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
   // Reset / regenerate on difficulty or seed change
   useEffect(() => {
@@ -180,13 +182,16 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
         setShowWinModal(true);
         if (!isMuted) sounds.playVictory();
 
-        const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
           "tango",
           difficulty,
-          secondsElapsed
+          secondsElapsed,
+          mistakesCount
         );
         setIsNewBestTime(isBest);
         setCurrentStreak(newStreak);
+        setPointsEarned(pts);
+        setArenaBonusPoints(arenaPts);
       }
     }
   }, [board, conflictCells.size, isWon, size, currentLevel.solution, difficulty, secondsElapsed, isMuted]);
@@ -433,6 +438,8 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
           mistakesCount={mistakesCount}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           hasNextLevel={diffIndex < TANGO_DIFFICULTIES.length - 1}
           onNextLevel={() => setDiffIndex((prev) => prev + 1)}
           onReplay={handleReset}

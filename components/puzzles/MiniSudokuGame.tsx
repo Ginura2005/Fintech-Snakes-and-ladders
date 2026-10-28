@@ -45,6 +45,8 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
   const [mistakesCount, setMistakesCount] = useState(0);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
   // Audio mute state
   const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
@@ -184,13 +186,16 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
       if (matches) {
         setIsWon(true);
         setShowWinModal(true);
-        const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
           "mini-sudoku",
           difficulty,
-          secondsElapsed
+          secondsElapsed,
+          mistakesCount
         );
         setIsNewBestTime(isBest);
         setCurrentStreak(newStreak);
+        setPointsEarned(pts);
+        setArenaBonusPoints(arenaPts);
         if (!isMuted) sounds.playVictory();
       }
     }
@@ -566,6 +571,8 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
           onClose={() => setShowWinModal(false)}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           educationalFact="Mini Sudoku demonstrates deterministic state machine verification and constraint propagation—analogous to how double-entry distributed ledgers validate that debits and credits balance across all account partitions without contradiction."
         />
       )}

@@ -40,6 +40,8 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
   const [showWinModal, setShowWinModal] = useState(false);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
   const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
 
   const isDraggingRef = useRef(false);
@@ -86,13 +88,15 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
-      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
         "zip",
         currentSize.toString(),
         secondsElapsed
       );
       setIsNewBestTime(isBest);
       setCurrentStreak(newStreak);
+      setPointsEarned(pts);
+      setArenaBonusPoints(arenaPts);
     }
   }, [path.length, totalCells, lastWaypointHit, waypoints.length, isWon, currentSize, secondsElapsed, isMuted]);
 
@@ -306,6 +310,8 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
           movesCount={path.length}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           hasNextLevel={sizeIndex < ZIP_SIZES.length - 1}
           onNextLevel={() => setSizeIndex((p) => p + 1)}
           onReplay={handleReset}

@@ -14,6 +14,8 @@ interface PuzzleWinModalProps {
   isNewBestTime?: boolean;
   currentStreak?: number;
   educationalFact?: string;
+  pointsEarned?: number;
+  arenaBonusPoints?: number;
   hasNextLevel: boolean;
   onNextLevel?: () => void;
   onReplay: () => void;
@@ -30,6 +32,8 @@ export default function PuzzleWinModal({
   isNewBestTime = false,
   currentStreak,
   educationalFact,
+  pointsEarned,
+  arenaBonusPoints,
   hasNextLevel,
   onNextLevel,
   onReplay,
@@ -60,8 +64,8 @@ export default function PuzzleWinModal({
 
   const shareText = `Lanka FinTechverse Puzzles | ${meta.title}
 Solved ${meta.title} — ${levelName} in ${formatTime(secondsElapsed)}!
-Rating: ${getStarRatingString()}${typeof movesCount === "number" ? ` · ${movesCount} moves` : ""}
-Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
+${typeof pointsEarned === "number" ? `Earned +${pointsEarned} Challenge Points · ` : ""}Rating: ${getStarRatingString()}${typeof movesCount === "number" ? ` · ${movesCount} moves` : ""}
+Play daily logic puzzles at fintechfestival.lk/puzzles`;
 
   const handleCopy = async () => {
     try {
@@ -146,6 +150,38 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
             </span>
           </div>
         </div>
+
+        {/* Points Contribution Banner */}
+        {typeof pointsEarned === "number" && pointsEarned > 0 && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#fec01f]/15 via-amber-500/10 to-[#00f0ff]/15 border border-[#fec01f]/35 flex items-center justify-between text-left shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#fec01f]/20 border border-[#fec01f]/50 flex items-center justify-center text-[#fec01f] shrink-0 shadow-inner">
+                <Trophy size={18} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
+                  <span>+{pointsEarned} Challenge Points</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#fec01f]/20 text-[#fec01f] font-mono font-bold uppercase tracking-wider">
+                    Added
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/70 leading-tight">
+                  {typeof arenaBonusPoints === "number" && arenaBonusPoints > 0
+                    ? `Contributes to Arena game score (Active Bonus: +${arenaBonusPoints} pts, max 50)`
+                    : "Contributes +10 pts to your Arena game score (up to 50 max)"}
+                </p>
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-heading font-extrabold text-[#fec01f] text-xl">
+                +{pointsEarned}
+              </span>
+              <span className="block text-[9px] font-mono uppercase tracking-wider text-white/40">
+                Points
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Educational Fact / Takeaway Card if available */}
         {educationalFact && (

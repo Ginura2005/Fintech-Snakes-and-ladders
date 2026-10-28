@@ -27,6 +27,7 @@ import {
   GameState,
 } from "@/lib/game-engine/engine";
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
+import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
 import {
   Volume2,
   VolumeX,
@@ -108,6 +109,11 @@ function GameContent() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [run, setRun] = useState<GameRun | null>(null);
   const [loading, setLoading] = useState(true);
+  const [puzzleBonus, setPuzzleBonus] = useState<number>(0);
+
+  useEffect(() => {
+    setPuzzleBonus(getArenaPuzzleBonus());
+  }, []);
 
   // Animated display coordinates
   const [playerDisplayPos, setPlayerDisplayPos] = useState<number>(1);
@@ -632,6 +638,10 @@ function GameContent() {
 
     // Check if terminal
     if (checkTerminal(stateAfterPlayer)) {
+      if (puzzleBonus > 0 && !(stateAfterPlayer as any).puzzleBonusApplied) {
+        stateAfterPlayer.playerScore += puzzleBonus;
+        (stateAfterPlayer as any).puzzleBonusApplied = true;
+      }
       setAnimating(false);
       if (typeof window !== "undefined") {
         sessionStorage.setItem("practice_run", JSON.stringify(stateAfterPlayer));
@@ -715,6 +725,10 @@ function GameContent() {
       });
 
       if (checkTerminal(finalState)) {
+        if (puzzleBonus > 0 && !(finalState as any).puzzleBonusApplied) {
+          finalState.playerScore += puzzleBonus;
+          (finalState as any).puzzleBonusApplied = true;
+        }
         if (typeof window !== "undefined") {
           sessionStorage.setItem("practice_run", JSON.stringify(finalState));
         }
@@ -755,6 +769,7 @@ function GameContent() {
       const res = await fetch("/api/game/roll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ puzzleBonus }),
       });
 
       const data: TurnResult = await res.json();
@@ -990,6 +1005,10 @@ function GameContent() {
         });
 
         if (checkTerminal(finalState)) {
+          if (puzzleBonus > 0 && !(finalState as any).puzzleBonusApplied) {
+            finalState.playerScore += puzzleBonus;
+            (finalState as any).puzzleBonusApplied = true;
+          }
           if (typeof window !== "undefined") {
             sessionStorage.setItem("practice_run", JSON.stringify(finalState));
           }
@@ -1043,6 +1062,7 @@ function GameContent() {
           const rollRes = await fetch("/api/game/roll", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ puzzleBonus }),
           });
 
           if (rollRes.ok) {
@@ -1215,6 +1235,7 @@ function GameContent() {
           playerPosition={playerDisplayPos}
           playerQuizCorrect={run.player_quiz_correct}
           playerMood={playerMood}
+          puzzleBonus={puzzleBonus}
           computerScore={run.computer_score}
           computerHearts={run.computer_hearts}
           computerShields={run.computer_shields}

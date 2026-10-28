@@ -67,6 +67,8 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const [mistakesCount, setMistakesCount] = useState(0);
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
+  const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
 
   // Regenerate level on size change or new puzzle trigger
   useEffect(() => {
@@ -151,13 +153,16 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         if (!isMuted) sounds.playVictory();
 
         // Record win
-        const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
           "queens",
           currentSize.toString(),
-          secondsElapsed
+          secondsElapsed,
+          mistakesCount
         );
         setIsNewBestTime(isBest);
         setCurrentStreak(newStreak);
+        setPointsEarned(pts);
+        setArenaBonusPoints(arenaPts);
       }
     }
   }, [
@@ -474,6 +479,8 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
           mistakesCount={mistakesCount}
           isNewBestTime={isNewBestTime}
           currentStreak={currentStreak}
+          pointsEarned={pointsEarned}
+          arenaBonusPoints={arenaBonusPoints}
           hasNextLevel={sizeIndex < DIFFICULTY_SIZES.length - 1}
           onNextLevel={() => setSizeIndex((prev) => prev + 1)}
           onReplay={handleReset}

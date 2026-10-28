@@ -20,6 +20,7 @@ import PuzzleIcon from "./PuzzleIcon";
 import {
   getPuzzleStats,
   toggleGlobalPuzzleMute,
+  getArenaPuzzleBonus,
   PuzzleStatsData,
 } from "@/lib/puzzles/puzzle-storage";
 
@@ -48,6 +49,8 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
     day: "numeric",
     year: "numeric",
   });
+
+  const arenaBonus = getArenaPuzzleBonus(stats);
 
   // Helper to format best time in seconds to mm:ss
   const formatTime = (secs: number) => {
@@ -108,6 +111,19 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
                   <Trophy size={14} className="text-emerald-400" />
                   <span className="font-bold">{stats.totalWins} Puzzles Solved</span>
                 </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fec01f]/10 border border-[#fec01f]/25 text-[#fec01f]">
+                  <Sparkles size={14} className="text-[#fec01f]" />
+                  <span className="font-bold">{stats.totalPuzzlePoints || 0} Challenge Pts</span>
+                </div>
+
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00f0ff]/10 border border-[#00f0ff]/25 text-[#00f0ff]"
+                  title="Modest score boost applied to your main Snakes & Ladders matches (+10 per unique game solved, up to +50 pts max)"
+                >
+                  <Zap size={13} className="text-[#00f0ff] fill-[#00f0ff]/40" />
+                  <span className="font-bold">+{arenaBonus} / 50 Arena Bonus</span>
+                </div>
               </>
             )}
 
@@ -145,7 +161,7 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
             Ready for your daily logic streak?
           </h2>
           <p className="text-xs text-white/60 max-w-xl">
-            Every game is seeded deterministically from today&apos;s date, meaning all FinTechverse participants worldwide solve the exact same board today.
+            Every game is seeded deterministically from today&apos;s date. Solving puzzles also contributes an Arena Intel bonus (+10 pts per game, up to +50 pts max) added directly to your Snakes & Ladders match score.
           </p>
         </div>
 
