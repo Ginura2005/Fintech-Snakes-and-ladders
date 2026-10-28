@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, Epilogue, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const sora = Sora({
@@ -24,7 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fintechfestival.lk"),
+  metadataBase: new URL("https://verse.fintechfestival.lk"),
   title: "LANKA FINTECHVERSE | Sri Lanka FinTech Festival 2026",
   description:
     "The Official Snakes & Ladders Game of the Sri Lanka FinTech Festival 2026. Test your FinTech knowledge, race against the AI, climb the leaderboard, and claim victory in the digital finance arena.",
@@ -52,6 +53,10 @@ export default function RootLayout({
       className={`${sora.variable} ${epilogue.variable} ${jetbrainsMono.variable} dark`}
     >
       <body className="min-h-screen bg-[#06061f] text-white selection:bg-[#fec01f] selection:text-black">
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+        />
         {children}
       </body>
     </html>

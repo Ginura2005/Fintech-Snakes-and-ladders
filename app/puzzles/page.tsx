@@ -14,6 +14,7 @@ import CrossclimbGame from "@/components/puzzles/CrossclimbGame";
 import ZipGame from "@/components/puzzles/ZipGame";
 import MiniSudokuGame from "@/components/puzzles/MiniSudokuGame";
 import { PuzzleId } from "@/components/puzzles/puzzleTypes";
+import { signInWithGoogle } from "@/lib/auth/google-sign-in";
 
 function PuzzlesContent() {
   const searchParams = useSearchParams();
@@ -36,12 +37,14 @@ function PuzzlesContent() {
 
   const handleSignIn = async () => {
     setSigningIn(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/puzzles`,
-      },
-    });
+    try {
+      await signInWithGoogle(supabase, {
+        nextUrl: "/puzzles",
+        onError: () => setSigningIn(false),
+      });
+    } catch {
+      setSigningIn(false);
+    }
   };
 
   const handleSignOut = async () => {

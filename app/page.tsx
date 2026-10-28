@@ -21,6 +21,7 @@ import {
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import MarqueeTicker from "@/components/layout/MarqueeTicker";
+import { signInWithGoogle } from "@/lib/auth/google-sign-in";
 
 interface LeaderboardEntry {
   rank: number;
@@ -68,14 +69,16 @@ export default function HomePage() {
   const handleGoogleSignIn = async () => {
     setSigningIn(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/game`,
-      },
-    });
-    if (error) {
-      setError(error.message);
+    try {
+      await signInWithGoogle(supabase, {
+        nextUrl: "/game",
+        onError: (err) => {
+          setError(err.message);
+          setSigningIn(false);
+        },
+      });
+    } catch (err: any) {
+      setError(err?.message || "Sign-in failed. Please try again.");
       setSigningIn(false);
     }
   };

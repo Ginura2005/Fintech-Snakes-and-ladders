@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Play, Trophy, Sparkles, Heart, Star } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
+import { signInWithGoogle } from "@/lib/auth/google-sign-in";
 
 interface CardData {
   displayName: string;
@@ -48,12 +49,17 @@ export default function ChallengePage() {
 
   const handleSignIn = async () => {
     setSigningIn(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/game`,
-      },
-    });
+    try {
+      await signInWithGoogle(supabase, {
+        nextUrl: "/game",
+        onError: (err) => {
+          setError(err.message);
+          setSigningIn(false);
+        },
+      });
+    } catch {
+      setSigningIn(false);
+    }
   };
 
   if (loading) {
