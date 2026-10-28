@@ -1165,7 +1165,7 @@ function GameContent() {
   const gameOver = isTerminal(run.status);
 
   return (
-    <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+    <div className="min-h-screen min-h-dvh bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
       {/* Festival Header */}
       <FestivalHeader
         user={user}
@@ -1178,20 +1178,20 @@ function GameContent() {
         <div
           className={`transition-all duration-500 ease-out overflow-hidden ${
             showPracticeBanner
-              ? "max-h-20 opacity-100 border-b border-teal-500/40"
+              ? "max-h-24 sm:max-h-20 opacity-100 border-b border-teal-500/40"
               : "max-h-0 opacity-0 border-b-0 py-0 pointer-events-none"
           }`}
         >
-          <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-[#0a0a28] px-4 py-2 text-center text-xs font-mono text-teal-200 flex items-center justify-center gap-2 sm:gap-3">
-            <span className="font-bold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded border border-teal-400/40 shrink-0">
+          <div className="bg-gradient-to-r from-teal-950 via-teal-900 to-[#0a0a28] px-3 py-1.5 sm:px-4 sm:py-2 text-center text-[11px] sm:text-xs font-mono text-teal-200 flex items-center justify-center gap-1.5 sm:gap-3 flex-wrap sm:flex-nowrap">
+            <span className="font-bold uppercase tracking-wider bg-teal-500/20 px-2 py-0.5 rounded border border-teal-400/40 shrink-0 text-[10px] sm:text-xs">
               Practice Arena
             </span>
-            <span className="truncate">Unlimited moves, full audio &amp; physics. Ready to rank?</span>
+            <span className="truncate max-w-[200px] xs:max-w-none">Full audio &amp; physics. Ready to rank?</span>
             <a
               href="/"
               className="text-[#fec01f] font-bold underline hover:text-white transition-colors shrink-0"
             >
-              Sign in for Official Tournament Leaderboard →
+              Sign in for Leaderboard →
             </a>
             <button
               onClick={() => {
@@ -1210,7 +1210,7 @@ function GameContent() {
         </div>
       )}
 
-      <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 py-3 sm:py-6 px-2 xs:px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full pb-safe">
         {/* Error notification */}
         {error && (
           <div className="mb-4 px-4 py-3 rounded-xl bg-red-950/70 border border-red-500/50 text-sm font-mono text-red-300 flex items-center justify-between">

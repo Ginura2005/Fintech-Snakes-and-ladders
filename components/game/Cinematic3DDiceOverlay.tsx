@@ -78,7 +78,7 @@ export default function Cinematic3DDiceOverlay({
       {/* Tabletop Arena Felt Ring */}
       <div
         className={`
-          relative w-72 h-72 sm:w-88 sm:h-88 rounded-full border-2 flex flex-col items-center justify-center p-6 text-center
+          relative w-[min(17rem,86vw)] h-[min(17rem,86vw)] sm:w-88 sm:h-88 rounded-full border-2 flex flex-col items-center justify-center p-4 sm:p-6 text-center
           transition-all duration-400 ease-out
           ${
             visible

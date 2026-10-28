@@ -24,6 +24,8 @@ import {
   MessageSquare,
   Link as LinkIcon,
   RotateCcw,
+  Info,
+  Puzzle,
 } from "lucide-react";
 import VictoryConfetti from "@/components/game/VictoryConfetti";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";
@@ -273,11 +275,11 @@ function ResultContent() {
   const durationMinutes = run.duration_seconds ? Math.floor(run.duration_seconds / 60) : null;
 
   return (
-    <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+    <div className="min-h-screen min-h-dvh bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
       {isWin && <VictoryConfetti />}
       <FestivalHeader user={user} activePath="/game/result" />
 
-      <main className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full space-y-6">
+      <main className="flex-1 py-6 sm:py-10 px-3.5 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full space-y-5 sm:space-y-6 pb-safe">
         {/* Main Result Showcase Card */}
         <div
           ref={cardRef}
@@ -345,7 +347,7 @@ function ResultContent() {
             )}
             {puzzleBonus > 0 && (
               <div className="mt-3 flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-[#00f0ff]/10 border border-[#00f0ff]/25 text-[#00f0ff] font-mono text-[11px] font-semibold">
-                <span>🧩</span>
+                <Puzzle size={12} className="text-[#00f0ff] shrink-0" />
                 <span>Includes +{puzzleBonus} Arena Logic Challenge Bonus</span>
               </div>
             )}
@@ -401,7 +403,7 @@ function ResultContent() {
 
         {/* 1-Run Notice */}
         <div className="festival-card p-4 flex items-start gap-3 border-amber-500/40 bg-amber-950/20">
-          <span className="text-xl">ℹ️</span>
+          <Info size={18} className="text-amber-400 shrink-0 mt-0.5" />
           <div className="text-xs font-mono">
             <p className="font-bold text-amber-300 uppercase tracking-wider">
               Official Attempt Record Locked

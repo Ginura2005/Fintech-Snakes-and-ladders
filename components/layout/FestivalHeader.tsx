@@ -217,46 +217,46 @@ export default function FestivalHeader({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-[#06061f] px-4 py-4 space-y-2 animate-slide-up">
+        <div className="md:hidden border-t border-white/10 bg-[#06061f]/95 backdrop-blur-2xl px-4 py-4 space-y-2 animate-slide-up max-h-[calc(100dvh-4rem)] overflow-y-auto pb-safe shadow-2xl">
           <nav className="flex flex-col space-y-1 text-sm font-mono uppercase tracking-wider text-white/80">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-2.5"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Sparkles size={16} className="text-[#fec01f]" />
+              <Sparkles size={17} className="text-[#fec01f]" />
               <span>Home</span>
             </Link>
             <Link
               href="/game"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-2.5"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Gamepad2 size={16} className="text-teal-400" />
+              <Gamepad2 size={17} className="text-teal-400" />
               <span>Game Arena</span>
             </Link>
             <Link
               href="/game?mode=practice"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 px-3 rounded-lg hover:bg-white/5 text-teal-300 hover:text-teal-200 transition-colors flex items-center gap-2.5"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 text-teal-300 hover:text-teal-200 transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Play size={16} />
+              <Play size={17} />
               <span>Practice Mode</span>
             </Link>
             <Link
               href="/puzzles"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-2.5"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Puzzle size={16} className="text-[#fec01f]" />
+              <Puzzle size={17} className="text-[#fec01f]" />
               <span>FinTech Puzzles</span>
             </Link>
             <Link
               href="/leaderboard"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-2.5"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Trophy size={16} className="text-[#fec01f]" />
+              <Trophy size={17} className="text-[#fec01f]" />
               <span>Leaderboard</span>
             </Link>
 
@@ -264,9 +264,9 @@ export default function FestivalHeader({
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-2.5 px-3 rounded-lg bg-[#8d1739]/20 border border-[#8d1739]/40 text-[#fec01f] font-bold transition-colors flex items-center gap-2.5"
+                className="py-3 px-3.5 rounded-xl bg-[#8d1739]/20 border border-[#8d1739]/40 text-[#fec01f] font-bold transition-colors flex items-center gap-3 min-h-[44px]"
               >
-                <ShieldCheck size={16} />
+                <ShieldCheck size={17} />
                 <span>Admin Mission Control</span>
               </Link>
             )}
@@ -274,10 +274,10 @@ export default function FestivalHeader({
               href="https://fintechfestival.lk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-white/5 hover:text-[#fec01f] transition-colors"
+              className="inline-flex items-center justify-between py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors min-h-[44px]"
             >
-              <span className="flex items-center gap-2.5">
-                <ExternalLink size={16} />
+              <span className="flex items-center gap-3">
+                <ExternalLink size={17} />
                 <span>Main Website</span>
               </span>
               <span className="text-xs text-white/40">fintechfestival.lk</span>
@@ -288,7 +288,7 @@ export default function FestivalHeader({
             <Link
               href="/privacy"
               onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-[#fec01f] transition-colors"
+              className="py-2 hover:text-[#fec01f] transition-colors"
             >
               Privacy Policy
             </Link>
@@ -296,7 +296,7 @@ export default function FestivalHeader({
             <Link
               href="/terms"
               onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-[#fec01f] transition-colors"
+              className="py-2 hover:text-[#fec01f] transition-colors"
             >
               Terms of Service
             </Link>

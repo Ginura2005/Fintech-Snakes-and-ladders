@@ -148,14 +148,14 @@ export default function GameBoard({
   return (
     <div className="w-full select-none">
       {/* 5x5 Arena Board with Aspect-Square Canvas */}
-      <div className="relative w-full max-w-2xl mx-auto p-1.5 sm:p-3 rounded-2xl bg-[#080824]/95 border border-white/15 backdrop-blur-xl shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden">
+      <div className="relative w-full max-w-[min(100vw-1rem,560px)] mx-auto p-1 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#080824]/95 border border-white/15 backdrop-blur-xl shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden">
         
         {/* Floating Event Toast */}
         {floatingMessage && (
           <div
             className={`
-              absolute top-3 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl font-heading font-extrabold text-xs sm:text-sm
-              shadow-2xl flex items-center gap-2 border animate-toast-pop max-w-[90%] text-center pointer-events-none
+              absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 z-40 px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl font-heading font-extrabold text-[11px] sm:text-sm
+              shadow-2xl flex items-center gap-1.5 sm:gap-2 border animate-toast-pop max-w-[92%] text-center pointer-events-none
               ${
                 floatingMessage.type === "ladder"
                   ? "bg-teal-500/95 text-white border-teal-300 shadow-[0_0_25px_rgba(45,212,191,0.6)]"
@@ -179,7 +179,7 @@ export default function GameBoard({
           <BoardSvgOverlay activeLadder={activeLadder} activeSnake={activeSnake} ladders={activeConfig.ladders} snakes={activeConfig.snakes} />
 
           {/* Clean 5x5 Grid Cells */}
-          <div className="grid grid-cols-5 grid-rows-5 gap-1 sm:gap-1.5 w-full h-full relative z-10">
+          <div className="grid grid-cols-5 grid-rows-5 gap-0.5 sm:gap-1.5 w-full h-full relative z-10">
             {BOARD_GRID.map((row) =>
               row.map((square) => {
                 const isPlayerHere = playerPosition === square;
@@ -190,15 +190,15 @@ export default function GameBoard({
                   <div
                     key={square}
                     className={`
-                      relative flex flex-col justify-between p-1 sm:p-1.5 rounded-lg sm:rounded-xl border transition-all duration-300
+                      relative flex flex-col justify-between p-0.5 xs:p-1 sm:p-1.5 rounded-md sm:rounded-xl border transition-all duration-300
                       ${meta.bgClass}
                       ${
                         isPlayerHere && isComputerHere
-                          ? "ring-2 ring-[#fec01f] shadow-[0_0_16px_rgba(254,192,31,0.6)] z-20"
+                          ? "ring-1.5 sm:ring-2 ring-[#fec01f] shadow-[0_0_16px_rgba(254,192,31,0.6)] z-20"
                           : isPlayerHere
-                          ? "ring-2 ring-[#fec01f] shadow-[0_0_12px_rgba(254,192,31,0.5)] z-20"
+                          ? "ring-1.5 sm:ring-2 ring-[#fec01f] shadow-[0_0_12px_rgba(254,192,31,0.5)] z-20"
                           : isComputerHere
-                          ? "ring-1.5 ring-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.4)]"
+                          ? "ring-1 sm:ring-1.5 ring-rose-500/80 shadow-[0_0_10px_rgba(244,63,94,0.4)]"
                           : ""
                       }
                     `}
@@ -206,7 +206,7 @@ export default function GameBoard({
                     {/* Top Header: Crisp Square Number + Feature Indicator */}
                     <div className="flex items-center justify-between w-full leading-none">
                       <span
-                        className={`font-mono text-[11px] sm:text-xs md:text-sm font-black ${
+                        className={`font-mono text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-black ${
                           square === 25 ? "text-[#fec01f]" : "text-white/70"
                         }`}
                       >
@@ -215,7 +215,7 @@ export default function GameBoard({
 
                       {meta.badge && (
                         <span
-                          className={`text-[8px] sm:text-[9px] font-mono px-1 py-0.5 rounded leading-none ${meta.badgeClass}`}
+                          className={`text-[7px] xs:text-[8px] sm:text-[9px] font-mono px-0.5 sm:px-1 py-0.2 sm:py-0.5 rounded leading-none ${meta.badgeClass}`}
                         >
                           {meta.badge}
                         </span>
@@ -224,18 +224,18 @@ export default function GameBoard({
 
                     {/* Middle: Clean Feature Icon (Real Lucide SVG, No Emojis) */}
                     <div className="flex items-center justify-center my-auto">
-                      {meta.type === "finish" && <Trophy size={16} className="text-[#fec01f] drop-shadow" />}
-                      {meta.type === "ladder" && <TrendingUp size={15} className="text-teal-300 drop-shadow" />}
-                      {meta.type === "snake" && <AlertTriangle size={14} className="text-rose-400 drop-shadow" />}
-                      {meta.type === "quiz" && <HelpCircle size={14} className="text-[#fec01f] drop-shadow" />}
-                      {meta.type === "treasure" && <Gem size={14} className="text-orange-400 drop-shadow" />}
+                      {meta.type === "finish" && <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#fec01f] drop-shadow" />}
+                      {meta.type === "ladder" && <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-teal-300 drop-shadow" />}
+                      {meta.type === "snake" && <AlertTriangle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-rose-400 drop-shadow" />}
+                      {meta.type === "quiz" && <HelpCircle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-[#fec01f] drop-shadow" />}
+                      {meta.type === "treasure" && <Gem className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-orange-400 drop-shadow" />}
                     </div>
 
                     {/* Bottom: Subtle Tile Landing Groove */}
-                    <div className="flex items-center justify-center min-h-[14px] sm:min-h-[18px] w-full">
+                    <div className="flex items-center justify-center min-h-[6px] sm:min-h-[14px] w-full">
                       <div
                         className={`
-                          w-6 sm:w-8 h-1 rounded-full transition-all duration-300
+                          w-4 sm:w-8 h-0.5 sm:h-1 rounded-full transition-all duration-300
                           ${
                             isPlayerHere || isComputerHere
                               ? "bg-[#fec01f]/35 blur-[0.5px] scale-110"
@@ -259,7 +259,7 @@ export default function GameBoard({
                 left: `${playerX}%`,
                 top: `${playerY}%`,
                 transform: sameSquare
-                  ? "translate(calc(-50% - 13px), -50%)"
+                  ? "translate(calc(-50% - 10px), -50%)"
                   : "translate(-50%, -50%)",
                 transition: getPawnTransition(isPlayerLadder, isPlayerSnake),
                 zIndex: isPlayerMoving ? 35 : 28,
@@ -271,8 +271,8 @@ export default function GameBoard({
                   className={`
                     relative transition-transform duration-200
                     ${isPlayerMoving ? "animate-pawn-hop" : animating ? "scale-105" : "scale-100"}
-                    ${isPlayerLadder ? "ring-4 ring-[#fec01f] shadow-[0_0_25px_rgba(254,192,31,0.9)] rounded-full" : ""}
-                    ${isPlayerSnake ? "ring-4 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.9)] rounded-full" : ""}
+                    ${isPlayerLadder ? "ring-3 sm:ring-4 ring-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.9)] rounded-full" : ""}
+                    ${isPlayerSnake ? "ring-3 sm:ring-4 ring-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.9)] rounded-full" : ""}
                   `}
                   title={`You (Square ${playerPosition})`}
                 >
@@ -282,7 +282,7 @@ export default function GameBoard({
                 {/* Ground Drop Shadow */}
                 <span
                   className={`
-                    w-4 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
+                    w-3 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
                     ${isPlayerMoving ? "animate-pawn-shadow" : "opacity-60"}
                   `}
                 />
@@ -296,7 +296,7 @@ export default function GameBoard({
                 left: `${computerX}%`,
                 top: `${computerY}%`,
                 transform: sameSquare
-                  ? "translate(calc(-50% + 13px), -50%)"
+                  ? "translate(calc(-50% + 10px), -50%)"
                   : "translate(-50%, -50%)",
                 transition: getPawnTransition(isComputerLadder, isComputerSnake),
                 zIndex: isComputerMoving ? 35 : 27,
@@ -308,8 +308,8 @@ export default function GameBoard({
                   className={`
                     relative transition-transform duration-200
                     ${isComputerMoving ? "animate-pawn-hop" : "scale-100"}
-                    ${isComputerLadder ? "ring-4 ring-[#fec01f] shadow-[0_0_25px_rgba(254,192,31,0.9)] rounded-full" : ""}
-                    ${isComputerSnake ? "ring-4 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.9)] rounded-full" : ""}
+                    ${isComputerLadder ? "ring-3 sm:ring-4 ring-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.9)] rounded-full" : ""}
+                    ${isComputerSnake ? "ring-3 sm:ring-4 ring-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.9)] rounded-full" : ""}
                   `}
                   title={`Ava (Square ${computerPosition})`}
                 >
@@ -319,7 +319,7 @@ export default function GameBoard({
                 {/* Ground Drop Shadow */}
                 <span
                   className={`
-                    w-4 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
+                    w-3 h-1 sm:w-5 sm:h-1.5 bg-black/60 rounded-full blur-[1px] -mt-0.5
                     ${isComputerMoving ? "animate-pawn-shadow" : "opacity-60"}
                   `}
                 />

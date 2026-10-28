@@ -188,53 +188,53 @@ export default function LeaderboardPage() {
           <>
             {/* Top 3 Podium Cards */}
             {entries.length >= 3 && (
-              <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-2xl mx-auto mb-10 items-end pt-8">
+              <div className="grid grid-cols-3 gap-1.5 xs:gap-2.5 sm:gap-6 max-w-2xl mx-auto mb-8 sm:mb-10 items-end pt-6 sm:pt-8">
                 {/* 2nd Place */}
-                <div className="festival-card p-3.5 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(203,213,225,0.3)]">
-                    <span className="text-lg sm:text-xl font-bold font-mono text-slate-200">#2</span>
+                <div className="festival-card p-2 xs:p-3 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center mb-2 sm:mb-3 shadow-[0_0_15px_rgba(203,213,225,0.3)]">
+                    <span className="text-sm xs:text-base sm:text-xl font-bold font-mono text-slate-200">#2</span>
                   </div>
-                  <span className="font-mono text-[10px] text-slate-300 uppercase tracking-widest font-bold">
+                  <span className="font-mono text-[8px] xs:text-[9px] sm:text-[10px] text-slate-300 uppercase tracking-widest font-bold">
                     Rank 2
                   </span>
-                  <p className="font-heading font-bold text-xs sm:text-sm text-white truncate max-w-full mt-1">
+                  <p className="font-heading font-bold text-[11px] xs:text-xs sm:text-sm text-white truncate max-w-full mt-0.5 sm:mt-1">
                     {entries[1]?.displayName}
                   </p>
-                  <p className="font-mono font-bold text-sm sm:text-base text-slate-200 mt-1">
-                    {entries[1]?.finalScore.toLocaleString()} pts
+                  <p className="font-mono font-bold text-xs xs:text-sm sm:text-base text-slate-200 mt-0.5 sm:mt-1">
+                    {entries[1]?.finalScore.toLocaleString()} <span className="text-[9px] font-normal text-white/50">pts</span>
                   </p>
                 </div>
 
                 {/* 1st Place (Champion) */}
-                <div className="festival-card p-4 sm:p-6 text-center border-[#fec01f] bg-gradient-to-b from-[#fec01f]/20 via-[#0a0a2c] to-[#06061f] shadow-[0_0_40px_rgba(254,192,31,0.25)] flex flex-col items-center scale-105 z-10 -translate-y-2">
-                  <Crown size={22} className="text-[#fec01f] mb-1" />
-                  <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#fec01f] text-black border-2 border-white flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(254,192,31,0.6)]">
-                    <Trophy size={26} className="fill-black" />
+                <div className="festival-card p-2.5 xs:p-3.5 sm:p-6 text-center border-[#fec01f] bg-gradient-to-b from-[#fec01f]/20 via-[#0a0a2c] to-[#06061f] shadow-[0_0_40px_rgba(254,192,31,0.25)] flex flex-col items-center scale-105 z-10 -translate-y-2">
+                  <Crown size={18} className="text-[#fec01f] mb-0.5 sm:mb-1 sm:w-5 sm:h-5" />
+                  <div className="w-12 h-12 xs:w-14 xs:h-14 sm:w-20 sm:h-20 rounded-full bg-[#fec01f] text-black border-2 border-white flex items-center justify-center mb-2 sm:mb-3 shadow-[0_0_25px_rgba(254,192,31,0.6)]">
+                    <Trophy size={20} className="fill-black sm:w-6 sm:h-6" />
                   </div>
-                  <span className="section-badge section-badge-primary text-[9px] sm:text-[10px] py-0.5 px-2">
-                    FESTIVAL CHAMPION
+                  <span className="section-badge section-badge-primary text-[8px] xs:text-[9px] sm:text-[10px] py-0.5 px-1.5 sm:px-2">
+                    CHAMPION
                   </span>
-                  <p className="font-heading font-extrabold text-sm sm:text-base text-white truncate max-w-full mt-2">
+                  <p className="font-heading font-extrabold text-xs xs:text-sm sm:text-base text-white truncate max-w-full mt-1 sm:mt-2">
                     {entries[0]?.displayName}
                   </p>
-                  <p className="font-mono font-black text-lg sm:text-xl text-[#fec01f] mt-1">
-                    {entries[0]?.finalScore.toLocaleString()} pts
+                  <p className="font-mono font-black text-sm xs:text-base sm:text-xl text-[#fec01f] mt-0.5 sm:mt-1">
+                    {entries[0]?.finalScore.toLocaleString()} <span className="text-[10px] font-normal text-white/70">pts</span>
                   </p>
                 </div>
 
                 {/* 3rd Place */}
-                <div className="festival-card p-3.5 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950 border-2 border-amber-500 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                    <span className="text-lg sm:text-xl font-bold font-mono text-amber-300">#3</span>
+                <div className="festival-card p-2 xs:p-3 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
+                  <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950 border-2 border-amber-500 flex items-center justify-center mb-2 sm:mb-3 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                    <span className="text-sm xs:text-base sm:text-xl font-bold font-mono text-amber-300">#3</span>
                   </div>
-                  <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
+                  <span className="font-mono text-[8px] xs:text-[9px] sm:text-[10px] text-amber-400 uppercase tracking-widest font-bold">
                     Rank 3
                   </span>
-                  <p className="font-heading font-bold text-xs sm:text-sm text-white truncate max-w-full mt-1">
+                  <p className="font-heading font-bold text-[11px] xs:text-xs sm:text-sm text-white truncate max-w-full mt-0.5 sm:mt-1">
                     {entries[2]?.displayName}
                   </p>
-                  <p className="font-mono font-bold text-sm sm:text-base text-amber-300 mt-1">
-                    {entries[2]?.finalScore.toLocaleString()} pts
+                  <p className="font-mono font-bold text-xs xs:text-sm sm:text-base text-amber-300 mt-0.5 sm:mt-1">
+                    {entries[2]?.finalScore.toLocaleString()} <span className="text-[9px] font-normal text-white/50">pts</span>
                   </p>
                 </div>
               </div>
@@ -249,7 +249,7 @@ export default function LeaderboardPage() {
                   placeholder="Filter by player handle…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-white/40 font-mono focus:border-[#fec01f] focus:outline-none transition-colors"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-base sm:text-xs text-white placeholder-white/40 font-mono focus:border-[#fec01f] focus:outline-none transition-colors touch-manipulation"
                 />
               </div>
               <span className="text-xs font-mono text-white/50 hidden sm:inline">
@@ -259,15 +259,15 @@ export default function LeaderboardPage() {
 
             {/* Standings Table */}
             <div className="festival-card overflow-hidden border-white/15 bg-[#090924]/85 shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-scroll">
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-white/10 bg-white/[0.02] text-xs font-mono uppercase tracking-wider text-white/50">
-                      <th className="py-4 px-5">Rank</th>
-                      <th className="py-4 px-5">Player Handle</th>
-                      <th className="py-4 px-5 text-right">Final Score</th>
-                      <th className="py-4 px-5 text-right hidden sm:table-cell">Quiz Score</th>
-                      <th className="py-4 px-5 text-right hidden md:table-cell">Duration</th>
+                      <th className="py-3 px-3 sm:py-4 sm:px-5">Rank</th>
+                      <th className="py-3 px-3 sm:py-4 sm:px-5">Player Handle</th>
+                      <th className="py-3 px-3 sm:py-4 sm:px-5 text-right">Final Score</th>
+                      <th className="py-3 px-3 sm:py-4 sm:px-5 text-right hidden sm:table-cell">Quiz Score</th>
+                      <th className="py-3 px-3 sm:py-4 sm:px-5 text-right hidden md:table-cell">Duration</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 font-mono">
@@ -283,9 +283,9 @@ export default function LeaderboardPage() {
                               : ""
                           }`}
                         >
-                          <td className="py-4 px-5">
+                          <td className="py-3 px-3 sm:py-4 sm:px-5">
                             <span
-                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold font-mono ${
+                              className={`inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-[11px] sm:text-xs font-bold font-mono ${
                                 entry.rank === 1
                                   ? "bg-[#fec01f] text-black shadow-[0_0_12px_rgba(254,192,31,0.6)]"
                                   : entry.rank === 2
@@ -298,29 +298,29 @@ export default function LeaderboardPage() {
                               #{entry.rank}
                             </span>
                           </td>
-                          <td className="py-4 px-5 font-sans font-medium text-white">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold">{entry.displayName}</span>
+                          <td className="py-3 px-3 sm:py-4 sm:px-5 font-sans font-medium text-white">
+                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                              <span className="font-bold text-xs sm:text-sm">{entry.displayName}</span>
                               {isCurrentUser && (
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#fec01f]/25 border border-[#fec01f]/50 text-[#fec01f] font-bold">
+                                <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-[#fec01f]/25 border border-[#fec01f]/50 text-[#fec01f] font-bold">
                                   YOU
                                 </span>
                               )}
                               {entry.playerWon && (
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-900/60 border border-teal-500/40 text-teal-300 inline-flex items-center gap-1">
-                                  <Award size={11} />
+                                <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-teal-900/60 border border-teal-500/40 text-teal-300 inline-flex items-center gap-1">
+                                  <Award size={10} />
                                   <span>WON</span>
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-4 px-5 text-right font-bold text-[#fec01f] text-base">
+                          <td className="py-3 px-3 sm:py-4 sm:px-5 text-right font-bold text-[#fec01f] text-sm sm:text-base">
                             {entry.finalScore.toLocaleString()}
                           </td>
-                          <td className="py-4 px-5 text-right text-white/70 hidden sm:table-cell">
+                          <td className="py-3 px-3 sm:py-4 sm:px-5 text-right text-white/70 text-xs sm:text-sm hidden sm:table-cell">
                             {entry.quizCorrect} Correct
                           </td>
-                          <td className="py-4 px-5 text-right text-white/40 hidden md:table-cell">
+                          <td className="py-3 px-3 sm:py-4 sm:px-5 text-right text-white/40 text-xs hidden md:table-cell">
                             {formatDuration(entry.durationSeconds)}
                           </td>
                         </tr>

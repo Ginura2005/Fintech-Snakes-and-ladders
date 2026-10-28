@@ -23,6 +23,12 @@
   --teal-light: #1a7a7a;
   --orange: #f57222;
   --lankapay: #004382;
+
+  /* Safe Area Insets for iOS & Android with notches/home indicators */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -33,6 +39,7 @@ html {
   background-color: #06061f;
   color: #ffffff;
   color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -40,8 +47,38 @@ body {
   color: #ffffff;
   font-family: var(--font-epilogue, "Epilogue", sans-serif);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fast tap response without 300ms delay & no grey flash */
+a, button, input, select, textarea, [role="button"], .board-cell {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Safe Area Inset Helpers */
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.pl-safe {
+  padding-left: max(1rem, env(safe-area-inset-left));
+}
+.pr-safe {
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* iOS Safari Input Auto-Zoom Prevention (minimum 16px on mobile viewports) */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 h1, h2, h3, h4, .font-heading {

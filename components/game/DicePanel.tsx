@@ -39,10 +39,10 @@ export default function DicePanel({
 
   return (
     <div className="festival-card p-2 sm:p-3.5 border-2 border-white/15 bg-[#0a0a28]/95 shadow-[0_12px_35px_rgba(0,0,0,0.6)] max-w-2xl mx-auto">
-      <div className="flex items-center justify-between gap-3 sm:gap-6">
+      <div className="flex items-center justify-between gap-2.5 sm:gap-6">
         
         {/* Left: 3D Physical Cube Dice (Player & Ava) */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0 pb-1">
+        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 pb-1">
           {/* Player 3D Cube Die */}
           <div className="flex flex-col items-center">
             <span className="font-mono text-[9px] sm:text-[10px] font-bold text-[#fec01f] uppercase tracking-wider mb-1 flex items-center gap-0.5">
@@ -53,7 +53,7 @@ export default function DicePanel({
               <Cube3D
                 value={lastRoll}
                 isRolling={rolling}
-                size={54}
+                size={48}
                 color="teal"
                 clickable={isPlayerTurn && !rolling && !disabled}
                 onThrow={handleCubeThrow}
@@ -76,7 +76,7 @@ export default function DicePanel({
               <Cube3D
                 value={computerRoll}
                 isRolling={computerRolling}
-                size={54}
+                size={48}
                 color="burgundy"
                 clickable={false}
               />
@@ -91,8 +91,8 @@ export default function DicePanel({
               onClick={handleButtonClick}
               disabled={rolling || disabled}
               className={`
-                w-full py-2.5 sm:py-3.5 px-3 sm:px-4 rounded-xl font-heading font-extrabold text-xs sm:text-base
-                transition-all duration-150 shadow-lg flex items-center justify-center gap-1.5 sm:gap-3
+                w-full min-h-[46px] sm:min-h-[50px] py-2.5 sm:py-3.5 px-3 sm:px-4 rounded-xl font-heading font-extrabold text-xs sm:text-base
+                transition-all duration-150 shadow-lg flex items-center justify-center gap-1.5 sm:gap-3 touch-manipulation
                 ${
                   rolling || disabled
                     ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
