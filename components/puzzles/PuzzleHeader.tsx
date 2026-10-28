@@ -214,13 +214,13 @@ export default function PuzzleHeader({
 
       {/* Rules Modal */}
       {showRules && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="festival-panel max-w-lg w-full p-6 space-y-4 border border-white/20 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn overflow-y-auto">
+          <div className="festival-panel max-w-lg w-full max-h-[88vh] flex flex-col p-4 sm:p-6 space-y-4 border border-white/20 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
               <div className="flex items-center gap-2.5">
                 <PuzzleIcon id={meta.id} size={24} />
                 <div>
-                  <h3 className="font-heading font-bold text-white text-lg">
+                  <h3 className="font-heading font-bold text-white text-base sm:text-lg">
                     How to Play {meta.title}
                   </h3>
                   <p className="text-xs font-mono text-[#fec01f]">
@@ -230,21 +230,21 @@ export default function PuzzleHeader({
               </div>
               <button
                 onClick={() => setShowRules(false)}
-                className="text-white/50 hover:text-white p-1 rounded-md hover:bg-white/10"
+                className="text-white/50 hover:text-white p-1.5 rounded-md hover:bg-white/10 min-h-[36px] min-w-[36px] flex items-center justify-center"
                 aria-label="Close rules"
               >
-                <X size={15} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="text-sm text-white/80 space-y-3 leading-relaxed">
+            <div className="text-sm text-white/80 space-y-3 leading-relaxed overflow-y-auto pr-1">
               {rulesContent}
             </div>
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex justify-end shrink-0 border-t border-white/10">
               <button
                 onClick={() => setShowRules(false)}
-                className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-2 px-4"
+                className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-2.5 px-5"
               >
                 Got It, Let&apos;s Play!
               </button>

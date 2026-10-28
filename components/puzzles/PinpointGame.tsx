@@ -270,13 +270,16 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
               value={userGuess}
               onChange={(e) => setUserGuess(e.target.value)}
               placeholder="What is the common category / theme?"
-              className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-white/40 outline-none font-sans"
-              autoFocus
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              inputMode="text"
+              className="flex-1 bg-transparent px-3 py-2.5 text-base sm:text-sm text-white placeholder-white/40 outline-none font-sans"
             />
             <button
               type="submit"
               disabled={!userGuess.trim()}
-              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-2.5 px-4 disabled:opacity-40"
+              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-2.5 px-4 min-h-[44px] disabled:opacity-40"
             >
               <span>Guess</span>
               <Send size={13} />

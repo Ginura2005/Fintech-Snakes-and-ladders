@@ -300,6 +300,10 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
             onChange={(e) => setTopAnswer(e.target.value.toUpperCase())}
             placeholder={isLadderFullyConnected ? "Type summit word..." : "Locked until ladder is ordered"}
             maxLength={currentLevel.wordLength}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck="false"
+            inputMode="text"
             className="w-full bg-black/40 border border-white/20 rounded-lg px-3 py-2 font-mono text-center tracking-widest text-base font-bold text-white uppercase outline-none focus:border-[#fec01f]"
           />
         </div>
@@ -320,23 +324,25 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
                       : "bg-white/[0.02] border-white/10"
                   }`}
                 >
-                  {/* Reorder Buttons */}
-                  <div className="flex flex-col gap-1">
+                  {/* Reorder Buttons (Touch-friendly 36px+ targets) */}
+                  <div className="flex flex-col gap-1.5 shrink-0">
                     <button
                       onClick={() => moveRung(index, "up")}
                       disabled={index === 0 || isLadderFullyConnected}
                       title="Move up"
-                      className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-20 text-white/70"
+                      aria-label="Move rung up"
+                      className="w-9 h-8 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 disabled:opacity-20 text-white flex items-center justify-center transition-colors"
                     >
-                      <ArrowUp size={12} />
+                      <ArrowUp size={14} />
                     </button>
                     <button
                       onClick={() => moveRung(index, "down")}
                       disabled={index === ladder.length - 1 || isLadderFullyConnected}
                       title="Move down"
-                      className="p-1 rounded bg-white/5 hover:bg-white/10 disabled:opacity-20 text-white/70"
+                      aria-label="Move rung down"
+                      className="w-9 h-8 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 disabled:opacity-20 text-white flex items-center justify-center transition-colors"
                     >
-                      <ArrowDown size={12} />
+                      <ArrowDown size={14} />
                     </button>
                   </div>
 
@@ -351,7 +357,11 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
                       onChange={(e) => handleAnswerChange(item.id, e.target.value)}
                       placeholder={`${currentLevel.wordLength} letters`}
                       maxLength={currentLevel.wordLength}
-                      className={`w-32 bg-black/30 border rounded-lg px-2.5 py-1.5 font-mono text-center tracking-widest text-sm font-bold uppercase outline-none transition-colors ${
+                      autoCapitalize="characters"
+                      autoCorrect="off"
+                      spellCheck="false"
+                      inputMode="text"
+                      className={`w-32 bg-black/40 border rounded-lg px-2.5 py-1.5 font-mono text-center tracking-widest text-base font-bold uppercase outline-none transition-colors ${
                         isCorrect
                           ? "border-teal-500/60 text-teal-300"
                           : "border-white/20 text-white focus:border-[#fec01f]"
@@ -413,6 +423,10 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
             onChange={(e) => setBottomAnswer(e.target.value.toUpperCase())}
             placeholder={isLadderFullyConnected ? "Type base word..." : "Locked until ladder is ordered"}
             maxLength={currentLevel.wordLength}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck="false"
+            inputMode="text"
             className="w-full bg-black/40 border border-white/20 rounded-lg px-3 py-2 font-mono text-center tracking-widest text-base font-bold text-white uppercase outline-none focus:border-[#fec01f]"
           />
         </div>

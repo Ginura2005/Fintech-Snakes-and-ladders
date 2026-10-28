@@ -132,11 +132,50 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
         return; // cannot skip ahead or revisit
       }
       if (!isMuted) sounds.playMoveSuccess();
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([25, 30, 45]);
+      }
     } else {
       if (!isMuted) sounds.playClick();
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(10);
+      }
     }
 
     setPath([...path, [r, c]]);
+  };
+
+  const handlePointerDown = (r: number, c: number, e: React.PointerEvent) => {
+    isDraggingRef.current = true;
+    tryMoveTo(r, c);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return;
+    const cellEl = el.closest("[data-cell-coord]");
+    if (cellEl) {
+      const coord = cellEl.getAttribute("data-cell-coord");
+      if (coord) {
+        const [r, c] = coord.split(",").map(Number);
+        tryMoveTo(r, c);
+      }
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleUndoStep = () => {
+    if (path.length > 1) {
+      setPath(path.slice(0, -1));
+      if (!isMuted) sounds.playClick();
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(12);
+      }
+    }
   };
 
   const handleReset = () => {
@@ -248,82 +287,128 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
         </div>
       </div>
 
-      {/* Zip Grid */}
-      <div className="flex justify-center py-2">
+      {/* Zip Grid (Fluid responsive sizing + SVG snake trail + touch drag) */}
+      <div className="flex justify-center py-2 px-1">
         <div
-          className="relative inline-grid p-3.5 rounded-2xl bg-[#070720] border-2 border-white/15 shadow-2xl select-none"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            gap: "0.5rem",
-          }}
-          onMouseDown={() => {
-            isDraggingRef.current = true;
-          }}
-          onMouseUp={() => {
-            isDraggingRef.current = false;
-          }}
-          onMouseLeave={() => {
-            isDraggingRef.current = false;
-          }}
+          className="relative w-full max-w-[min(94vw,390px)] aspect-square p-2.5 sm:p-3.5 rounded-2xl bg-[#070720] border-2 border-white/15 shadow-2xl select-none touch-none"
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
-          {Array.from({ length: rows }).map((_, r) =>
-            Array.from({ length: cols }).map((_, c) => {
-              const key = `${r},${c}`;
-              const wpStep = waypointMap.get(key);
-              const pathIndex = path.findIndex(([pr, pc]) => pr === r && pc === c);
-              const isVisited = pathIndex !== -1;
-              const isHead =
-                path.length > 0 &&
-                path[path.length - 1][0] === r &&
-                path[path.length - 1][1] === c;
-
-              const cellSizeClass =
-                rows === 5
-                  ? "w-12 h-12 sm:w-16 sm:h-16"
-                  : rows === 6
-                  ? "w-11 h-11 sm:w-14 sm:h-14"
-                  : "w-9 h-9 sm:w-12 sm:h-12";
-
-              return (
-                <button
-                  key={key}
-                  onClick={() => tryMoveTo(r, c)}
-                  onMouseEnter={() => {
-                    if (isDraggingRef.current) tryMoveTo(r, c);
-                  }}
-                  className={`${cellSizeClass} rounded-xl flex items-center justify-center font-mono font-bold text-sm transition-all relative ${
-                    isHead
-                      ? "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.8)] scale-105 z-10 animate-pulse"
-                      : isVisited
-                      ? "bg-[#fec01f]/20 text-[#fec01f] border border-[#fec01f]/40"
-                      : "bg-white/[0.04] hover:bg-white/[0.08] text-white/50 border border-white/10"
-                  }`}
-                >
-                  {/* Waypoint Badge */}
-                  {wpStep !== undefined ? (
-                    <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition-all ${
-                        isVisited
-                          ? "bg-[#fec01f] text-black shadow-[0_0_8px_rgba(254,192,31,0.6)]"
-                          : wpStep === nextRequiredWaypoint
-                          ? "bg-teal-500 text-white ring-2 ring-teal-400 animate-pulse"
-                          : "bg-white/15 text-white/90 border border-white/30"
-                      }`}
-                    >
-                      {wpStep}
-                    </div>
-                  ) : isVisited ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#fec01f]/70" />
-                  ) : null}
-                </button>
-              );
-            })
+          {/* Neon SVG Path Trace */}
+          {path.length > 1 && (
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none z-10 p-2.5 sm:p-3.5"
+              viewBox={`0 0 ${cols * 100} ${rows * 100}`}
+              preserveAspectRatio="none"
+            >
+              <polyline
+                points={path.map(([r, c]) => `${c * 100 + 50},${r * 100 + 50}`).join(" ")}
+                fill="none"
+                stroke="#fec01f"
+                strokeWidth={cols === 5 ? "16" : cols === 6 ? "13" : "11"}
+                strokeOpacity="0.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <polyline
+                points={path.map(([r, c]) => `${c * 100 + 50},${r * 100 + 50}`).join(" ")}
+                fill="none"
+                stroke="#fec01f"
+                strokeWidth={cols === 5 ? "6" : cols === 6 ? "5" : "4"}
+                strokeOpacity="0.95"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           )}
+
+          <div
+            className="w-full h-full grid relative z-20"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+              gap: cols === 7 ? "0.2rem" : "0.35rem",
+            }}
+          >
+            {Array.from({ length: rows }).map((_, r) =>
+              Array.from({ length: cols }).map((_, c) => {
+                const key = `${r},${c}`;
+                const wpStep = waypointMap.get(key);
+                const pathIndex = path.findIndex(([pr, pc]) => pr === r && pc === c);
+                const isVisited = pathIndex !== -1;
+                const isHead =
+                  path.length > 0 &&
+                  path[path.length - 1][0] === r &&
+                  path[path.length - 1][1] === c;
+
+                return (
+                  <button
+                    key={key}
+                    data-cell-coord={`${r},${c}`}
+                    onPointerDown={(e) => handlePointerDown(r, c, e)}
+                    className={`w-full h-full rounded-xl flex items-center justify-center font-mono font-bold text-xs sm:text-sm transition-all relative ${
+                      isHead
+                        ? "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.8)] scale-105 z-30 animate-pulse ring-2 ring-white/50"
+                        : isVisited
+                        ? "bg-[#fec01f]/20 text-[#fec01f] border border-[#fec01f]/40"
+                        : "bg-white/[0.04] hover:bg-white/[0.08] text-white/50 border border-white/10"
+                    }`}
+                  >
+                    {/* Waypoint Badge */}
+                    {wpStep !== undefined ? (
+                      <div
+                        className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-[11px] sm:text-xs shadow-md transition-all ${
+                          isVisited
+                            ? "bg-[#fec01f] text-black shadow-[0_0_8px_rgba(254,192,31,0.6)]"
+                            : wpStep === nextRequiredWaypoint
+                            ? "bg-teal-500 text-white ring-2 ring-teal-400 animate-pulse"
+                            : "bg-white/15 text-white/90 border border-white/30"
+                        }`}
+                      >
+                        {wpStep}
+                      </div>
+                    ) : isVisited ? (
+                      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#fec01f]/80" />
+                    ) : null}
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="text-center text-xs font-mono text-white/50">
-        <span>Click or drag through squares · Click earlier square to rewind path</span>
+      {/* Mobile-First Action Bar */}
+      <div className="flex items-center justify-between gap-2 max-w-sm mx-auto px-2">
+        <button
+          onClick={handleUndoStep}
+          disabled={path.length <= 1 || isWon}
+          className="flex-1 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 border border-white/10 font-mono text-xs uppercase font-bold text-white flex items-center justify-center gap-1.5 transition-colors"
+        >
+          <RotateCcw size={13} />
+          <span>Undo Step</span>
+        </button>
+
+        <button
+          onClick={handleReset}
+          className="flex-1 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-mono text-xs uppercase font-bold text-white/70 hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+        >
+          <span>Clear Path</span>
+        </button>
+
+        <button
+          onClick={handleHint}
+          disabled={isWon}
+          className="py-2.5 px-3.5 rounded-xl bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 border border-[#00f0ff]/30 font-mono text-xs uppercase font-bold text-[#00f0ff] flex items-center justify-center gap-1.5 transition-colors"
+        >
+          <Zap size={13} className="fill-current" />
+          <span>Hint</span>
+        </button>
+      </div>
+
+      <div className="text-center text-[11px] font-mono text-white/50 px-2">
+        <span>Drag through squares continuously · Tap earlier square or Undo to rewind</span>
       </div>
 
       {/* Win Modal */}

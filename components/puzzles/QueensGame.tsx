@@ -235,11 +235,31 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     handleCellClick(r, c, grid[r][c] === "x" ? "queen" : "x");
   };
 
-  // Drag-to-cross handler
-  const handleCellMouseEnter = (r: number, c: number) => {
-    if (isDraggingCrossRef.current && grid[r][c] === "empty") {
-      handleCellClick(r, c, "x");
+  const handlePointerDown = (r: number, c: number) => {
+    handleCellClick(r, c);
+    if (mode === "x") {
+      isDraggingCrossRef.current = true;
     }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingCrossRef.current || mode !== "x") return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return;
+    const cellEl = el.closest("[data-queen-coord]");
+    if (cellEl) {
+      const coord = cellEl.getAttribute("data-queen-coord");
+      if (coord) {
+        const [r, c] = coord.split(",").map(Number);
+        if (grid[r]?.[c] === "empty") {
+          handleCellClick(r, c, "x");
+        }
+      }
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDraggingCrossRef.current = false;
   };
 
   const handleUndo = () => {
@@ -408,80 +428,68 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         </div>
       </div>
 
-      {/* Queens Board */}
-      <div
-        className="flex justify-center py-2"
-        onMouseDown={() => {
-          if (mode === "x") isDraggingCrossRef.current = true;
-        }}
-        onMouseUp={() => {
-          isDraggingCrossRef.current = false;
-        }}
-        onMouseLeave={() => {
-          isDraggingCrossRef.current = false;
-        }}
-      >
+      {/* Queens Board (Fluid Responsive Aspect-Square Container) */}
+      <div className="flex justify-center py-2 px-1">
         <div
-          className="inline-grid select-none rounded-2xl p-2.5 bg-[#070720] border-2 border-white/20 shadow-2xl overflow-hidden"
-          style={{
-            gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-          }}
+          className="relative w-full max-w-[min(94vw,440px)] aspect-square select-none rounded-2xl p-2 sm:p-3 bg-[#070720] border-2 border-white/20 shadow-2xl overflow-hidden touch-none"
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
         >
-          {grid.map((row, r) =>
-            row.map((cell, c) => {
-              const regId = currentLevel.regions[r][c];
-              const colorClass = REGION_COLORS[regId % REGION_COLORS.length];
-              const isConflict = conflictingCells.has(`${r},${c}`);
-              const borderStyles = getCellBorders(r, c);
+          <div
+            className="w-full h-full grid"
+            style={{
+              gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
+            }}
+          >
+            {grid.map((row, r) =>
+              row.map((cell, c) => {
+                const regId = currentLevel.regions[r][c];
+                const colorClass = REGION_COLORS[regId % REGION_COLORS.length];
+                const isConflict = conflictingCells.has(`${r},${c}`);
+                const borderStyles = getCellBorders(r, c);
 
-              const isRowSatisfied = satisfiedRows.has(r) && !conflictingCells.has(`${r},${c}`);
-              const isColSatisfied = satisfiedCols.has(c) && !conflictingCells.has(`${r},${c}`);
-              const isRegSatisfied = satisfiedRegs.has(regId) && !conflictingCells.has(`${r},${c}`);
+                const isRowSatisfied = satisfiedRows.has(r) && !conflictingCells.has(`${r},${c}`);
+                const isColSatisfied = satisfiedCols.has(c) && !conflictingCells.has(`${r},${c}`);
+                const isRegSatisfied = satisfiedRegs.has(regId) && !conflictingCells.has(`${r},${c}`);
 
-              const cellSizeClass =
-                size <= 6
-                  ? "w-12 h-12 sm:w-16 sm:h-16"
-                  : size === 7
-                  ? "w-11 h-11 sm:w-14 sm:h-14"
-                  : size === 8
-                  ? "w-10 h-10 sm:w-12 sm:h-12"
-                  : "w-9 h-9 sm:w-11 sm:h-11";
-
-              return (
-                <button
-                  key={`${r}-${c}`}
-                  onClick={() => handleCellClick(r, c)}
-                  onMouseEnter={() => handleCellMouseEnter(r, c)}
-                  onContextMenu={(e) => handleCellRightClick(e, r, c)}
-                  className={`relative ${cellSizeClass} flex items-center justify-center transition-all ${colorClass} ${borderStyles} ${
-                    isConflict
-                      ? "ring-2 ring-rose-500 ring-inset bg-rose-950/60 animate-pulse z-10"
-                      : isRowSatisfied && isColSatisfied && isRegSatisfied
-                      ? "brightness-105"
-                      : "hover:brightness-125"
-                  }`}
-                  aria-label={`Row ${r + 1}, Column ${c + 1}`}
-                >
-                  {cell === "queen" && (
-                    <Crown
-                      size={size >= 8 ? 20 : 26}
-                      className={`transition-transform duration-150 scale-100 ${
-                        isConflict
-                          ? "text-rose-400 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]"
-                          : "text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_10px_rgba(254,192,31,0.7)] animate-scaleIn"
-                      }`}
-                    />
-                  )}
-                  {cell === "x" && (
-                    <X
-                      size={size >= 8 ? 14 : 18}
-                      className="text-white/35 hover:text-white/60 transition-colors"
-                    />
-                  )}
-                </button>
-              );
-            })
-          )}
+                return (
+                  <button
+                    key={`${r}-${c}`}
+                    data-queen-coord={`${r},${c}`}
+                    onPointerDown={() => handlePointerDown(r, c)}
+                    onContextMenu={(e) => handleCellRightClick(e, r, c)}
+                    className={`relative w-full h-full aspect-square flex items-center justify-center transition-all ${colorClass} ${borderStyles} ${
+                      isConflict
+                        ? "ring-2 ring-rose-500 ring-inset bg-rose-950/60 animate-pulse z-10"
+                        : isRowSatisfied && isColSatisfied && isRegSatisfied
+                        ? "brightness-105"
+                        : "hover:brightness-125"
+                    }`}
+                    aria-label={`Row ${r + 1}, Column ${c + 1}`}
+                  >
+                    {cell === "queen" && (
+                      <Crown
+                        size={size >= 9 ? 18 : size >= 8 ? 20 : 25}
+                        className={`transition-transform duration-150 scale-100 ${
+                          isConflict
+                            ? "text-rose-400 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                            : "text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_10px_rgba(254,192,31,0.7)] animate-scaleIn"
+                        }`}
+                      />
+                    )}
+                    {cell === "x" && (
+                      <X
+                        size={size >= 9 ? 12 : size >= 8 ? 14 : 17}
+                        className="text-white/40 hover:text-white/70 transition-colors"
+                      />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 

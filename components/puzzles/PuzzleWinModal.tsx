@@ -78,8 +78,8 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="festival-panel max-w-md w-full p-6 sm:p-8 space-y-5 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
+      <div className="festival-panel max-w-md w-full max-h-[92vh] overflow-y-auto p-4 sm:p-8 space-y-4 sm:space-y-5 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative scrollbar-none">
         {/* Glow decoration */}
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#fec01f]/15 rounded-full blur-3xl" />
 

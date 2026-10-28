@@ -351,9 +351,9 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
       </div>
 
       {/* Tango Grid with Row / Col Edge Tallies */}
-      <div className="flex justify-center py-2">
-        <div className="relative p-3 sm:p-5 rounded-2xl bg-[#070722] border-2 border-white/15 shadow-2xl">
-          <div className="grid grid-cols-6 gap-2">
+      <div className="flex justify-center py-2 px-1">
+        <div className="relative w-full max-w-[min(94vw,400px)] aspect-square p-2.5 sm:p-4 rounded-2xl bg-[#070722] border-2 border-white/15 shadow-2xl">
+          <div className="grid grid-cols-6 gap-1.5 sm:gap-2 w-full h-full">
             {board.map((row, r) =>
               row.map((cell, c) => {
                 const isGiven = currentLevel.givens[r][c] !== null;
@@ -367,11 +367,11 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
                 const isVEdgeSatisfied = satisfiedVEdges.has(`${r},${c}`);
 
                 return (
-                  <div key={`${r}-${c}`} className="relative">
+                  <div key={`${r}-${c}`} className="relative w-full h-full">
                     <button
                       onClick={() => handleCellClick(r, c)}
                       disabled={isGiven}
-                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-lg transition-all font-bold ${
+                      className={`w-full h-full aspect-square rounded-xl flex items-center justify-center text-base sm:text-lg transition-all font-bold ${
                         isGiven
                           ? "bg-white/10 text-white border border-white/25 cursor-not-allowed"
                           : "bg-white/[0.04] hover:bg-white/[0.09] border border-white/10"
@@ -388,14 +388,14 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
                     >
                       {cell === "S" && (
                         <Sun
-                          size={24}
-                          className="text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_6px_rgba(254,192,31,0.8)] animate-scaleIn"
+                          size={20}
+                          className="text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_6px_rgba(254,192,31,0.8)] animate-scaleIn sm:w-6 sm:h-6"
                         />
                       )}
                       {cell === "M" && (
                         <Moon
-                          size={22}
-                          className="text-cyan-300 fill-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)] animate-scaleIn"
+                          size={18}
+                          className="text-cyan-300 fill-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.8)] animate-scaleIn sm:w-5 sm:h-5"
                         />
                       )}
                     </button>
@@ -403,7 +403,7 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
                     {/* Horizontal Edge Constraint between (r,c) and (r, c+1) */}
                     {hEdge && (
                       <div
-                        className={`pointer-events-none absolute top-1/2 -right-2.5 -translate-y-1/2 z-20 w-4 h-4 rounded-full bg-[#06061f] border flex items-center justify-center font-mono text-[10px] font-bold shadow-md transition-all ${
+                        className={`pointer-events-none absolute top-1/2 -right-2 sm:-right-2.5 -translate-y-1/2 z-20 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#06061f] border flex items-center justify-center font-mono text-[9px] sm:text-[10px] font-bold shadow-md transition-all ${
                           isHEdgeBroken
                             ? "border-rose-500 text-rose-400 animate-pulse"
                             : isHEdgeSatisfied
@@ -422,7 +422,7 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
                     {/* Vertical Edge Constraint between (r,c) and (r+1, c) */}
                     {vEdge && (
                       <div
-                        className={`pointer-events-none absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 w-4 h-4 rounded-full bg-[#06061f] border flex items-center justify-center font-mono text-[10px] font-bold shadow-md transition-all ${
+                        className={`pointer-events-none absolute -bottom-2 sm:-bottom-2.5 left-1/2 -translate-x-1/2 z-20 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#06061f] border flex items-center justify-center font-mono text-[9px] sm:text-[10px] font-bold shadow-md transition-all ${
                           isVEdgeBroken
                             ? "border-rose-500 text-rose-400 animate-pulse"
                             : isVEdgeSatisfied

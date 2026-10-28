@@ -404,10 +404,10 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         </div>
       </div>
 
-      {/* Mini Sudoku Grid */}
-      <div className="flex justify-center py-1">
-        <div className="p-3 sm:p-4 rounded-2xl bg-[#080820] border-2 border-white/20 shadow-2xl relative">
-          <div className="grid grid-cols-6 border-2 border-white/30 bg-[#06061f] rounded-xl overflow-hidden shadow-inner">
+      {/* Mini Sudoku Grid (Fluid Responsive Container) */}
+      <div className="flex justify-center py-1 px-1">
+        <div className="w-full max-w-[min(94vw,390px)] aspect-square p-2 sm:p-3 rounded-2xl bg-[#080820] border-2 border-white/20 shadow-2xl relative">
+          <div className="w-full h-full grid grid-cols-6 border-2 border-white/30 bg-[#06061f] rounded-xl overflow-hidden shadow-inner">
             {grid.map((row, r) =>
               row.map((val, c) => {
                 const isGiven = currentLevel.givens[r][c] !== 0;
@@ -443,7 +443,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
                       if (val !== 0) setHighlightNum(val);
                       if (!isMuted) sounds.playClick();
                     }}
-                    className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center font-mono font-bold text-lg sm:text-xl transition-all relative ${borderBottom} ${borderRight} ${
+                    className={`w-full h-full aspect-square flex items-center justify-center font-mono font-bold text-base sm:text-xl transition-all relative ${borderBottom} ${borderRight} ${
                       isSelected
                         ? "bg-[#fec01f]/25 ring-2 ring-[#fec01f] ring-inset z-10"
                         : isConflict
@@ -465,16 +465,16 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
                       val
                     ) : (
                       // Render notes inside empty cell
-                      <div className="grid grid-cols-3 gap-0.5 text-[8px] sm:text-[9px] text-white/50 leading-none pointer-events-none p-0.5 w-full h-full place-items-center">
+                      <div className="grid grid-cols-3 gap-0.5 text-[7px] sm:text-[9px] text-white/50 leading-none pointer-events-none p-0.5 w-full h-full place-items-center">
                         {[1, 2, 3, 4, 5, 6].map((num) => (
                           <span
                             key={num}
-                            className={`w-3 h-3 flex items-center justify-center rounded-sm ${
+                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 flex items-center justify-center rounded-sm ${
                               cellNotes.includes(num)
                                 ? highlightNum === num
-                                  ? "text-[#00f0ff] font-bold bg-[#00f0ff]/20"
-                                  : "text-white/80 font-medium"
-                                : ""
+                                ? "text-[#00f0ff] font-bold bg-[#00f0ff]/20"
+                                : "text-white/80 font-medium"
+                              : ""
                             }`}
                           >
                             {cellNotes.includes(num) ? num : ""}

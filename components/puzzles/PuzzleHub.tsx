@@ -119,7 +119,7 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
 
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#00f0ff]/10 border border-[#00f0ff]/25 text-[#00f0ff]"
-                  title="Modest score boost applied to your main Snakes & Ladders matches (+10 per unique game solved, up to +50 pts max)"
+                  title="Modest score boost applied to your main Snakes & Ladders matches (tiered bonus by difficulty: Easy +5, Medium +10, Hard +15, up to +50 pts max)"
                 >
                   <Zap size={13} className="text-[#00f0ff] fill-[#00f0ff]/40" />
                   <span className="font-bold">+{arenaBonus} / 50 Arena Bonus</span>
@@ -161,7 +161,7 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
             Ready for your daily logic streak?
           </h2>
           <p className="text-xs text-white/60 max-w-xl">
-            Every game is seeded deterministically from today&apos;s date. Solving puzzles also contributes an Arena Intel bonus (+10 pts per game, up to +50 pts max) added directly to your Snakes & Ladders match score.
+            Every game is seeded deterministically from today&apos;s date. Solving puzzles also contributes an Arena Intel bonus (tiered by difficulty: Easy +5, Medium +10, Hard +15, up to +50 pts max) added directly to your Snakes & Ladders match score.
           </p>
         </div>
 
