@@ -26,6 +26,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import VictoryConfetti from "@/components/game/VictoryConfetti";
+import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
@@ -409,6 +410,9 @@ function ResultContent() {
             </p>
           </div>
         </div>
+
+        {/* Tournament Deadline & Grand Prize Countdown */}
+        <TournamentCountdown compact />
 
         {/* Leaderboard Opt-in Card */}
         <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">

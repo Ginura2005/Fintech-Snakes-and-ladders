@@ -308,7 +308,7 @@ export async function generateResultCardBlob(
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "600 18px system-ui, -apple-system, sans-serif";
   ctx.fillText(
-    "Race against autonomous AI · Climb the Festival Hall of Fame",
+    "Race against AI · Grand Prize: 10,000 LKR Festival Ticket to Top Winners!",
     width / 2,
     qrBoxY + qrBoxSize + 72
   );
@@ -316,7 +316,7 @@ export async function generateResultCardBlob(
   ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
   ctx.font = "500 16px system-ui, -apple-system, sans-serif";
   ctx.fillText(
-    "Sri Lanka FinTech Festival 2026  ·  fintechfestival.lk  ·  #SLFinTechFest2026",
+    "Arena Closes Oct 31st · Sri Lanka FinTech Festival 2026 · fintechfestival.lk",
     width / 2,
     qrBoxY + qrBoxSize + 102
   );

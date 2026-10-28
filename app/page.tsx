@@ -30,6 +30,7 @@ import {
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import MarqueeTicker from "@/components/layout/MarqueeTicker";
+import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 import { signInWithGoogle } from "@/lib/auth/google-sign-in";
 
 interface LeaderboardEntry {
@@ -231,8 +232,11 @@ export default function HomePage() {
               </div>
             )}
 
+            {/* Official Tournament Deadline & Grand Prize Countdown */}
+            <TournamentCountdown />
+
             {/* Subtle festival link */}
-            <div className="mt-4">
+            <div className="mt-2">
               <a
                 href="https://fintechfestival.lk"
                 target="_blank"

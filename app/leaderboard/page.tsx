@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award, Crown } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
+import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 
 interface LeaderboardEntry {
   rank: number;
@@ -140,6 +141,9 @@ export default function LeaderboardPage() {
             </div>
           )}
         </div>
+
+        {/* Live Tournament Deadline & Grand Prize Countdown */}
+        <TournamentCountdown />
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
