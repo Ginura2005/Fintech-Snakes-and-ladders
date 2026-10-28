@@ -225,12 +225,17 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
           Ladder State:{" "}
           <strong
             className={
-              isLadderFullyConnected ? "text-teal-300 font-bold" : "text-amber-400"
+              isLadderFullyConnected ? "text-teal-300 font-bold inline-flex items-center gap-1" : "text-amber-400"
             }
           >
-            {isLadderFullyConnected
-              ? "✨ Ladder Complete! Top & Bottom Unlocked"
-              : "Arrange words so each differs by 1 letter"}
+            {isLadderFullyConnected ? (
+              <>
+                <Sparkles size={13} className="text-teal-300 shrink-0" />
+                <span>Ladder Complete! Top &amp; Bottom Unlocked</span>
+              </>
+            ) : (
+              "Arrange words so each differs by 1 letter"
+            )}
           </strong>
         </span>
         <span className="text-white/40">

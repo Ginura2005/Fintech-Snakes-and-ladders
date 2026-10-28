@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit3, Eraser, AlertTriangle, Check, Sparkles, SlidersHorizontal } from "lucide-react";
+import { Edit3, Eraser, AlertTriangle, Check, Sparkles, SlidersHorizontal, Calendar, Lightbulb } from "lucide-react";
 import { MiniSudokuLevel } from "./puzzleTypes";
 import { MINI_SUDOKU_LEVELS, PUZZLES_META } from "./puzzleData";
 import { generateMiniSudokuLevel } from "@/lib/puzzles/mini-sudoku-engine";
@@ -330,8 +330,9 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         <li>Every column must contain digits 1-6 with no repeats.</li>
         <li>Each outlined <strong>2x3 block</strong> (2 rows by 3 columns) must contain digits 1-6.</li>
       </ul>
-      <p className="text-xs text-white/60">
-        💡 <strong>Pro-Tip:</strong> Toggle Notes mode (or press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[#00f0ff]">N</kbd>) to jot down candidates. Arrow keys navigate cells, and number keys (1-6) enter values.
+      <p className="text-xs text-white/60 flex items-center gap-1.5 pt-1">
+        <Lightbulb size={13} className="text-[#00f0ff] shrink-0" />
+        <span><strong>Pro-Tip:</strong> Toggle Notes mode (or press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[#00f0ff]">N</kbd>) to jot down candidates. Arrow keys navigate cells, and number keys (1-6) enter values.</span>
       </p>
     </>
   );
@@ -381,10 +382,11 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleDailyPuzzle}
-            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors text-[11px]"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors text-[11px]"
             title="Load today's synchronized daily Mini Sudoku seed"
           >
-            📅 Daily
+            <Calendar size={12} />
+            <span>Daily</span>
           </button>
           <button
             onClick={handleRandomPuzzle}

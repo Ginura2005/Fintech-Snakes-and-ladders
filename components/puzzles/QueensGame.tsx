@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Crown, X, Sparkles, CheckCircle2, SlidersHorizontal, Check } from "lucide-react";
+import { Crown, X, Sparkles, CheckCircle2, SlidersHorizontal, Check, AlertTriangle, Lightbulb } from "lucide-react";
 import { QueensLevel } from "./puzzleTypes";
 import { generateQueensLevel } from "@/lib/puzzles/queens-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
@@ -286,7 +286,7 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const rulesContent = (
     <>
       <p>
-        <strong>Queens</strong> is LinkedIn&apos;s flagship daily logic puzzle. The goal is to place crowns 👑 on the board such that every single rule is satisfied:
+        <strong>Queens</strong> is LinkedIn&apos;s flagship daily logic puzzle. The goal is to place crowns on the board such that every single rule is satisfied:
       </p>
       <ul className="list-disc pl-5 space-y-1.5 text-white/70">
         <li>Exactly <strong>1 Queen</strong> in every row.</li>
@@ -296,8 +296,9 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
           <strong className="text-[#fec01f]">No Touching:</strong> Queens cannot touch horizontally, vertically, or diagonally (no two queens can occupy adjacent squares).
         </li>
       </ul>
-      <p className="text-xs text-white/60">
-        💡 <strong>Pro-Tip:</strong> Drag across squares in ❌ mode to cross them out in one smooth sweep! Turn on Auto-X to automatically cross out invalid squares when you place a Queen.
+      <p className="text-xs text-white/60 flex items-center gap-1.5 pt-1">
+        <Lightbulb size={13} className="text-[#fec01f] shrink-0" />
+        <span><strong>Pro-Tip:</strong> Drag across squares in Mark Cross mode to cross them out in one smooth sweep! Turn on Auto-X to automatically cross out invalid squares when you place a Queen.</span>
       </p>
     </>
   );
@@ -336,7 +337,7 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
             }`}
           >
             <Crown size={14} className="fill-current" />
-            <span>Place Crown 👑</span>
+            <span>Place Crown</span>
           </button>
 
           <button
@@ -348,7 +349,7 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
             }`}
           >
             <X size={14} />
-            <span>Mark Cross ❌</span>
+            <span>Mark Cross</span>
           </button>
         </div>
 
@@ -454,10 +455,11 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
 
       {/* Instructions footer */}
       <div className="flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-white/50 px-2 gap-2 text-center sm:text-left">
-        <span>Click to toggle cell · Drag across in ❌ mode to sweep</span>
+        <span>Click to toggle cell · Drag across in Cross mode to sweep</span>
         {conflictingCells.size > 0 && (
-          <span className="text-rose-400 font-bold animate-pulse">
-            ⚠️ Queens are conflicting or touching!
+          <span className="inline-flex items-center gap-1 text-rose-400 font-bold animate-pulse">
+            <AlertTriangle size={13} />
+            <span>Queens are conflicting or touching!</span>
           </span>
         )}
       </div>

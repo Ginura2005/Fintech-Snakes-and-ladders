@@ -14,7 +14,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Queens",
     subtitle: "Logic Placement",
     badge: "LinkedIn Hit #1",
-    icon: "👑",
+    icon: "crown",
     tagline: "Rule the board without crowns colliding",
     description:
       "Place exactly one crown in every row, column, and color region. No two crowns can touch horizontally, vertically, or diagonally.",
@@ -27,7 +27,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Tango",
     subtitle: "Sun & Moon Binary Logic",
     badge: "Binary Grid",
-    icon: "☀️",
+    icon: "sun",
     tagline: "Balance the cosmic celestial forces",
     description:
       "Fill the 6x6 grid with equal Suns and Moons per row and column. Avoid 3 consecutive identical symbols and satisfy the = and × constraints.",
@@ -40,7 +40,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Pinpoint",
     subtitle: "5-Clue Category Mystery",
     badge: "Word Trivia",
-    icon: "🎯",
+    icon: "target",
     tagline: "Guess the hidden theme with fewest clues",
     description:
       "Uncover 5 progressive clues that point to a single secret FinTech or tech category. Guess early to earn the highest score!",
@@ -53,7 +53,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Crossclimb",
     subtitle: "Word-Ladder Trivia Climb",
     badge: "Word Climb",
-    icon: "🪜",
+    icon: "trending-up",
     tagline: "Bridge the ladder rung by single letter",
     description:
       "Solve trivia clues for equal-length words and arrange them into a ladder where each rung differs by only 1 letter. Unlock the top and bottom words!",
@@ -66,7 +66,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Zip",
     subtitle: "Complete Path Waypoint Maze",
     badge: "Single Trail",
-    icon: "⚡",
+    icon: "zap",
     tagline: "Trace one line through every square",
     description:
       "Draw a single continuous line that starts at 1, visits all numbered waypoints in numerical order, and covers 100% of the squares on the board.",
@@ -79,7 +79,7 @@ export const PUZZLES_META: PuzzleMeta[] = [
     title: "Mini Sudoku",
     subtitle: "6x6 Fast Logic Grid",
     badge: "Number Grid",
-    icon: "🔢",
+    icon: "binary",
     tagline: "Fast-paced coffee break number crunch",
     description:
       "Fill the 6x6 grid with numbers 1 to 6. Every row, column, and 2x3 block must have numbers 1-6 with zero repeats.",

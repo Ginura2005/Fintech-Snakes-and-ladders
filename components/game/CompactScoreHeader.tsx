@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Heart, Shield, Volume2, VolumeX, RotateCcw, Shuffle } from "lucide-react";
+import { Heart, Shield, Volume2, VolumeX, RotateCcw, Shuffle, MessageSquare } from "lucide-react";
 import { sounds } from "@/lib/audio/sound-effects";
 import GameAvatar, { AvatarMood } from "./GameAvatar";
 
@@ -67,7 +67,10 @@ export default function CompactScoreHeader({
         {computerReaction && (
           <div className="absolute -bottom-3 right-2 sm:right-4 z-30 animate-speech-bubble pointer-events-none max-w-[85%]">
             <div className="bg-gradient-to-r from-rose-900 to-[#1e0712] border border-rose-400 text-white text-[9px] sm:text-xs font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-[0_4px_15px_rgba(244,63,94,0.5)] flex items-center gap-1 sm:gap-1.5 truncate">
-              <span className="shrink-0">💬 Ava:</span>
+              <span className="shrink-0 flex items-center gap-1">
+                <MessageSquare size={11} className="text-rose-300" />
+                <span>Ava:</span>
+              </span>
               <span className="text-rose-200 truncate">"{computerReaction}"</span>
             </div>
           </div>

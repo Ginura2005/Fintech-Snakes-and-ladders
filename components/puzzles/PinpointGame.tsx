@@ -134,8 +134,9 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         <li>Every incorrect guess unlocks the next clue.</li>
         <li>Guess in fewer clues to earn a higher rating (1 clue = 5 Stars!).</li>
       </ul>
-      <p className="text-xs text-white/60">
-        💡 <strong>Tip:</strong> Exact capitalization and punctuation are not required (e.g. &apos;payment methods&apos; or &apos;digital payments&apos; will both be accepted!).
+      <p className="text-xs text-white/60 flex items-center gap-1.5 pt-1">
+        <Lightbulb size={13} className="text-[#fec01f] shrink-0" />
+        <span><strong>Tip:</strong> Exact capitalization and punctuation are not required (e.g. &apos;payment methods&apos; or &apos;digital payments&apos; will both be accepted!).</span>
       </p>
     </>
   );
@@ -163,7 +164,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-white/50 px-1">
           <span>Revealed Clues ({revealedCount} / 5)</span>
           <span className="text-[#fec01f] font-bold">
-            {revealedCount === 1 ? "⭐⭐⭐⭐⭐ 5★ Rank" : `${6 - revealedCount}★ Potential`}
+            {revealedCount === 1 ? "Top 5-Star Rank" : `${6 - revealedCount}★ Rating`}
           </span>
         </div>
 

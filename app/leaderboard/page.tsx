@@ -292,9 +292,6 @@ export default function LeaderboardPage() {
                                   <span>WON</span>
                                 </span>
                               )}
-                                  🏆 WON
-                                </span>
-                              )}
                             </div>
                           </td>
                           <td className="py-4 px-5 text-right font-bold text-[#fec01f] text-base">

@@ -246,7 +246,7 @@ export async function generateResultCardBlob(
 
     ctx.fillStyle = "#F57222";
     ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
-    ctx.fillText(`🏆 Rank #${options.rank} on Festival Leaderboard`, width / 2, rankPillY + 25);
+    ctx.fillText(`Rank #${options.rank} on Festival Leaderboard`, width / 2, rankPillY + 25);
     ctx.restore();
   }
 
@@ -260,7 +260,7 @@ export async function generateResultCardBlob(
     statsY,
     colWidth,
     options.format === "story" ? 120 : 100,
-    "❤️ HEARTS LEFT",
+    "HEARTS LEFT",
     `${options.heartsRemaining} / 3`,
     "Resilience"
   );
@@ -270,7 +270,7 @@ export async function generateResultCardBlob(
     statsY,
     colWidth,
     options.format === "story" ? 120 : 100,
-    "💡 FINTECH IQ",
+    "FINTECH IQ",
     `${options.quizCorrect} Correct`,
     "Domain Mastery"
   );
@@ -280,7 +280,7 @@ export async function generateResultCardBlob(
     statsY,
     colWidth,
     options.format === "story" ? 120 : 100,
-    "🛡️ SHIELDS & TREASURE",
+    "SHIELDS & TREASURE",
     `${options.treasuresCollected} Claimed`,
     "Risk Safeguard"
   );

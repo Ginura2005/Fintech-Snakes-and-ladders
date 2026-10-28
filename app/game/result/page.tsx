@@ -22,8 +22,6 @@ import {
   Gem,
   Clock,
   MessageSquare,
-  Linkedin,
-  Twitter,
   Link as LinkIcon,
   RotateCcw,
 } from "lucide-react";
@@ -159,7 +157,7 @@ function ResultContent() {
   const handleShareWhatsApp = async () => {
     const target = await getOrGenerateShareUrl();
     const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
-    const text = `🎲 I scored ${scoreText} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n\nChallenge me here: ${target}\n\n#SLFinTechFest2026`;
+    const text = `I scored ${scoreText} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n\nChallenge me here: ${target}\n\n#SLFinTechFest2026`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -171,7 +169,7 @@ function ResultContent() {
   const handleShareTwitter = async () => {
     const target = await getOrGenerateShareUrl();
     const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
-    const text = `I just scored ${scoreText} pts in LANKA FINTECHVERSE! Race against autonomous AI at the Sri Lanka FinTech Festival 2026. Can you beat me? 🎲`;
+    const text = `I just scored ${scoreText} pts in LANKA FINTECHVERSE! Race against autonomous AI at the Sri Lanka FinTech Festival 2026. Can you beat me?`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(target)}&hashtags=SLFinTechFest2026,FinTechSriLanka`,
       "_blank"
@@ -227,7 +225,7 @@ function ResultContent() {
 
   const handleNativeShare = async () => {
     const target = await getOrGenerateShareUrl();
-    const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE! Can you beat me? 🎲\n\nSri Lanka FinTech Festival 2026`;
+    const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE! Can you beat me?\n\nSri Lanka FinTech Festival 2026`;
     try {
       await navigator.share({ title: "LANKA FINTECHVERSE", text, url: target });
     } catch {
@@ -497,7 +495,9 @@ function ResultContent() {
               disabled={generatingLink}
               className="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/50 text-sky-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              <Linkedin size={15} />
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 9.74V9.95H5.06v8.55z" />
+              </svg>
               <span>Post to LinkedIn</span>
             </button>
             <button
@@ -505,7 +505,9 @@ function ResultContent() {
               disabled={generatingLink}
               className="py-3 px-3 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-slate-500/50 text-slate-200 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              <Twitter size={15} />
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
               <span>Share on X</span>
             </button>
           </div>

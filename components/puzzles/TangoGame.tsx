@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sun, Moon, AlertTriangle, Check, Volume2, VolumeX } from "lucide-react";
+import { Sun, Moon, AlertTriangle, Check, Volume2, VolumeX, Lightbulb } from "lucide-react";
 import { TangoLevel, TangoSymbol } from "./puzzleTypes";
 import { generateTangoLevel } from "@/lib/puzzles/tango-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
@@ -261,13 +261,13 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
   const rulesContent = (
     <>
       <p>
-        <strong>Tango</strong> is LinkedIn&apos;s celestial binary logic puzzle. The goal is to fill the 6×6 grid with Suns ☀️ and Moons 🌙 so that:
+        <strong>Tango</strong> is LinkedIn&apos;s celestial binary logic puzzle. The goal is to fill the 6×6 grid with Suns and Moons so that:
       </p>
       <ul className="list-disc pl-5 space-y-1.5 text-white/70">
         <li>Every row has exactly <strong>3 Suns</strong> and <strong>3 Moons</strong>.</li>
         <li>Every column has exactly <strong>3 Suns</strong> and <strong>3 Moons</strong>.</li>
         <li>
-          <strong className="text-rose-400">No Triples:</strong> You cannot have 3 identical symbols consecutive in any row or column (no ☀️☀️☀️ or 🌙🌙🌙).
+          <strong className="text-rose-400">No Triples:</strong> You cannot have 3 identical symbols consecutive in any row or column (no 3 consecutive Suns or Moons).
         </li>
         <li>
           <strong className="text-[#fec01f]">= Clue:</strong> Adjacent cells sharing an &apos;=&apos; sign must have the <strong>same</strong> symbol.
@@ -276,8 +276,9 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
           <strong className="text-cyan-300">× Clue:</strong> Adjacent cells sharing an &apos;×&apos; sign must have <strong>opposite</strong> symbols.
         </li>
       </ul>
-      <p className="text-xs text-white/60">
-        💡 <strong>Tip:</strong> Look at the edge tallies to see your current Sun and Moon counts for each row and column. They turn green with a checkmark once satisfied!
+      <p className="text-xs text-white/60 flex items-center gap-1.5 pt-1">
+        <Lightbulb size={13} className="text-[#fec01f] shrink-0" />
+        <span><strong>Tip:</strong> Look at the edge tallies to see your current Sun and Moon counts for each row and column. They turn green with a checkmark once satisfied!</span>
       </p>
     </>
   );
@@ -306,11 +307,11 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
       {/* Guide Banner */}
       <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-mono">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-[#fec01f]">
-            <Sun size={15} /> Sun (☀️)
+          <span className="flex items-center gap-1.5 text-[#fec01f]">
+            <Sun size={15} /> Sun
           </span>
-          <span className="flex items-center gap-1 text-cyan-300">
-            <Moon size={15} /> Moon (🌙)
+          <span className="flex items-center gap-1.5 text-cyan-300">
+            <Moon size={15} /> Moon
           </span>
         </div>
         <div className="flex items-center gap-3 text-white/60">

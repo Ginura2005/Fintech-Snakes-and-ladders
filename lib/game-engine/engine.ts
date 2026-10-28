@@ -209,7 +209,7 @@ export function processTurn(
     events.push({
       type: isMajor ? "snake_major" : "snake_ordinary",
       description: isMajor
-        ? `⚠️ Major risk snake! Slide from ${rawPos} to ${snake.to}.`
+        ? `Major risk snake! Slide from ${rawPos} to ${snake.to}.`
         : `Snake! Slide from ${rawPos} to ${snake.to}.`,
       fromSquare: rawPos,
       toSquare: snake.to,
@@ -228,13 +228,13 @@ export function processTurn(
         else newState.computerShields -= 1;
         events.push({
           type: "shield_consumed",
-          description: "🛡️ Shield absorbed the heart loss!",
+          description: "Shield absorbed the heart loss!",
         });
       } else {
         // Lose a heart
         if (actor === "player") {
           newState.playerHearts = Math.max(0, newState.playerHearts - 1);
-          events.push({ type: "heart_lost", description: "💔 Lost a heart!" });
+          events.push({ type: "heart_lost", description: "Lost a heart!" });
           if (newState.playerHearts === 0) {
             events.push({ type: "eliminated", description: "Player eliminated!" });
             if (actor === "player") newState.playerPosition = finalPos;
@@ -255,7 +255,7 @@ export function processTurn(
           }
         } else {
           newState.computerHearts = Math.max(0, newState.computerHearts - 1);
-          events.push({ type: "heart_lost", description: "💔 Computer lost a heart!" });
+          events.push({ type: "heart_lost", description: "Computer lost a heart!" });
           if (newState.computerHearts === 0) {
             events.push({ type: "eliminated", description: "Computer eliminated! Player wins!" });
             newState.computerPosition = finalPos;
@@ -286,7 +286,7 @@ export function processTurn(
     finalPos = lad.to;
     events.push({
       type: "ladder",
-      description: `🪜 ${lad.theme} ladder! Climb from ${rawPos} to ${lad.to}.`,
+      description: `${lad.theme} ladder! Climb from ${rawPos} to ${lad.to}.`,
       fromSquare: rawPos,
       toSquare: lad.to,
     });
@@ -306,7 +306,7 @@ export function processTurn(
         scoreDeltas.push({ actor, event: "treasure", delta: boardConfig.treasure.points });
         events.push({
           type: "treasure_collected",
-          description: `💰 Treasure! +${boardConfig.treasure.points} points!`,
+          description: `Treasure! +${boardConfig.treasure.points} points!`,
         });
 
         if (boardConfig.treasure.shieldAwarded) {
@@ -314,7 +314,7 @@ export function processTurn(
           if (currentShields < boardConfig.treasure.maxShields) {
             if (actor === "player") newState.playerShields += 1;
             else newState.computerShields += 1;
-            events.push({ type: "normal_move", description: "🛡️ Shield awarded!" });
+            events.push({ type: "normal_move", description: "Shield awarded!" });
           }
         }
 
@@ -338,7 +338,7 @@ export function processTurn(
         newState.playerQuizEncountered = [...newState.playerQuizEncountered, finalPos];
         events.push({
           type: "quiz_triggered",
-          description: `📝 FinTech Quiz! Answer correctly for +${boardConfig.scoring.quizCorrect} points!`,
+          description: `FinTech Quiz! Answer correctly for +${boardConfig.scoring.quizCorrect} points!`,
         });
       }
     }
@@ -408,13 +408,13 @@ function applyEndOfGame(
     scoreDeltas.push({ actor: "player", event: "defeating_computer", delta: victoryBonus });
     state.playerScore = Math.max(0, state.playerScore + finishBonus + victoryBonus);
     state.status = "player_won";
-    events.push({ type: "finish", description: "🎉 Player wins!" });
+    events.push({ type: "finish", description: "Player wins!" });
   } else {
     const finishBonus = boardConfig.scoring.reachingFinish;
     scoreDeltas.push({ actor: "computer", event: "reaching_finish", delta: finishBonus });
     state.computerScore = Math.max(0, state.computerScore + finishBonus);
     state.status = "computer_won";
-    events.push({ type: "finish", description: "🤖 Computer wins!" });
+    events.push({ type: "finish", description: "Computer wins!" });
   }
 
   return state;

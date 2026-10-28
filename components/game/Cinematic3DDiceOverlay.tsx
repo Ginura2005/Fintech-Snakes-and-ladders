@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Cube3D, { ThrowPhysics } from "./Cube3D";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Bot, Dices, Target } from "lucide-react";
 
 interface Cinematic3DDiceOverlayProps {
   show: boolean;
@@ -50,11 +50,11 @@ export default function Cinematic3DDiceOverlay({
   // Derive throw flavor label from physics
   let throwStyleLabel = "Smooth Fair Throw";
   if (physics.speed > 1.3) {
-    throwStyleLabel = "⚡ Power Throw";
+    throwStyleLabel = "Power Throw";
   } else if (physics.speed < 0.85) {
-    throwStyleLabel = "🌿 Gentle Roll";
+    throwStyleLabel = "Gentle Roll";
   } else if (Math.abs(physics.tilt) > 16) {
-    throwStyleLabel = physics.tilt > 0 ? "↗️ Right Bank Roll" : "↖️ Left Bank Roll";
+    throwStyleLabel = physics.tilt > 0 ? "Right Bank Roll" : "Left Bank Roll";
   }
 
   return (
@@ -105,7 +105,8 @@ export default function Cinematic3DDiceOverlay({
               </span>
             ) : (
               <span className="text-rose-300 flex items-center gap-1.5">
-                <span>🤖</span> Ava is Throwing
+                <Bot size={14} className="text-rose-300" />
+                <span>Ava is Throwing</span>
               </span>
             )}
           </div>
@@ -143,10 +144,14 @@ export default function Cinematic3DDiceOverlay({
                 }
               `}
             >
-              <span>🎲 ROLLED A {rollValue}!</span>
+              <span className="flex items-center gap-1.5">
+                <Dices size={14} />
+                <span>ROLLED A {rollValue}!</span>
+              </span>
               {isOvershoot && (
-                <span className="text-[9px] font-mono tracking-normal normal-case font-bold">
-                  🎯 Needs exact roll for 25
+                <span className="text-[9px] font-mono tracking-normal normal-case font-bold flex items-center gap-1">
+                  <Target size={11} />
+                  <span>Needs exact roll for 25</span>
                 </span>
               )}
             </div>

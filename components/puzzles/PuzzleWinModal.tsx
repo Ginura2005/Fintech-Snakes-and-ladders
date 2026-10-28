@@ -44,20 +44,23 @@ export default function PuzzleWinModal({
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const getStarRating = () => {
+  const getStarCount = () => {
     if (typeof mistakesCount === "number") {
-      if (mistakesCount === 0) return "⭐⭐⭐";
-      if (mistakesCount <= 2) return "⭐⭐";
-      return "⭐";
+      if (mistakesCount === 0) return 3;
+      if (mistakesCount <= 2) return 2;
+      return 1;
     }
-    if (secondsElapsed < 90) return "⭐⭐⭐";
-    if (secondsElapsed < 180) return "⭐⭐";
-    return "⭐";
+    if (secondsElapsed < 90) return 3;
+    if (secondsElapsed < 180) return 2;
+    return 1;
   };
 
-  const shareText = `Lanka FinTechverse Puzzles ${meta.icon}
+  const starCount = getStarCount();
+  const getStarRatingString = () => "★".repeat(starCount) + "☆".repeat(3 - starCount);
+
+  const shareText = `Lanka FinTechverse Puzzles | ${meta.title}
 Solved ${meta.title} — ${levelName} in ${formatTime(secondsElapsed)}!
-Rating: ${getStarRating()}${typeof movesCount === "number" ? ` · ${movesCount} moves` : ""}
+Rating: ${getStarRatingString()}${typeof movesCount === "number" ? ` · ${movesCount} moves` : ""}
 Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
 
   const handleCopy = async () => {
@@ -77,8 +80,8 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#fec01f]/15 rounded-full blur-3xl" />
 
         {/* Big Icon */}
-        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-3xl sm:text-4xl shadow-inner animate-bounce">
-          {meta.icon}
+        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-[#fec01f] shadow-inner animate-bounce">
+          <PuzzleIcon id={meta.id} size={36} />
         </div>
 
         {/* Win Title */}
@@ -123,9 +126,15 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
             <span className="block text-[10px] font-mono uppercase tracking-wider text-white/50">
               Score Rating
             </span>
-            <span className="font-mono text-base font-bold text-amber-300">
-              {getStarRating()}
-            </span>
+            <div className="flex items-center justify-center gap-1 mt-1">
+              {[1, 2, 3].map((star) => (
+                <Star
+                  key={star}
+                  size={16}
+                  className={star <= starCount ? "fill-[#fec01f] text-[#fec01f]" : "text-white/20"}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="p-2 col-span-2 sm:col-span-1">
@@ -157,8 +166,8 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
             <span>Shareable Result</span>
             <span>LinkedIn Style</span>
           </div>
-          <p className="font-bold text-white/90">Lanka FinTechverse Puzzles {meta.icon}</p>
-          <p>Solved {meta.title} in {formatTime(secondsElapsed)} {getStarRating()}</p>
+          <p className="font-bold text-white/90">Lanka FinTechverse Puzzles · {meta.title}</p>
+          <p>Solved {meta.title} in {formatTime(secondsElapsed)} ({getStarRatingString()})</p>
           <p className="text-[11px] text-[#fec01f]/80">fintechfestival.lk/puzzles</p>
         </div>
 

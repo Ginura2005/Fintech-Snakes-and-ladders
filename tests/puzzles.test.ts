@@ -101,7 +101,7 @@ describe("Queens Puzzles Verification", () => {
       }
 
       const solCount = countQueensSolutions(level.size, level.regions);
-      expect(solCount).toBeGreaterThanOrEqual(1);
+      expect(solCount).toBe(1);
     }
   });
 });
