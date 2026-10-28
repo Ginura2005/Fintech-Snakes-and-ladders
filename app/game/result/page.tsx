@@ -26,6 +26,9 @@ import {
   RotateCcw,
   Info,
   Puzzle,
+  X,
+  Send,
+  Smartphone,
 } from "lucide-react";
 import VictoryConfetti from "@/components/game/VictoryConfetti";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";
@@ -71,6 +74,14 @@ function ResultContent() {
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [updatingOptIn, setUpdatingOptIn] = useState(false);
   const [puzzleBonus, setPuzzleBonus] = useState(0);
+
+  // Social Sharing Enhancements
+  const [linkedInModalOpen, setLinkedInModalOpen] = useState(false);
+  const [instagramModalOpen, setInstagramModalOpen] = useState(false);
+  const [copiedCardImage, setCopiedCardImage] = useState(false);
+  const [copyingCardImage, setCopyingCardImage] = useState(false);
+  const [copiedLinkedInText, setCopiedLinkedInText] = useState(false);
+  const [sharingChannel, setSharingChannel] = useState<string | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -161,16 +172,129 @@ function ResultContent() {
     await getOrGenerateShareUrl();
   };
 
-  const handleShareWhatsApp = async () => {
-    const target = await getOrGenerateShareUrl();
+  const getLinkedInCaptionText = (targetUrl: string) => {
     const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
-    const text = `I scored ${scoreText} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n\nChallenge me here: ${target}\n\n#SLFinTechFest2026`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+    const rankText = rank && leaderboardOptIn ? ` · Ranked #${rank} on Official Leaderboard` : "";
+    return `🚀 Proud to have tested my financial technology knowledge in the official LANKA FINTECHVERSE Arena at the Sri Lanka FinTech Festival 2026!
+
+🏆 Official Score: ${scoreText} pts${rankText}
+🎯 FinTech Quizzes Solved: ${run?.player_quiz_correct || 0}
+❤️ Hearts Preserved: ${run?.player_hearts || 0}/3
+
+Can you beat my score? Step into the arena here:
+${targetUrl}
+
+#FinTech #SriLankaFinTechFestival #SLFinTechFest2026 #DigitalBanking #Innovation #LankaPay #DPI`;
   };
 
-  const handleShareLinkedIn = async () => {
+  const handleShareWhatsApp = async () => {
+    setSharingChannel("whatsapp");
+    try {
+      const target = await getOrGenerateShareUrl();
+      const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
+      const rankText = rank && leaderboardOptIn ? ` (Rank #${rank})` : "";
+      const text = `I scored ${scoreText} points${rankText} in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n\nStep into the arena here: ${target}\n\n#SLFinTechFest2026 #FinTechSriLanka`;
+
+      // Mobile Web Share API Level 2 (Direct PNG Image + Caption)
+      if (typeof navigator !== "undefined" && "canShare" in navigator) {
+        try {
+          const blob = await generateResultCardBlob({
+            format: "post",
+            displayName: profile?.display_name || "Festival Player",
+            finalScore: run?.player_score || 0,
+            rank: leaderboardOptIn ? rank : null,
+            outcome: run?.status as any,
+            heartsRemaining: run?.player_hearts || 0,
+            quizCorrect: run?.player_quiz_correct || 0,
+            treasuresCollected: (run?.player_treasures_collected || []).length,
+            challengeUrl: target,
+            festivalDates: "2–3 November 2026",
+          });
+          const file = new File([blob], `fintechverse-${run?.player_score}pts.png`, { type: "image/png" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: "LANKA FINTECHVERSE Scorecard",
+              text,
+            });
+            return;
+          }
+        } catch (shareErr) {
+          if ((shareErr as Error).name === "AbortError") return;
+        }
+      }
+
+      // Desktop / Web URL fallback (WhatsApp crawls open-graph og:image preview)
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+    } finally {
+      setSharingChannel(null);
+    }
+  };
+
+  const handleShareInstagramStory = async () => {
+    setSharingChannel("instagram");
+    try {
+      const target = await getOrGenerateShareUrl();
+      await navigator.clipboard.writeText(target);
+      setCopied(true);
+
+      const blob = await generateResultCardBlob({
+        format: "story",
+        displayName: profile?.display_name || "Festival Player",
+        finalScore: run?.player_score || 0,
+        rank: leaderboardOptIn ? rank : null,
+        outcome: run?.status as any,
+        heartsRemaining: run?.player_hearts || 0,
+        quizCorrect: run?.player_quiz_correct || 0,
+        treasuresCollected: (run?.player_treasures_collected || []).length,
+        challengeUrl: target,
+        festivalDates: "2–3 November 2026",
+      });
+
+      const file = new File([blob], `fintechverse-story-${run?.player_score}pts.png`, { type: "image/png" });
+
+      if (typeof navigator !== "undefined" && "canShare" in navigator && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Lanka FinTechverse Story Card",
+          });
+          setInstagramModalOpen(true);
+          return;
+        } catch (e) {
+          if ((e as Error).name === "AbortError") return;
+        }
+      }
+
+      // Fallback: Download 9:16 card and open instruction modal
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fintechverse-story-${run?.player_score}pts.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setInstagramModalOpen(true);
+    } catch (err) {
+      console.error("Instagram story sharing failed:", err);
+    } finally {
+      setSharingChannel(null);
+    }
+  };
+
+  const handleShareLinkedInModal = async () => {
+    await getOrGenerateShareUrl();
+    setLinkedInModalOpen(true);
+  };
+
+  const handleShareFacebook = async () => {
     const target = await getOrGenerateShareUrl();
-    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(target)}`, "_blank");
+    const text = `I scored ${run?.player_score?.toLocaleString()} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?`;
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(target)}&quote=${encodeURIComponent(text)}`,
+      "_blank"
+    );
   };
 
   const handleShareTwitter = async () => {
@@ -178,9 +302,56 @@ function ResultContent() {
     const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
     const text = `I just scored ${scoreText} pts in LANKA FINTECHVERSE! Race against autonomous AI at the Sri Lanka FinTech Festival 2026. Can you beat me?`;
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(target)}&hashtags=SLFinTechFest2026,FinTechSriLanka`,
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(target)}&hashtags=SLFinTechFest2026,FinTechSriLanka,LankaPay`,
       "_blank"
     );
+  };
+
+  const handleShareTelegram = async () => {
+    const target = await getOrGenerateShareUrl();
+    const scoreText = run?.player_score ? run.player_score.toLocaleString() : "0";
+    const text = `I scored ${scoreText} points in LANKA FINTECHVERSE at the Sri Lanka FinTech Festival 2026! Can you beat my score?\n${target}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(target)}&text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleCopyCardImage = async () => {
+    if (!run) return;
+    setCopyingCardImage(true);
+    try {
+      let targetUrl = shareUrl;
+      if (!targetUrl) {
+        targetUrl = await getOrGenerateShareUrl();
+      }
+
+      const blob = await generateResultCardBlob({
+        format: "post",
+        displayName: profile?.display_name || "Festival Player",
+        finalScore: run.player_score,
+        rank: leaderboardOptIn ? rank : null,
+        outcome: run.status as any,
+        heartsRemaining: run.player_hearts,
+        quizCorrect: run.player_quiz_correct,
+        treasuresCollected: (run.player_treasures_collected || []).length,
+        challengeUrl: targetUrl || window.location.origin,
+        festivalDates: "2–3 November 2026",
+      });
+
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard && navigator.clipboard.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": blob,
+          }),
+        ]);
+        setCopiedCardImage(true);
+        setTimeout(() => setCopiedCardImage(false), 3000);
+      } else {
+        await handleDownloadCard("post");
+      }
+    } catch {
+      await handleDownloadCard("post");
+    } finally {
+      setCopyingCardImage(false);
+    }
   };
 
   const handleDownloadCard = async (format: "post" | "story") => {
@@ -453,78 +624,131 @@ function ResultContent() {
         </div>
 
         {/* Result Card Image Generator */}
-        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
-          <h3 className="font-heading font-bold text-base text-white mb-2 flex items-center gap-2">
-            <ImageIcon size={18} className="text-[#fec01f]" />
-            Download Branded Share Card
-          </h3>
-          <p className="text-sm text-white/70 mb-5">
-            Download high-resolution commemorative cards formatted for Instagram, LinkedIn, and WhatsApp stories with your custom QR challenge code.
+        <div className="festival-card p-5 sm:p-6 bg-[#0a0a28]/85 border-white/10">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-heading font-bold text-base text-white flex items-center gap-2">
+              <ImageIcon size={18} className="text-[#fec01f]" />
+              Download &amp; Copy Branded Share Cards
+            </h3>
+            <span className="text-[10px] font-mono text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded-full">
+              High-Res PNG
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-white/70 mb-4 leading-relaxed">
+            Generate commemorative arena cards formatted for social media with your custom QR code challenge.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <button
               onClick={() => handleDownloadCard("post")}
-              disabled={downloadingPost || downloadingStory}
-              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3.5 px-4 disabled:opacity-50"
+              disabled={downloadingPost || downloadingStory || copyingCardImage}
+              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3 px-3 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              <Download size={15} />
-              <span>{downloadingPost ? "Generating Post Card…" : "Post Card (1080×1350)"}</span>
+              <Download size={14} />
+              <span>{downloadingPost ? "Generating…" : "Feed Card (4:5)"}</span>
             </button>
             <button
               onClick={() => handleDownloadCard("story")}
-              disabled={downloadingPost || downloadingStory}
-              className="interactive-btn interactive-btn--burgundy text-xs uppercase tracking-wider py-3.5 px-4 disabled:opacity-50"
+              disabled={downloadingPost || downloadingStory || copyingCardImage}
+              className="interactive-btn interactive-btn--burgundy text-xs uppercase tracking-wider py-3 px-3 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              <Download size={15} />
-              <span>{downloadingStory ? "Generating Story Card…" : "Story Card (1080×1920)"}</span>
+              <Download size={14} />
+              <span>{downloadingStory ? "Generating…" : "Story Card (9:16)"}</span>
+            </button>
+            <button
+              onClick={handleCopyCardImage}
+              disabled={downloadingPost || downloadingStory || copyingCardImage}
+              className="py-3 px-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-mono text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Copy card image directly to clipboard to paste into WhatsApp Web, LinkedIn, or Slack"
+            >
+              {copiedCardImage ? <Check size={14} className="text-teal-400" /> : <Copy size={14} />}
+              <span>{copiedCardImage ? "Image Copied!" : copyingCardImage ? "Copying…" : "Copy Image (Ctrl+V)"}</span>
             </button>
           </div>
         </div>
 
-        {/* Challenge Friends & 1-Click Social Sharing */}
-        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
-          <div className="flex items-center justify-between mb-3">
+        {/* Challenge Friends & 1-Click Multi-Channel Social Sharing */}
+        <div className="festival-card p-5 sm:p-6 bg-[#0a0a28]/85 border-white/10">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="font-heading font-bold text-base text-white flex items-center gap-2">
               <Share2 size={18} className="text-[#fec01f]" />
-              Challenge Attendees &amp; Colleagues
+              Share &amp; Challenge Your Network
             </h3>
             <span className="text-[10px] font-mono text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-0.5 rounded-full">
               #SLFinTechFest2026
             </span>
           </div>
-          <p className="text-sm text-white/70 mb-5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-white/70 mb-4 leading-relaxed">
             Invite your colleagues from banking, fintech, and tech sectors to beat your score in the official FinTechverse arena.
           </p>
 
-          {/* Instant 1-Click Viral Channels */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-5">
+          {/* Social Channels 6-Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 mb-4">
+            {/* WhatsApp: Direct image file & caption on mobile, web link preview on desktop */}
             <button
               onClick={handleShareWhatsApp}
-              disabled={generatingLink}
-              className="py-3 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+              disabled={generatingLink || sharingChannel === "whatsapp"}
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
             >
-              <MessageSquare size={15} />
-              <span>Share to WhatsApp</span>
+              <MessageSquare size={15} className="shrink-0" />
+              <span className="truncate">{sharingChannel === "whatsapp" ? "Opening…" : "WhatsApp"}</span>
             </button>
+
+            {/* Instagram: 9:16 Story sharing with auto-copied link sticker */}
             <button
-              onClick={handleShareLinkedIn}
-              disabled={generatingLink}
-              className="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/50 text-sky-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+              onClick={handleShareInstagramStory}
+              disabled={generatingLink || sharingChannel === "instagram"}
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-gradient-to-r from-purple-900/30 via-pink-900/30 to-amber-900/30 hover:opacity-90 border border-pink-500/50 text-pink-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
             >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+              <span className="truncate">{sharingChannel === "instagram" ? "Opening…" : "IG Story"}</span>
+            </button>
+
+            {/* LinkedIn: Pro Post dialog with caption & card */}
+            <button
+              onClick={handleShareLinkedInModal}
+              disabled={generatingLink}
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/50 text-sky-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
+            >
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
                 <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 9.74V9.95H5.06v8.55z" />
               </svg>
-              <span>Post to LinkedIn</span>
+              <span className="truncate">LinkedIn</span>
             </button>
+
+            {/* Facebook */}
+            <button
+              onClick={handleShareFacebook}
+              disabled={generatingLink}
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-blue-700/20 hover:bg-blue-700/30 border border-blue-500/50 text-blue-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
+            >
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+              <span className="truncate">Facebook</span>
+            </button>
+
+            {/* X / Twitter */}
             <button
               onClick={handleShareTwitter}
               disabled={generatingLink}
-              className="py-3 px-3 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-slate-500/50 text-slate-200 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-slate-500/50 text-slate-200 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
             >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-              <span>Share on X</span>
+              <span className="truncate">Post on X</span>
+            </button>
+
+            {/* Telegram */}
+            <button
+              onClick={handleShareTelegram}
+              disabled={generatingLink}
+              className="py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl bg-cyan-700/20 hover:bg-cyan-700/30 border border-cyan-500/50 text-cyan-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer touch-manipulation min-h-[44px]"
+            >
+              <Send size={14} className="shrink-0" />
+              <span className="truncate">Telegram</span>
             </button>
           </div>
 
@@ -532,7 +756,7 @@ function ResultContent() {
             <button
               onClick={handleGenerateLink}
               disabled={generatingLink}
-              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full min-h-[46px] py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2 touch-manipulation"
             >
               <LinkIcon size={15} />
               <span>{generatingLink ? "Generating Link…" : "Create Custom Challenge Link"}</span>
@@ -547,7 +771,7 @@ function ResultContent() {
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-4 py-2.5 rounded-xl interactive-btn interactive-btn--primary text-xs font-bold uppercase tracking-wider cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl interactive-btn interactive-btn--primary text-xs font-bold uppercase tracking-wider cursor-pointer touch-manipulation min-h-[44px]"
                 >
                   {copied ? <Check size={14} /> : <Copy size={14} />}
                   <span>{copied ? "Copied" : "Copy"}</span>
@@ -557,7 +781,7 @@ function ResultContent() {
               {"share" in navigator && (
                 <button
                   onClick={handleNativeShare}
-                  className="w-full py-2.5 rounded-xl border border-white/20 bg-white/5 text-xs font-mono uppercase tracking-wider text-white hover:border-[#fec01f] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full min-h-[44px] py-2.5 rounded-xl border border-white/20 bg-white/5 text-xs font-mono uppercase tracking-wider text-white hover:border-[#fec01f] transition-colors flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
                 >
                   <Share2 size={14} />
                   <span>Share Via Device Menu…</span>
@@ -566,6 +790,134 @@ function ResultContent() {
             </div>
           )}
         </div>
+
+        {/* ── Modal: LinkedIn Pro Post Assistant ── */}
+        {linkedInModalOpen && (
+          <div className="fixed inset-0 z-50 bg-[#06061f]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+            <div className="festival-panel max-w-lg w-full max-h-[88dvh] overflow-y-auto p-5 sm:p-7 bg-[#0a0a28]/95 border-2 border-sky-500/50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pb-safe relative">
+              <button
+                onClick={() => setLinkedInModalOpen(false)}
+                className="absolute top-4 right-4 text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-sky-600/20 border border-sky-500/40 flex items-center justify-center text-sky-400">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 9.74V9.95H5.06v8.55z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-heading font-bold text-base text-white">Post to LinkedIn</h3>
+                  <p className="text-xs text-white/60 font-mono">Algorithm-optimized card + post text</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-white/70 mb-3">
+                LinkedIn gives 3x–5x more reach to native image posts. We formatted a professional caption and 1080×1350 card for you:
+              </p>
+
+              {/* Pre-formatted caption box */}
+              <div className="relative mb-4 p-3 rounded-xl bg-black/40 border border-white/15 text-xs font-mono text-white/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                {getLinkedInCaptionText(shareUrl || "https://verse.fintechfestival.lk")}
+              </div>
+
+              <div className="space-y-2.5">
+                <button
+                  onClick={async () => {
+                    const text = getLinkedInCaptionText(shareUrl || "https://verse.fintechfestival.lk");
+                    await navigator.clipboard.writeText(text);
+                    setCopiedLinkedInText(true);
+                    await handleDownloadCard("post");
+                    window.open("https://www.linkedin.com/feed/?shareActive=true", "_blank");
+                    setTimeout(() => setCopiedLinkedInText(false), 3000);
+                  }}
+                  className="w-full min-h-[46px] py-3 px-4 rounded-xl interactive-btn interactive-btn--primary font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                >
+                  <Download size={15} />
+                  <span>
+                    {copiedLinkedInText
+                      ? "Caption Copied & Card Downloaded! Opening LinkedIn…"
+                      : "Copy Caption, Download Card & Open LinkedIn"}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    window.open(
+                      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                        shareUrl || "https://verse.fintechfestival.lk"
+                      )}`,
+                      "_blank"
+                    );
+                  }}
+                  className="w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white/80 font-mono text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={14} />
+                  <span>Or Share as Quick Link Preview Dialog</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: Instagram Story Guidance ── */}
+        {instagramModalOpen && (
+          <div className="fixed inset-0 z-50 bg-[#06061f]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+            <div className="festival-panel max-w-sm w-full p-5 sm:p-7 bg-[#0a0a28]/95 border-2 border-pink-500/50 shadow-[0_0_60px_rgba(0,0,0,0.8)] pb-safe relative text-center">
+              <button
+                onClick={() => setInstagramModalOpen(false)}
+                className="absolute top-4 right-4 text-white/50 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500/30 via-pink-600/30 to-purple-600/30 border border-pink-400/50 flex items-center justify-center mx-auto mb-3 text-pink-300">
+                <Smartphone size={28} />
+              </div>
+
+              <h3 className="font-heading font-bold text-lg text-white mb-1">Story Card Ready!</h3>
+              <p className="text-xs text-teal-300 font-mono font-bold mb-4">
+                Challenge Link Copied to Clipboard
+              </p>
+
+              <div className="text-left space-y-2 text-xs font-mono text-white/80 mb-5 p-3 rounded-xl bg-white/[0.03] border border-white/10">
+                <div className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-[#fec01f] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                    1
+                  </span>
+                  <span>Open Instagram Stories and choose your downloaded 9:16 card.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-[#fec01f] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                    2
+                  </span>
+                  <span>Tap the Sticker icon and select <strong>Link</strong> (🔗).</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-[#fec01f] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+                    3
+                  </span>
+                  <span>Paste your copied challenge URL and publish your story!</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setInstagramModalOpen(false);
+                  window.open("https://instagram.com", "_blank");
+                }}
+                className="w-full min-h-[46px] py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+              >
+                <ExternalLink size={14} />
+                <span>Open Instagram</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Back navigation */}
         <div className="flex flex-col sm:flex-row gap-4 pt-2">
