@@ -6,10 +6,13 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    "https://vqzyogpdecdqithvnarg.supabase.co";
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "sb_publishable_s5SduLYiklyi0zbHAY9qdA_DSv7ZOK2";
 
   if (!url || !anonKey) {
     // If Supabase is not configured yet, allow navigation so app is inspectable

@@ -51,6 +51,14 @@ export default function HomePage() {
   const supabase = createClient();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code) {
+      // If code query parameter landed on root page, forward to callback route to complete exchange
+      window.location.replace(`/auth/callback${window.location.search}`);
+      return;
+    }
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       setLoading(false);
@@ -67,9 +75,15 @@ export default function HomePage() {
       .then((data) => setLeaderboard(data.entries || []))
       .catch(() => {});
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "auth_failed") {
-      setError("Sign-in failed. Please try again.");
+    if (params.get("error")) {
+      const errParam = params.get("error");
+      const errDesc = params.get("error_description");
+      setError(
+        errDesc ||
+          (errParam === "auth_failed"
+            ? "Sign-in failed. Please try again."
+            : decodeURIComponent(errParam!))
+      );
     }
 
     return () => subscription.unsubscribe();

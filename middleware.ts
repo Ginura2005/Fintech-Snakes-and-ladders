@@ -1,7 +1,22 @@
 import { updateSession } from "@/lib/supabase/middleware";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // If an OAuth code lands on root or any page other than /auth/callback,
+  // automatically forward it to /auth/callback to complete session exchange
+  const code = request.nextUrl.searchParams.get("code");
+  if (code && request.nextUrl.pathname !== "/auth/callback") {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    if (!callbackUrl.searchParams.has("next")) {
+      callbackUrl.searchParams.set(
+        "next",
+        request.nextUrl.pathname === "/" ? "/game" : request.nextUrl.pathname
+      );
+    }
+    return NextResponse.redirect(callbackUrl);
+  }
+
   return await updateSession(request);
 }
 
