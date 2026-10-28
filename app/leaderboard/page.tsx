@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award } from "lucide-react";
+import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award, Crown } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 
@@ -172,7 +172,7 @@ export default function LeaderboardPage() {
                 {/* 2nd Place */}
                 <div className="festival-card p-3.5 sm:p-5 text-center border-slate-400/40 bg-[#090924]/90 flex flex-col items-center">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-slate-800 border-2 border-slate-300 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(203,213,225,0.3)]">
-                    <span className="text-xl sm:text-2xl font-bold text-slate-200">🥈</span>
+                    <span className="text-lg sm:text-xl font-bold font-mono text-slate-200">#2</span>
                   </div>
                   <span className="font-mono text-[10px] text-slate-300 uppercase tracking-widest font-bold">
                     Rank 2
@@ -187,9 +187,9 @@ export default function LeaderboardPage() {
 
                 {/* 1st Place (Champion) */}
                 <div className="festival-card p-4 sm:p-6 text-center border-[#fec01f] bg-gradient-to-b from-[#fec01f]/20 via-[#0a0a2c] to-[#06061f] shadow-[0_0_40px_rgba(254,192,31,0.25)] flex flex-col items-center scale-105 z-10 -translate-y-2">
-                  <span className="text-2xl mb-1 animate-bounce">👑</span>
+                  <Crown size={22} className="text-[#fec01f] mb-1" />
                   <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#fec01f] text-black border-2 border-white flex items-center justify-center mb-3 shadow-[0_0_25px_rgba(254,192,31,0.6)]">
-                    <Trophy size={28} className="fill-black" />
+                    <Trophy size={26} className="fill-black" />
                   </div>
                   <span className="section-badge section-badge-primary text-[9px] sm:text-[10px] py-0.5 px-2">
                     FESTIVAL CHAMPION
@@ -205,7 +205,7 @@ export default function LeaderboardPage() {
                 {/* 3rd Place */}
                 <div className="festival-card p-3.5 sm:p-5 text-center border-amber-600/40 bg-[#090924]/90 flex flex-col items-center">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950 border-2 border-amber-500 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                    <span className="text-xl sm:text-2xl font-bold text-amber-400">🥉</span>
+                    <span className="text-lg sm:text-xl font-bold font-mono text-amber-300">#3</span>
                   </div>
                   <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
                     Rank 3
@@ -265,7 +265,7 @@ export default function LeaderboardPage() {
                         >
                           <td className="py-4 px-5">
                             <span
-                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${
+                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold font-mono ${
                                 entry.rank === 1
                                   ? "bg-[#fec01f] text-black shadow-[0_0_12px_rgba(254,192,31,0.6)]"
                                   : entry.rank === 2
@@ -275,7 +275,7 @@ export default function LeaderboardPage() {
                                   : "bg-white/10 text-white/70"
                               }`}
                             >
-                              {entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : entry.rank}
+                              #{entry.rank}
                             </span>
                           </td>
                           <td className="py-4 px-5 font-sans font-medium text-white">
@@ -287,7 +287,11 @@ export default function LeaderboardPage() {
                                 </span>
                               )}
                               {entry.playerWon && (
-                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-900/60 border border-teal-500/40 text-teal-300">
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-900/60 border border-teal-500/40 text-teal-300 inline-flex items-center gap-1">
+                                  <Award size={11} />
+                                  <span>WON</span>
+                                </span>
+                              )}
                                   🏆 WON
                                 </span>
                               )}

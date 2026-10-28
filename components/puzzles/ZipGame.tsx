@@ -1,16 +1,31 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Zap, RotateCcw, Check, Flag } from "lucide-react";
+import { Zap, RotateCcw, Check, Flag, Shuffle, Volume2, VolumeX } from "lucide-react";
 import { ZipLevel, ZipWaypoint } from "./puzzleTypes";
-import { ZIP_LEVELS, PUZZLES_META } from "./puzzleData";
+import { generateZipLevel } from "@/lib/puzzles/zip-engine";
+import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
+import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
+import { sounds } from "@/lib/audio/sound-effects";
+import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
+const ZIP_SIZES: Array<{ label: string; size: 5 | 6 | 7 }> = [
+  { label: "5×5 Easy", size: 5 },
+  { label: "6×6 Medium", size: 6 },
+  { label: "7×7 Hard", size: 7 },
+];
+
 export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "zip")!;
-  const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel: ZipLevel = ZIP_LEVELS[levelIndex];
+  const [sizeIndex, setSizeIndex] = useState(0);
+  const currentSize = ZIP_SIZES[sizeIndex].size;
+
+  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const [currentLevel, setCurrentLevel] = useState<ZipLevel>(() =>
+    generateZipLevel(currentSize, getDailyPuzzleSeed())
+  );
   const { rows, cols, waypoints } = currentLevel;
   const totalCells = rows * cols;
 
@@ -23,6 +38,10 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
   const [hasStarted, setHasStarted] = useState(false);
   const [isWon, setIsWon] = useState(false);
   const [showWinModal, setShowWinModal] = useState(false);
+  const [isNewBestTime, setIsNewBestTime] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+
   const isDraggingRef = useRef(false);
 
   // Map of waypoint positions to step
@@ -31,15 +50,18 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     waypointMap.set(`${w.row},${w.col}`, w.step);
   });
 
-  // Reset on level change
+  // Reset on level change or seed change
   useEffect(() => {
-    const sw = currentLevel.waypoints.find((w) => w.step === 1)!;
+    const level = generateZipLevel(currentSize, levelSeed);
+    setCurrentLevel(level);
+    const sw = level.waypoints.find((w) => w.step === 1)!;
     setPath([[sw.row, sw.col]]);
     setSecondsElapsed(0);
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
-  }, [levelIndex, currentLevel]);
+    setIsNewBestTime(false);
+  }, [currentSize, levelSeed]);
 
   // Timer
   useEffect(() => {
@@ -62,10 +84,17 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     if (path.length === totalCells && lastWaypointHit === waypoints.length && !isWon) {
       setIsWon(true);
       setShowWinModal(true);
-    }
-  }, [path.length, totalCells, lastWaypointHit, waypoints.length, isWon]);
+      if (!isMuted) sounds.playVictory();
 
-  const pathSet = new Set(path.map(([r, c]) => `${r},${c}`));
+      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        "zip",
+        currentSize.toString(),
+        secondsElapsed
+      );
+      setIsNewBestTime(isBest);
+      setCurrentStreak(newStreak);
+    }
+  }, [path.length, totalCells, lastWaypointHit, waypoints.length, isWon, currentSize, secondsElapsed, isMuted]);
 
   // Extend or rewind path
   const tryMoveTo = (r: number, c: number) => {
@@ -80,6 +109,7 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     if (existingIndex !== -1) {
       if (existingIndex < path.length - 1) {
         setPath(path.slice(0, existingIndex + 1));
+        if (!isMuted) sounds.playClick();
       }
       return;
     }
@@ -93,10 +123,12 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     // Check if cell has waypoint
     const wpStep = waypointMap.get(cellKey);
     if (wpStep !== undefined) {
-      // Must be the next in order!
       if (wpStep !== nextRequiredWaypoint) {
         return; // cannot skip ahead or revisit
       }
+      if (!isMuted) sounds.playMoveSuccess();
+    } else {
+      if (!isMuted) sounds.playClick();
     }
 
     setPath([...path, [r, c]]);
@@ -110,12 +142,21 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     setShowWinModal(false);
   };
 
+  const handleNewPuzzle = () => {
+    setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+  };
+
   const handleHint = () => {
-    // Fill next step from solution path
     const sol = currentLevel.solutionPath;
     if (path.length < sol.length) {
       setPath(sol.slice(0, path.length + 1));
+      if (!isMuted) sounds.playMoveSuccess();
     }
+  };
+
+  const handleToggleSound = () => {
+    const muted = toggleGlobalPuzzleMute();
+    setIsMuted(muted);
   };
 
   const rulesContent = (
@@ -139,35 +180,40 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     <div className="max-w-xl mx-auto space-y-6">
       <PuzzleHeader
         meta={meta}
-        levelNames={ZIP_LEVELS.map((l) => l.name)}
-        currentLevelIndex={levelIndex}
-        onSelectLevel={setLevelIndex}
+        levelNames={ZIP_SIZES.map((s) => s.label)}
+        currentLevelIndex={sizeIndex}
+        onSelectLevel={setSizeIndex}
         secondsElapsed={secondsElapsed}
         movesCount={path.length}
         onReset={handleReset}
         onHint={handleHint}
         canHint={!isWon}
+        onNewPuzzle={handleNewPuzzle}
+        isSoundMuted={isMuted}
+        onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
 
-      {/* Progress Bar */}
-      <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+      {/* Progress Bar & Live Coverage */}
+      <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
         <div className="flex items-center justify-between text-xs font-mono">
-          <span className="text-white/60">
-            Path Progress:{" "}
-            <strong className="text-[#fec01f]">{path.length}</strong> / {totalCells} squares
+          <span className="text-white/70">
+            Coverage: <strong className="text-[#fec01f]">{path.length}</strong> / {totalCells} squares (
+            {Math.round((path.length / totalCells) * 100)}%)
           </span>
-          <span className="text-white/60">
-            Next Waypoint:{" "}
+          <span className="text-white/70">
+            Target:{" "}
             <strong className="text-teal-300">
-              {nextRequiredWaypoint <= waypoints.length ? `#${nextRequiredWaypoint}` : "Finish"}
+              {nextRequiredWaypoint <= waypoints.length
+                ? `Waypoint #${nextRequiredWaypoint}`
+                : "Complete Grid!"}
             </strong>
           </span>
         </div>
-        <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+        <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[#fec01f] to-rose-500 transition-all duration-200"
+            className="h-full bg-gradient-to-r from-[#fec01f] via-rose-500 to-teal-400 transition-all duration-200"
             style={{ width: `${(path.length / totalCells) * 100}%` }}
           />
         </div>
@@ -176,7 +222,7 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
       {/* Zip Grid */}
       <div className="flex justify-center py-2">
         <div
-          className="relative inline-grid p-3 rounded-2xl bg-[#080820] border-2 border-white/15 shadow-2xl select-none"
+          className="relative inline-grid p-3.5 rounded-2xl bg-[#070720] border-2 border-white/15 shadow-2xl select-none"
           style={{
             gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
             gap: "0.5rem",
@@ -197,7 +243,17 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
               const wpStep = waypointMap.get(key);
               const pathIndex = path.findIndex(([pr, pc]) => pr === r && pc === c);
               const isVisited = pathIndex !== -1;
-              const isHead = path.length > 0 && path[path.length - 1][0] === r && path[path.length - 1][1] === c;
+              const isHead =
+                path.length > 0 &&
+                path[path.length - 1][0] === r &&
+                path[path.length - 1][1] === c;
+
+              const cellSizeClass =
+                rows === 5
+                  ? "w-12 h-12 sm:w-16 sm:h-16"
+                  : rows === 6
+                  ? "w-11 h-11 sm:w-14 sm:h-14"
+                  : "w-9 h-9 sm:w-12 sm:h-12";
 
               return (
                 <button
@@ -206,9 +262,9 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
                   onMouseEnter={() => {
                     if (isDraggingRef.current) tryMoveTo(r, c);
                   }}
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-mono font-bold text-sm transition-all relative ${
+                  className={`${cellSizeClass} rounded-xl flex items-center justify-center font-mono font-bold text-sm transition-all relative ${
                     isHead
-                      ? "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.8)] scale-105 z-10"
+                      ? "bg-rose-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.8)] scale-105 z-10 animate-pulse"
                       : isVisited
                       ? "bg-[#fec01f]/20 text-[#fec01f] border border-[#fec01f]/40"
                       : "bg-white/[0.04] hover:bg-white/[0.08] text-white/50 border border-white/10"
@@ -217,16 +273,18 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
                   {/* Waypoint Badge */}
                   {wpStep !== undefined ? (
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-md transition-all ${
                         isVisited
-                          ? "bg-[#fec01f] text-black"
+                          ? "bg-[#fec01f] text-black shadow-[0_0_8px_rgba(254,192,31,0.6)]"
+                          : wpStep === nextRequiredWaypoint
+                          ? "bg-teal-500 text-white ring-2 ring-teal-400 animate-pulse"
                           : "bg-white/15 text-white/90 border border-white/30"
                       }`}
                     >
                       {wpStep}
                     </div>
                   ) : isVisited ? (
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#fec01f]/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#fec01f]/70" />
                   ) : null}
                 </button>
               );
@@ -246,8 +304,10 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
           levelName={currentLevel.name}
           secondsElapsed={secondsElapsed}
           movesCount={path.length}
-          hasNextLevel={levelIndex < ZIP_LEVELS.length - 1}
-          onNextLevel={() => setLevelIndex((p) => p + 1)}
+          isNewBestTime={isNewBestTime}
+          currentStreak={currentStreak}
+          hasNextLevel={sizeIndex < ZIP_SIZES.length - 1}
+          onNextLevel={() => setSizeIndex((p) => p + 1)}
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}

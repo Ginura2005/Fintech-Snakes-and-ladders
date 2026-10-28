@@ -3,6 +3,7 @@
 import { BOARD_CONFIG, getLadder, getSnake, getSpecialSquare, BoardConfig } from "@/lib/game-engine/board-config";
 import BoardSvgOverlay, { SQUARE_CENTERS } from "./BoardSvgOverlay";
 import GameAvatar, { AvatarMood } from "./GameAvatar";
+import { Trophy, TrendingUp, AlertTriangle, HelpCircle, Gem } from "lucide-react";
 
 interface BoardProps {
   playerPosition: number;
@@ -44,7 +45,6 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
       bgClass: "bg-gradient-to-br from-[#fec01f]/25 via-teal-950/40 to-[#070722] border-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.35)]",
       badge: "FINISH",
       badgeClass: "bg-[#fec01f] text-black font-extrabold shadow-[0_0_8px_rgba(254,192,31,0.6)]",
-      icon: "🏁",
     };
   }
 
@@ -54,7 +54,6 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
       bgClass: "bg-gradient-to-br from-[#125252]/40 via-teal-950/40 to-[#070722] border-teal-400/50",
       badge: `↑${ladder.to}`,
       badgeClass: "bg-teal-500/90 text-white font-bold",
-      icon: "🪜",
     };
   }
 
@@ -65,11 +64,10 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
       bgClass: isMajor
         ? "bg-gradient-to-br from-[#8d1739]/45 via-rose-950/40 to-[#070722] border-rose-500/60"
         : "bg-gradient-to-br from-amber-950/35 via-rose-950/20 to-[#070722] border-amber-500/50",
-      badge: isMajor ? `↓${snake.to}⚠️` : `↓${snake.to}`,
+      badge: isMajor ? `↓${snake.to}!` : `↓${snake.to}`,
       badgeClass: isMajor
         ? "bg-rose-700 text-white font-bold"
         : "bg-amber-700 text-amber-100 font-bold",
-      icon: "🐍",
     };
   }
 
@@ -79,7 +77,6 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
       bgClass: "bg-gradient-to-br from-[#fec01f]/15 via-amber-950/30 to-[#070722] border-[#fec01f]/50",
       badge: "+50",
       badgeClass: "bg-[#fec01f] text-black font-bold",
-      icon: "📝",
     };
   }
 
@@ -87,9 +84,8 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
     return {
       type: "treasure",
       bgClass: "bg-gradient-to-br from-[#f57222]/20 via-orange-950/30 to-[#070722] border-[#f57222]/50",
-      badge: "🛡️",
+      badge: "SHLD",
       badgeClass: "bg-[#f57222] text-white font-bold",
-      icon: "💰",
     };
   }
 
@@ -98,7 +94,6 @@ function getCellMetadata(square: number, config: BoardConfig = BOARD_CONFIG) {
     bgClass: "bg-[#0b0b28]/70 border-white/[0.08] hover:border-white/20",
     badge: null,
     badgeClass: "",
-    icon: null,
   };
 }
 
@@ -227,17 +222,13 @@ export default function GameBoard({
                       )}
                     </div>
 
-                    {/* Middle: Clean Feature Icon */}
+                    {/* Middle: Clean Feature Icon (Real Lucide SVG, No Emojis) */}
                     <div className="flex items-center justify-center my-auto">
-                      {meta.icon && (
-                        <span
-                          className="text-sm sm:text-base md:text-xl drop-shadow select-none opacity-90"
-                          role="img"
-                          aria-label={meta.type}
-                        >
-                          {meta.icon}
-                        </span>
-                      )}
+                      {meta.type === "finish" && <Trophy size={16} className="text-[#fec01f] drop-shadow" />}
+                      {meta.type === "ladder" && <TrendingUp size={15} className="text-teal-300 drop-shadow" />}
+                      {meta.type === "snake" && <AlertTriangle size={14} className="text-rose-400 drop-shadow" />}
+                      {meta.type === "quiz" && <HelpCircle size={14} className="text-[#fec01f] drop-shadow" />}
+                      {meta.type === "treasure" && <Gem size={14} className="text-orange-400 drop-shadow" />}
                     </div>
 
                     {/* Bottom: Subtle Tile Landing Groove */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Info, Heart, Shield, Zap, Sparkles, Trophy } from "lucide-react";
+import { Info, Heart, Shield, Zap, Sparkles, Trophy, Dices, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 interface OnboardingModalProps {
@@ -119,7 +119,7 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
               {/* Rules highlight */}
               <div className="space-y-2.5 text-xs font-mono text-white/80">
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-3">
-                  <span className="text-base">🎲</span>
+                  <Dices size={16} className="text-[#fec01f] shrink-0" />
                   <span><strong>1 Official Run:</strong> Your official score is locked upon match conclusion.</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-3">
@@ -162,11 +162,34 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
                 </button>
                 <button
                   onClick={handleStart}
-                  className="flex-1 py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)]"
+                  className="flex-1 py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] flex items-center justify-center gap-1.5"
                 >
-                  Enter the Arena Now 🚀
+                  <span>Enter the Arena</span>
+                  <ArrowRight size={15} />
                 </button>
               </div>
+
+              <p className="text-[11px] text-center text-white/50 leading-relaxed font-mono pt-1">
+                By entering, you agree to the{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-white/70 hover:text-[#fec01f] transition-colors"
+                >
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-white/70 hover:text-[#fec01f] transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                .
+              </p>
             </div>
           )}
         </div>

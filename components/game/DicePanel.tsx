@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Dices, Target } from "lucide-react";
 import Cube3D, { ThrowPhysics } from "./Cube3D";
 
 interface DicePanelProps {
@@ -107,8 +107,8 @@ export default function DicePanel({
                 </>
               ) : (
                 <>
-                  <span className="text-base sm:text-lg">🎲</span>
-                  <span className="tracking-wider uppercase">ROLL 3D DIE</span>
+                  <Dices size={18} className="shrink-0" />
+                  <span className="tracking-wider uppercase">ROLL DIE</span>
                 </>
               )}
             </button>
@@ -122,8 +122,9 @@ export default function DicePanel({
           {/* Status Subtext */}
           <div className="mt-1 text-[10px] sm:text-xs font-mono text-white/60 text-center sm:text-right truncate">
             {playerPosition >= 19 ? (
-              <span className="text-[#fec01f] font-semibold">
-                🎯 Exactly {neededToFinish} needed for Square 25!
+              <span className="text-[#fec01f] font-semibold inline-flex items-center gap-1">
+                <Target size={12} />
+                <span>Exactly {neededToFinish} needed for Square 25</span>
               </span>
             ) : (
               <span>Square {playerPosition} · Swipe cube or tap roll</span>

@@ -331,6 +331,55 @@ class SoundEffectsManager {
       osc.stop(start + dur + 0.05);
     });
   }
+
+  /** Quick tactile click / tap */
+  public playClick(): void {
+    this.playPawnStep();
+  }
+
+  public click(): void {
+    this.playClick();
+  }
+
+  /** Successful placement / move */
+  public playMoveSuccess(): void {
+    this.playQuizCorrect();
+  }
+
+  public moveSuccess(): void {
+    this.playMoveSuccess();
+  }
+
+  /** Mistake / invalid move */
+  public playMistake(): void {
+    this.playQuizWrong();
+  }
+
+  public mistake(): void {
+    this.playMistake();
+  }
+
+  /** Undo action */
+  public playUndo(): void {
+    this.playSnakeSlide();
+  }
+
+  public undo(): void {
+    this.playUndo();
+  }
+
+  /** Hint reveal */
+  public playHint(): void {
+    this.playTreasure();
+  }
+
+  public hint(): void {
+    this.playHint();
+  }
+
+  public victory(): void {
+    this.playVictory();
+  }
 }
 
 export const sounds = new SoundEffectsManager();

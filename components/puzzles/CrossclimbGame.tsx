@@ -1,29 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUp, ArrowDown, Check, Lock, Unlock, Link2, Sparkles, HelpCircle } from "lucide-react";
+import { ArrowUp, ArrowDown, Check, Lock, Unlock, Link2, Sparkles, HelpCircle, Shuffle } from "lucide-react";
 import { CrossclimbLevel, CrossclimbLadderWord } from "./puzzleTypes";
-import { CROSSCLIMB_LEVELS, PUZZLES_META } from "./puzzleData";
+import {
+  CROSSCLIMB_TEMPLATES,
+  getHammingDistance,
+  generateCrossclimbLevel,
+} from "@/lib/puzzles/crossclimb-engine";
+import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
+import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
+import { sounds } from "@/lib/audio/sound-effects";
+import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
-function getHammingDistance(w1: string, w2: string) {
-  if (w1.length !== w2.length) return 99;
-  let diff = 0;
-  for (let i = 0; i < w1.length; i++) {
-    if (w1[i] !== w2[i]) diff++;
-  }
-  return diff;
-}
+const CLIMB_DIFFICULTIES: Array<"Easy" | "Medium" | "Hard"> = [
+  "Easy",
+  "Medium",
+  "Hard",
+];
 
 export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "crossclimb")!;
-  const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel: CrossclimbLevel = CROSSCLIMB_LEVELS[levelIndex];
+  const [diffIndex, setDiffIndex] = useState(0);
+  const difficulty = CLIMB_DIFFICULTIES[diffIndex];
+
+  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const [currentLevel, setCurrentLevel] = useState<CrossclimbLevel>(() =>
+    generateCrossclimbLevel(difficulty, getDailyPuzzleSeed())
+  );
 
   // Scramble ladder words initially
   const [ladder, setLadder] = useState<CrossclimbLadderWord[]>(() => {
-    return [...currentLevel.ladderWords].sort(() => Math.sin(1) - 0.5);
+    return [...currentLevel.ladderWords].reverse();
   });
 
   // User input answers for each ladder word ID
@@ -31,20 +41,24 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
   const [topAnswer, setTopAnswer] = useState("");
   const [bottomAnswer, setBottomAnswer] = useState("");
 
+  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [isWon, setIsWon] = useState(false);
   const [showWinModal, setShowWinModal] = useState(false);
+  const [isNewBestTime, setIsNewBestTime] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
   // Reset on level change
   useEffect(() => {
-    // Deterministic shuffle
-    const shuffled = [...currentLevel.ladderWords];
-    const n = shuffled.length;
-    // Swap 0 and 2, 1 and n-1
-    if (n >= 4) {
+    const level = generateCrossclimbLevel(difficulty, levelSeed);
+    setCurrentLevel(level);
+
+    // Shuffle deterministically
+    const shuffled = [...level.ladderWords];
+    if (shuffled.length >= 4) {
       const temp0 = shuffled[0]; shuffled[0] = shuffled[2]; shuffled[2] = temp0;
-      const temp1 = shuffled[1]; shuffled[1] = shuffled[n - 1]; shuffled[n - 1] = temp1;
+      const temp1 = shuffled[1]; shuffled[1] = shuffled[shuffled.length - 1]; shuffled[shuffled.length - 1] = temp1;
     }
     setLadder(shuffled);
     setAnswers({});
@@ -54,7 +68,8 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
-  }, [levelIndex, currentLevel]);
+    setIsNewBestTime(false);
+  }, [difficulty, levelSeed]);
 
   // Timer
   useEffect(() => {
@@ -91,8 +106,17 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     if (isLadderFullyConnected && isTopSolved && isBottomSolved && !isWon) {
       setIsWon(true);
       setShowWinModal(true);
+      if (!isMuted) sounds.playVictory();
+
+      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        "crossclimb",
+        difficulty,
+        secondsElapsed
+      );
+      setIsNewBestTime(isBest);
+      setCurrentStreak(newStreak);
     }
-  }, [isLadderFullyConnected, isTopSolved, isBottomSolved, isWon]);
+  }, [isLadderFullyConnected, isTopSolved, isBottomSolved, isWon, difficulty, secondsElapsed, isMuted]);
 
   // Reordering ladder rungs
   const moveRung = (index: number, direction: "up" | "down") => {
@@ -107,6 +131,8 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     newLadder[index] = newLadder[targetIndex];
     newLadder[targetIndex] = temp;
     setLadder(newLadder);
+
+    if (!isMuted) sounds.playClick();
   };
 
   const handleAnswerChange = (wordId: string, val: string) => {
@@ -118,17 +144,17 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
   };
 
   const handleHint = () => {
-    // Fill one unsolved ladder word or arrange ladder correctly
     if (!allLadderWordsSolved) {
       for (const w of ladder) {
         if ((answers[w.id] || "").toUpperCase() !== w.word) {
           handleAnswerChange(w.id, w.word);
+          if (!isMuted) sounds.playMoveSuccess();
           return;
         }
       }
     } else if (!isLadderFullyConnected) {
-      // Put in correct chain order
       setLadder([...currentLevel.ladderWords]);
+      if (!isMuted) sounds.playMoveSuccess();
     } else if (!isTopSolved) {
       setTopAnswer(currentLevel.topWord.word);
     } else if (!isBottomSolved) {
@@ -148,6 +174,15 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     setShowWinModal(false);
   };
 
+  const handleNewPuzzle = () => {
+    setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+  };
+
+  const handleToggleSound = () => {
+    const muted = toggleGlobalPuzzleMute();
+    setIsMuted(muted);
+  };
+
   const rulesContent = (
     <>
       <p>
@@ -161,7 +196,7 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
         <li>
           Connecting the ladder unlocks the mystery <strong className="text-[#fec01f]">Top Word</strong> and <strong className="text-[#fec01f]">Bottom Word</strong>!
         </li>
-        <li>Solve the Top and Bottom words to complete the summit climb!</li>
+        <li>Solve the Top and Bottom words to reach the summit and complete the climb!</li>
       </ul>
     </>
   );
@@ -170,13 +205,16 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     <div className="max-w-xl mx-auto space-y-6">
       <PuzzleHeader
         meta={meta}
-        levelNames={CROSSCLIMB_LEVELS.map((l) => l.name)}
-        currentLevelIndex={levelIndex}
-        onSelectLevel={setLevelIndex}
+        levelNames={CLIMB_DIFFICULTIES}
+        currentLevelIndex={diffIndex}
+        onSelectLevel={setDiffIndex}
         secondsElapsed={secondsElapsed}
         onReset={handleReset}
         onHint={handleHint}
         canHint={!isWon}
+        onNewPuzzle={handleNewPuzzle}
+        isSoundMuted={isMuted}
+        onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
@@ -191,22 +229,22 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
             }
           >
             {isLadderFullyConnected
-              ? "✨ Ladder Locked! Top & Bottom Unlocked"
+              ? "✨ Ladder Complete! Top & Bottom Unlocked"
               : "Arrange words so each differs by 1 letter"}
           </strong>
         </span>
         <span className="text-white/40">
-          Length: {currentLevel.wordLength} Letters
+          {currentLevel.wordLength} Letters per Rung
         </span>
       </div>
 
-      {/* The Ladder Stack */}
-      <div className="space-y-2">
-        {/* TOP WORD (Unlocked when ladder is connected) */}
+      {/* The Cyber Ladder Visual Structure */}
+      <div className="relative px-4 py-2 border-l-2 border-r-2 border-white/10 rounded-2xl bg-[#070720]">
+        {/* TOP WORD (Summit) */}
         <div
           className={`p-3.5 rounded-xl border transition-all ${
             isLadderFullyConnected
-              ? "bg-[#fec01f]/10 border-[#fec01f]/50 shadow-md"
+              ? "bg-[#fec01f]/10 border-[#fec01f]/50 shadow-[0_0_15px_rgba(254,192,31,0.2)] animate-pulse"
               : "bg-white/[0.02] border-white/10 opacity-50 select-none"
           }`}
         >
@@ -227,14 +265,14 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
             disabled={!isLadderFullyConnected}
             value={topAnswer}
             onChange={(e) => setTopAnswer(e.target.value.toUpperCase())}
-            placeholder={isLadderFullyConnected ? "Type word..." : "Locked until ladder is ordered"}
+            placeholder={isLadderFullyConnected ? "Type summit word..." : "Locked until ladder is ordered"}
             maxLength={currentLevel.wordLength}
             className="w-full bg-black/40 border border-white/20 rounded-lg px-3 py-2 font-mono text-center tracking-widest text-base font-bold text-white uppercase outline-none focus:border-[#fec01f]"
           />
         </div>
 
         {/* LADDER RUNGS */}
-        <div className="space-y-1.5 py-1">
+        <div className="space-y-2 py-3">
           {ladder.map((item, index) => {
             const currentVal = answers[item.id] || "";
             const isCorrect = currentVal.toUpperCase() === item.word;
@@ -300,12 +338,12 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
 
                 {/* Ladder bridge connector indicator between adjacent rungs */}
                 {index < ladder.length - 1 && (
-                  <div className="flex items-center justify-center py-0.5">
+                  <div className="flex items-center justify-center py-1">
                     <div
-                      className={`h-4 w-0.5 transition-colors ${
+                      className={`h-5 w-1 rounded-full transition-all ${
                         hasLinkDown
-                          ? "bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]"
-                          : "bg-white/10 border-l border-dashed border-white/20"
+                          ? "bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.9)]"
+                          : "bg-white/15"
                       }`}
                     />
                   </div>
@@ -319,7 +357,7 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
         <div
           className={`p-3.5 rounded-xl border transition-all ${
             isLadderFullyConnected
-              ? "bg-[#fec01f]/10 border-[#fec01f]/50 shadow-md"
+              ? "bg-[#fec01f]/10 border-[#fec01f]/50 shadow-[0_0_15px_rgba(254,192,31,0.2)] animate-pulse"
               : "bg-white/[0.02] border-white/10 opacity-50 select-none"
           }`}
         >
@@ -340,7 +378,7 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
             disabled={!isLadderFullyConnected}
             value={bottomAnswer}
             onChange={(e) => setBottomAnswer(e.target.value.toUpperCase())}
-            placeholder={isLadderFullyConnected ? "Type word..." : "Locked until ladder is ordered"}
+            placeholder={isLadderFullyConnected ? "Type base word..." : "Locked until ladder is ordered"}
             maxLength={currentLevel.wordLength}
             className="w-full bg-black/40 border border-white/20 rounded-lg px-3 py-2 font-mono text-center tracking-widest text-base font-bold text-white uppercase outline-none focus:border-[#fec01f]"
           />
@@ -353,8 +391,10 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
           meta={meta}
           levelName={currentLevel.name}
           secondsElapsed={secondsElapsed}
-          hasNextLevel={levelIndex < CROSSCLIMB_LEVELS.length - 1}
-          onNextLevel={() => setLevelIndex((p) => p + 1)}
+          isNewBestTime={isNewBestTime}
+          currentStreak={currentStreak}
+          hasNextLevel={diffIndex < CLIMB_DIFFICULTIES.length - 1}
+          onNextLevel={() => setDiffIndex((p) => p + 1)}
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}

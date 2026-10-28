@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Crown, X, Sparkles, CheckCircle2, SlidersHorizontal } from "lucide-react";
+import { Crown, X, Sparkles, CheckCircle2, SlidersHorizontal, Check } from "lucide-react";
 import { QueensLevel } from "./puzzleTypes";
-import { QUEENS_LEVELS, PUZZLES_META } from "./puzzleData";
+import { generateQueensLevel } from "@/lib/puzzles/queens-engine";
+import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
+import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
+import { sounds } from "@/lib/audio/sound-effects";
+import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
@@ -18,12 +22,27 @@ const REGION_COLORS = [
   "bg-purple-900/40 text-purple-300 border-purple-500/30",
   "bg-emerald-900/40 text-emerald-300 border-emerald-500/30",
   "bg-orange-900/40 text-orange-300 border-orange-500/30",
+  "bg-blue-900/40 text-blue-300 border-blue-500/30",
+];
+
+const DIFFICULTY_SIZES: Array<{ label: string; size: 6 | 7 | 8 | 9 }> = [
+  { label: "6×6 Easy", size: 6 },
+  { label: "7×7 Medium", size: 7 },
+  { label: "8×8 Hard", size: 8 },
+  { label: "9×9 Expert", size: 9 },
 ];
 
 export default function QueensGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "queens")!;
-  const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel: QueensLevel = QUEENS_LEVELS[levelIndex];
+  const [sizeIndex, setSizeIndex] = useState(0);
+  const currentSize = DIFFICULTY_SIZES[sizeIndex].size;
+
+  // Active level state (Daily seed or random seed)
+  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const [currentLevel, setCurrentLevel] = useState<QueensLevel>(() =>
+    generateQueensLevel(currentSize, getDailyPuzzleSeed())
+  );
+
   const size = currentLevel.size;
 
   // Board state
@@ -34,23 +53,34 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const [mode, setMode] = useState<"queen" | "x">("queen");
   const [autoX, setAutoX] = useState(true);
 
+  // Sound state
+  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+
+  // Drag-to-cross state
+  const isDraggingCrossRef = useRef(false);
+
   // Timer & Stats
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [isWon, setIsWon] = useState(false);
   const [showWinModal, setShowWinModal] = useState(false);
   const [mistakesCount, setMistakesCount] = useState(0);
+  const [isNewBestTime, setIsNewBestTime] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
-  // Reset board on level change
+  // Regenerate level on size change or new puzzle trigger
   useEffect(() => {
-    setGrid(Array.from({ length: currentLevel.size }, () => Array(currentLevel.size).fill("empty")));
+    const level = generateQueensLevel(currentSize, levelSeed);
+    setCurrentLevel(level);
+    setGrid(Array.from({ length: level.size }, () => Array(level.size).fill("empty")));
     setHistory([]);
     setSecondsElapsed(0);
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
     setMistakesCount(0);
-  }, [levelIndex, currentLevel.size]);
+    setIsNewBestTime(false);
+  }, [currentSize, levelSeed]);
 
   // Timer interval
   useEffect(() => {
@@ -91,28 +121,57 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     }
   }
 
+  // Row, Col, and Region satisfaction checks
+  const rowQueens = Array(size).fill(0);
+  const colQueens = Array(size).fill(0);
+  const regQueens = Array(size).fill(0);
+  for (const [r, c] of queenPositions) {
+    rowQueens[r]++;
+    colQueens[c]++;
+    regQueens[currentLevel.regions[r][c]]++;
+  }
+
+  const satisfiedRows = new Set<number>();
+  for (let r = 0; r < size; r++) if (rowQueens[r] === 1) satisfiedRows.add(r);
+  const satisfiedCols = new Set<number>();
+  for (let c = 0; c < size; c++) if (colQueens[c] === 1) satisfiedCols.add(c);
+  const satisfiedRegs = new Set<number>();
+  for (let reg = 0; reg < size; reg++) if (regQueens[reg] === 1) satisfiedRegs.add(reg);
+
   // Check win condition
   useEffect(() => {
     if (queensCount === size && conflictingCells.size === 0 && !isWon) {
-      // Also verify 1 queen per row, col, region
-      const rowCounts = Array(size).fill(0);
-      const colCounts = Array(size).fill(0);
-      const regionCounts = Array(size).fill(0);
-      for (const [r, c] of queenPositions) {
-        rowCounts[r]++;
-        colCounts[c]++;
-        regionCounts[currentLevel.regions[r][c]]++;
-      }
-      const allRows = rowCounts.every((cnt) => cnt === 1);
-      const allCols = colCounts.every((cnt) => cnt === 1);
-      const allRegs = regionCounts.every((cnt) => cnt === 1);
+      const allRows = rowQueens.every((cnt) => cnt === 1);
+      const allCols = colQueens.every((cnt) => cnt === 1);
+      const allRegs = regQueens.every((cnt) => cnt === 1);
 
       if (allRows && allCols && allRegs) {
         setIsWon(true);
         setShowWinModal(true);
+        if (!isMuted) sounds.playVictory();
+
+        // Record win
+        const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+          "queens",
+          currentSize.toString(),
+          secondsElapsed
+        );
+        setIsNewBestTime(isBest);
+        setCurrentStreak(newStreak);
       }
     }
-  }, [queensCount, conflictingCells.size, isWon, size, currentLevel.regions, queenPositions]);
+  }, [
+    queensCount,
+    conflictingCells.size,
+    isWon,
+    size,
+    rowQueens,
+    colQueens,
+    regQueens,
+    currentSize,
+    secondsElapsed,
+    isMuted,
+  ]);
 
   // Cell interaction
   const handleCellClick = (r: number, c: number, overrideAction?: "queen" | "x") => {
@@ -129,8 +188,11 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     if (action === "queen") {
       if (currentMark === "queen") {
         newGrid[r][c] = "empty";
+        if (!isMuted) sounds.playClick();
       } else {
         newGrid[r][c] = "queen";
+        if (!isMuted) sounds.playMoveSuccess();
+
         if (autoX) {
           // Fill row, col, and 8 neighbors with X where empty
           for (let j = 0; j < size; j++) {
@@ -155,6 +217,7 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         newGrid[r][c] = "empty";
       } else {
         newGrid[r][c] = "x";
+        if (!isMuted) sounds.playClick();
       }
     }
 
@@ -164,6 +227,13 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const handleCellRightClick = (e: React.MouseEvent, r: number, c: number) => {
     e.preventDefault();
     handleCellClick(r, c, grid[r][c] === "x" ? "queen" : "x");
+  };
+
+  // Drag-to-cross handler
+  const handleCellMouseEnter = (r: number, c: number) => {
+    if (isDraggingCrossRef.current && grid[r][c] === "empty") {
+      handleCellClick(r, c, "x");
+    }
   };
 
   const handleUndo = () => {
@@ -182,8 +252,11 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     setShowWinModal(false);
   };
 
+  const handleNewPuzzle = () => {
+    setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+  };
+
   const handleHint = () => {
-    // Reveal one correct queen position that is empty
     const sol = currentLevel.solution;
     for (let r = 0; r < size; r++) {
       const c = sol[r];
@@ -195,31 +268,36 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     }
   };
 
+  const handleToggleSound = () => {
+    const muted = toggleGlobalPuzzleMute();
+    setIsMuted(muted);
+  };
+
   // Border classes to separate different colored regions visually
   const getCellBorders = (r: number, c: number) => {
     const reg = currentLevel.regions[r][c];
-    let borderTop = r === 0 || currentLevel.regions[r - 1][c] !== reg ? "border-t-2 border-t-white/50" : "border-t border-t-white/10";
-    let borderBottom = r === size - 1 || currentLevel.regions[r + 1][c] !== reg ? "border-b-2 border-b-white/50" : "border-b border-b-white/10";
-    let borderLeft = c === 0 || currentLevel.regions[r][c - 1] !== reg ? "border-l-2 border-l-white/50" : "border-l border-l-white/10";
-    let borderRight = c === size - 1 || currentLevel.regions[r][c + 1] !== reg ? "border-r-2 border-r-white/50" : "border-r border-r-white/10";
+    const borderTop = r === 0 || currentLevel.regions[r - 1][c] !== reg ? "border-t-2 border-t-white/60" : "border-t border-t-white/10";
+    const borderBottom = r === size - 1 || currentLevel.regions[r + 1][c] !== reg ? "border-b-2 border-b-white/60" : "border-b border-b-white/10";
+    const borderLeft = c === 0 || currentLevel.regions[r][c - 1] !== reg ? "border-l-2 border-l-white/60" : "border-l border-l-white/10";
+    const borderRight = c === size - 1 || currentLevel.regions[r][c + 1] !== reg ? "border-r-2 border-r-white/60" : "border-r border-r-white/10";
     return `${borderTop} ${borderBottom} ${borderLeft} ${borderRight}`;
   };
 
   const rulesContent = (
     <>
       <p>
-        <strong>Queens</strong> is LinkedIn&apos;s standout daily logic puzzle. The goal is to place crowns 👑 on the board such that every single rule is satisfied:
+        <strong>Queens</strong> is LinkedIn&apos;s flagship daily logic puzzle. The goal is to place crowns 👑 on the board such that every single rule is satisfied:
       </p>
       <ul className="list-disc pl-5 space-y-1.5 text-white/70">
         <li>Exactly <strong>1 Queen</strong> in every row.</li>
         <li>Exactly <strong>1 Queen</strong> in every column.</li>
         <li>Exactly <strong>1 Queen</strong> in each colored territory/region.</li>
         <li>
-          <strong className="text-[#fec01f]">No Touching:</strong> Queens cannot touch horizontally, vertically, or diagonally (no two queens can occupy adjacent cells).
+          <strong className="text-[#fec01f]">No Touching:</strong> Queens cannot touch horizontally, vertically, or diagonally (no two queens can occupy adjacent squares).
         </li>
       </ul>
       <p className="text-xs text-white/60">
-        💡 <strong>Tip:</strong> Toggle to ❌ mode or right-click to cross out cells that cannot hold a Queen. Use the Auto-X switch to automatically mark invalid rows and diagonals!
+        💡 <strong>Pro-Tip:</strong> Drag across squares in ❌ mode to cross them out in one smooth sweep! Turn on Auto-X to automatically cross out invalid squares when you place a Queen.
       </p>
     </>
   );
@@ -228,9 +306,9 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     <div className="max-w-2xl mx-auto space-y-6">
       <PuzzleHeader
         meta={meta}
-        levelNames={QUEENS_LEVELS.map((l) => l.name)}
-        currentLevelIndex={levelIndex}
-        onSelectLevel={setLevelIndex}
+        levelNames={DIFFICULTY_SIZES.map((d) => d.label)}
+        currentLevelIndex={sizeIndex}
+        onSelectLevel={setSizeIndex}
         secondsElapsed={secondsElapsed}
         movesCount={queensCount}
         mistakesCount={conflictingCells.size > 0 ? conflictingCells.size : undefined}
@@ -239,6 +317,9 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         onReset={handleReset}
         onHint={handleHint}
         canHint={!isWon}
+        onNewPuzzle={handleNewPuzzle}
+        isSoundMuted={isMuted}
+        onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
@@ -273,10 +354,13 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
 
         {/* Progress & Auto-X Toggle */}
         <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-1 text-white/80">
+          <div className="flex items-center gap-1.5 text-white/80">
             <span className="text-white/40">Queens:</span>
             <span className="text-[#fec01f] font-bold">{queensCount}</span>
             <span className="text-white/40">/ {size}</span>
+            {queensCount === size && conflictingCells.size === 0 && (
+              <Check size={14} className="text-teal-400" />
+            )}
           </div>
 
           <label className="flex items-center gap-1.5 text-white/60 cursor-pointer select-none hover:text-white">
@@ -292,9 +376,20 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
       </div>
 
       {/* Queens Board */}
-      <div className="flex justify-center py-2">
+      <div
+        className="flex justify-center py-2"
+        onMouseDown={() => {
+          if (mode === "x") isDraggingCrossRef.current = true;
+        }}
+        onMouseUp={() => {
+          isDraggingCrossRef.current = false;
+        }}
+        onMouseLeave={() => {
+          isDraggingCrossRef.current = false;
+        }}
+      >
         <div
-          className="inline-grid select-none rounded-xl p-2 bg-[#080820] border-2 border-white/20 shadow-2xl overflow-hidden"
+          className="inline-grid select-none rounded-2xl p-2.5 bg-[#070720] border-2 border-white/20 shadow-2xl overflow-hidden"
           style={{
             gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
           }}
@@ -306,31 +401,47 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
               const isConflict = conflictingCells.has(`${r},${c}`);
               const borderStyles = getCellBorders(r, c);
 
+              const isRowSatisfied = satisfiedRows.has(r) && !conflictingCells.has(`${r},${c}`);
+              const isColSatisfied = satisfiedCols.has(c) && !conflictingCells.has(`${r},${c}`);
+              const isRegSatisfied = satisfiedRegs.has(regId) && !conflictingCells.has(`${r},${c}`);
+
+              const cellSizeClass =
+                size <= 6
+                  ? "w-12 h-12 sm:w-16 sm:h-16"
+                  : size === 7
+                  ? "w-11 h-11 sm:w-14 sm:h-14"
+                  : size === 8
+                  ? "w-10 h-10 sm:w-12 sm:h-12"
+                  : "w-9 h-9 sm:w-11 sm:h-11";
+
               return (
                 <button
                   key={`${r}-${c}`}
                   onClick={() => handleCellClick(r, c)}
+                  onMouseEnter={() => handleCellMouseEnter(r, c)}
                   onContextMenu={(e) => handleCellRightClick(e, r, c)}
-                  className={`relative w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center transition-all ${colorClass} ${borderStyles} ${
+                  className={`relative ${cellSizeClass} flex items-center justify-center transition-all ${colorClass} ${borderStyles} ${
                     isConflict
-                      ? "ring-2 ring-rose-500 ring-inset bg-rose-950/60 animate-pulse"
+                      ? "ring-2 ring-rose-500 ring-inset bg-rose-950/60 animate-pulse z-10"
+                      : isRowSatisfied && isColSatisfied && isRegSatisfied
+                      ? "brightness-105"
                       : "hover:brightness-125"
                   }`}
                   aria-label={`Row ${r + 1}, Column ${c + 1}`}
                 >
                   {cell === "queen" && (
                     <Crown
-                      size={24}
+                      size={size >= 8 ? 20 : 26}
                       className={`transition-transform duration-150 scale-100 ${
                         isConflict
                           ? "text-rose-400 fill-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]"
-                          : "text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_8px_rgba(254,192,31,0.6)]"
+                          : "text-[#fec01f] fill-[#fec01f] drop-shadow-[0_0_10px_rgba(254,192,31,0.7)] animate-scaleIn"
                       }`}
                     />
                   )}
                   {cell === "x" && (
                     <X
-                      size={18}
+                      size={size >= 8 ? 14 : 18}
                       className="text-white/35 hover:text-white/60 transition-colors"
                     />
                   )}
@@ -341,11 +452,11 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         </div>
       </div>
 
-      {/* Helpful Instructions footer */}
+      {/* Instructions footer */}
       <div className="flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-white/50 px-2 gap-2 text-center sm:text-left">
-        <span>Click to toggle cell · Right-click or 2nd mode for ❌</span>
+        <span>Click to toggle cell · Drag across in ❌ mode to sweep</span>
         {conflictingCells.size > 0 && (
-          <span className="text-rose-400 font-bold">
+          <span className="text-rose-400 font-bold animate-pulse">
             ⚠️ Queens are conflicting or touching!
           </span>
         )}
@@ -359,8 +470,10 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
           secondsElapsed={secondsElapsed}
           movesCount={queensCount}
           mistakesCount={mistakesCount}
-          hasNextLevel={levelIndex < QUEENS_LEVELS.length - 1}
-          onNextLevel={() => setLevelIndex((prev) => prev + 1)}
+          isNewBestTime={isNewBestTime}
+          currentStreak={currentStreak}
+          hasNextLevel={sizeIndex < DIFFICULTY_SIZES.length - 1}
+          onNextLevel={() => setSizeIndex((prev) => prev + 1)}
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}

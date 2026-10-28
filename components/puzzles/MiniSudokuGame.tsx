@@ -1,22 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit3, Eraser, AlertTriangle, Check } from "lucide-react";
+import { Edit3, Eraser, AlertTriangle, Check, Sparkles, SlidersHorizontal } from "lucide-react";
 import { MiniSudokuLevel } from "./puzzleTypes";
 import { MINI_SUDOKU_LEVELS, PUZZLES_META } from "./puzzleData";
+import { generateMiniSudokuLevel } from "@/lib/puzzles/mini-sudoku-engine";
+import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
+import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
+import { sounds } from "@/lib/audio/sound-effects";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
+type Difficulty = "Easy" | "Medium" | "Hard";
+const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
+
 export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "mini-sudoku")!;
-  const [levelIndex, setLevelIndex] = useState(0);
-  const currentLevel: MiniSudokuLevel = MINI_SUDOKU_LEVELS[levelIndex];
+
+  const [difficulty, setDifficulty] = useState<Difficulty>("Easy");
+  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const [useProcedural, setUseProcedural] = useState(true);
+  const [presetIndex, setPresetIndex] = useState(0);
+
+  // Active level calculation
+  const [currentLevel, setCurrentLevel] = useState<MiniSudokuLevel>(() =>
+    generateMiniSudokuLevel("Easy", getDailyPuzzleSeed())
+  );
 
   // Grid of 6x6 numbers: 0 for empty
   const [grid, setGrid] = useState<number[][]>(() =>
     currentLevel.givens.map((r) => [...r])
   );
-  // Notes / pencil marks: [r][c] is set of candidate numbers
+  // Notes / pencil marks: [r][c] is array of candidate numbers
   const [notes, setNotes] = useState<Record<string, number[]>>({});
   const [notesMode, setNotesMode] = useState(false);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>([0, 0]);
@@ -28,10 +43,17 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
   const [isWon, setIsWon] = useState(false);
   const [showWinModal, setShowWinModal] = useState(false);
   const [mistakesCount, setMistakesCount] = useState(0);
+  const [isNewBestTime, setIsNewBestTime] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
-  // Reset on level change
-  useEffect(() => {
-    setGrid(currentLevel.givens.map((r) => [...r]));
+  // Audio mute state
+  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+
+  // Regeneration helper
+  const loadNewLevel = (diff: Difficulty, seed: number) => {
+    const lvl = generateMiniSudokuLevel(diff, seed);
+    setCurrentLevel(lvl);
+    setGrid(lvl.givens.map((r) => [...r]));
     setNotes({});
     setSelectedCell([0, 0]);
     setHighlightNum(null);
@@ -41,7 +63,37 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
     setIsWon(false);
     setShowWinModal(false);
     setMistakesCount(0);
-  }, [levelIndex, currentLevel]);
+  };
+
+  const handleDifficultyChange = (diff: Difficulty) => {
+    setDifficulty(diff);
+    setUseProcedural(true);
+    const newSeed = Date.now();
+    setLevelSeed(newSeed);
+    loadNewLevel(diff, newSeed);
+    if (!isMuted) sounds.playClick();
+  };
+
+  const handleRandomPuzzle = () => {
+    setUseProcedural(true);
+    const newSeed = Date.now();
+    setLevelSeed(newSeed);
+    loadNewLevel(difficulty, newSeed);
+    if (!isMuted) sounds.playClick();
+  };
+
+  const handleDailyPuzzle = () => {
+    setUseProcedural(true);
+    const seed = getDailyPuzzleSeed();
+    setLevelSeed(seed);
+    loadNewLevel(difficulty, seed);
+    if (!isMuted) sounds.playClick();
+  };
+
+  const handleToggleMute = () => {
+    const next = toggleGlobalPuzzleMute();
+    setIsMuted(next);
+  };
 
   // Timer
   useEffect(() => {
@@ -103,6 +155,17 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
     }
   }
 
+  // Count placed occurrences per digit (1 to 6)
+  const digitCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 6; c++) {
+      const v = grid[r][c];
+      if (v >= 1 && v <= 6) {
+        digitCounts[v]++;
+      }
+    }
+  }
+
   // Check win condition
   useEffect(() => {
     let filled = true;
@@ -121,15 +184,23 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
       if (matches) {
         setIsWon(true);
         setShowWinModal(true);
+        const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+          "mini-sudoku",
+          difficulty,
+          secondsElapsed
+        );
+        setIsNewBestTime(isBest);
+        setCurrentStreak(newStreak);
+        if (!isMuted) sounds.playVictory();
       }
     }
-  }, [grid, conflicts.size, isWon, currentLevel.solution]);
+  }, [grid, conflicts.size, isWon, currentLevel.solution, secondsElapsed, difficulty, isMuted]);
 
   // Handle number input
   const inputNumber = (num: number) => {
     if (isWon || !selectedCell) return;
     const [r, c] = selectedCell;
-    if (currentLevel.givens[r][c] !== 0) return; // locked
+    if (currentLevel.givens[r][c] !== 0) return; // locked cell
 
     if (!hasStarted) setHasStarted(true);
 
@@ -140,6 +211,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         ? curNotes.filter((n) => n !== num)
         : [...curNotes, num].sort();
       setNotes((prev) => ({ ...prev, [key]: updatedNotes }));
+      if (!isMuted) sounds.playClick();
     } else {
       setHistory((prev) => [...prev, grid.map((row) => [...row])]);
       const newGrid = grid.map((row) => [...row]);
@@ -147,9 +219,11 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
       setGrid(newGrid);
       setHighlightNum(num);
 
-      // Check if wrong against solution
       if (num !== currentLevel.solution[r][c]) {
         setMistakesCount((prev) => prev + 1);
+        if (!isMuted) sounds.playMistake();
+      } else {
+        if (!isMuted) sounds.playMoveSuccess();
       }
     }
   };
@@ -167,23 +241,35 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
       newGrid[r][c] = 0;
       setGrid(newGrid);
     }
+    if (!isMuted) sounds.playClick();
   };
 
-  // Keyboard support
+  // Keyboard navigation & input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedCell) return;
+      // Ignore if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
       if (e.key >= "1" && e.key <= "6") {
         inputNumber(parseInt(e.key, 10));
-      } else if (e.key === "Backspace" || e.key === "Delete") {
+      } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
         handleErase();
+      } else if (e.key === "n" || e.key === "N") {
+        setNotesMode((prev) => !prev);
+      } else if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleUndo();
       } else if (e.key === "ArrowUp") {
+        e.preventDefault();
         setSelectedCell((prev) => (prev ? [Math.max(0, prev[0] - 1), prev[1]] : [0, 0]));
       } else if (e.key === "ArrowDown") {
+        e.preventDefault();
         setSelectedCell((prev) => (prev ? [Math.min(5, prev[0] + 1), prev[1]] : [0, 0]));
       } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
         setSelectedCell((prev) => (prev ? [prev[0], Math.max(0, prev[1] - 1)] : [0, 0]));
       } else if (e.key === "ArrowRight") {
+        e.preventDefault();
         setSelectedCell((prev) => (prev ? [prev[0], Math.min(5, prev[1] + 1)] : [0, 0]));
       }
     };
@@ -196,6 +282,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
     const prev = history[history.length - 1];
     setGrid(prev);
     setHistory((h) => h.slice(0, -1));
+    if (!isMuted) sounds.playUndo();
   };
 
   const handleReset = () => {
@@ -207,13 +294,14 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
     setIsWon(false);
     setShowWinModal(false);
     setMistakesCount(0);
+    if (!isMuted) sounds.playClick();
   };
 
   const handleHint = () => {
-    // Fill selected cell or first empty cell with solution
     const [sr, sc] = selectedCell || [0, 0];
     if (grid[sr][sc] === 0) {
       inputNumber(currentLevel.solution[sr][sc]);
+      if (!isMuted) sounds.playHint();
       return;
     }
     for (let r = 0; r < 6; r++) {
@@ -224,6 +312,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
           newGrid[r][c] = currentLevel.solution[r][c];
           setGrid(newGrid);
           setMistakesCount((prev) => prev + 1);
+          if (!isMuted) sounds.playHint();
           return;
         }
       }
@@ -236,24 +325,24 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         <strong>Mini Sudoku</strong> is LinkedIn&apos;s fast 6x6 number grid puzzle:
       </p>
       <ul className="list-disc pl-5 space-y-1.5 text-white/70">
-        <li>Fill the grid with numbers <strong>1 through 6</strong>.</li>
+        <li>Fill every empty cell with digits <strong>1 through 6</strong>.</li>
         <li>Every row must contain digits 1-6 with no repeats.</li>
         <li>Every column must contain digits 1-6 with no repeats.</li>
-        <li>Each outlined <strong>2x3 block</strong> (2 rows by 3 columns) must contain 1-6.</li>
+        <li>Each outlined <strong>2x3 block</strong> (2 rows by 3 columns) must contain digits 1-6.</li>
       </ul>
       <p className="text-xs text-white/60">
-        💡 <strong>Tip:</strong> Toggle Notes mode 📝 to jot down potential candidates. You can also use your physical keyboard keys (1-6) and arrow keys!
+        💡 <strong>Pro-Tip:</strong> Toggle Notes mode (or press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[#00f0ff]">N</kbd>) to jot down candidates. Arrow keys navigate cells, and number keys (1-6) enter values.
       </p>
     </>
   );
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-5">
       <PuzzleHeader
         meta={meta}
-        levelNames={MINI_SUDOKU_LEVELS.map((l) => l.name)}
-        currentLevelIndex={levelIndex}
-        onSelectLevel={setLevelIndex}
+        levelNames={DIFFICULTIES.map((d) => `Difficulty: ${d}`)}
+        currentLevelIndex={DIFFICULTIES.indexOf(difficulty)}
+        onSelectLevel={(idx) => handleDifficultyChange(DIFFICULTIES[idx])}
         secondsElapsed={secondsElapsed}
         mistakesCount={mistakesCount}
         onUndo={handleUndo}
@@ -263,12 +352,55 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         canHint={!isWon}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        isSoundMuted={isMuted}
+        onToggleSound={handleToggleMute}
+        onNewPuzzle={handleRandomPuzzle}
       />
 
+      {/* Difficulty & Generator Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-mono">
+        <div className="flex items-center gap-1.5">
+          <SlidersHorizontal size={14} className="text-[#00f0ff]" />
+          <span className="text-white/60 font-semibold uppercase tracking-wider">Difficulty:</span>
+        </div>
+        <div className="flex items-center gap-1 bg-[#06061f] p-1 rounded-lg border border-white/10">
+          {DIFFICULTIES.map((diff) => (
+            <button
+              key={diff}
+              onClick={() => handleDifficultyChange(diff)}
+              className={`px-3 py-1 rounded-md transition-all text-xs font-bold ${
+                difficulty === diff
+                  ? "bg-[#fec01f] text-black shadow-sm"
+                  : "text-white/70 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {diff}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleDailyPuzzle}
+            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors text-[11px]"
+            title="Load today's synchronized daily Mini Sudoku seed"
+          >
+            📅 Daily
+          </button>
+          <button
+            onClick={handleRandomPuzzle}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 transition-colors text-[11px] font-bold"
+            title="Generate a brand new unique Mini Sudoku level"
+          >
+            <Sparkles size={11} />
+            <span>Shuffle</span>
+          </button>
+        </div>
+      </div>
+
       {/* Mini Sudoku Grid */}
-      <div className="flex justify-center py-2">
-        <div className="p-3 rounded-2xl bg-[#080820] border-2 border-white/20 shadow-2xl">
-          <div className="grid grid-cols-6 border border-white/20 bg-white/5 rounded-xl overflow-hidden">
+      <div className="flex justify-center py-1">
+        <div className="p-3 sm:p-4 rounded-2xl bg-[#080820] border-2 border-white/20 shadow-2xl relative">
+          <div className="grid grid-cols-6 border-2 border-white/30 bg-[#06061f] rounded-xl overflow-hidden shadow-inner">
             {grid.map((row, r) =>
               row.map((val, c) => {
                 const isGiven = currentLevel.givens[r][c] !== 0;
@@ -277,9 +409,24 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
                 const isSameNum = highlightNum !== null && val === highlightNum && val !== 0;
                 const cellNotes = notes[`${r},${c}`] || [];
 
+                // Crosshair check (same row, col, or 2x3 block)
+                const inSameRow = selectedCell?.[0] === r;
+                const inSameCol = selectedCell?.[1] === c;
+                const inSameBlock =
+                  selectedCell !== null &&
+                  Math.floor(selectedCell[0] / 2) === Math.floor(r / 2) &&
+                  Math.floor(selectedCell[1] / 3) === Math.floor(c / 3);
+                const isInCrosshair = !isSelected && (inSameRow || inSameCol || inSameBlock);
+
                 // 2x3 block borders
-                const borderBottom = (r + 1) % 2 === 0 && r !== 5 ? "border-b-2 border-b-white/50" : "border-b border-b-white/10";
-                const borderRight = (c + 1) % 3 === 0 && c !== 5 ? "border-r-2 border-r-white/50" : "border-r border-r-white/10";
+                const borderBottom =
+                  (r + 1) % 2 === 0 && r !== 5
+                    ? "border-b-2 border-b-white/50"
+                    : "border-b border-b-white/10";
+                const borderRight =
+                  (c + 1) % 3 === 0 && c !== 5
+                    ? "border-r-2 border-r-white/50"
+                    : "border-r border-r-white/10";
 
                 return (
                   <button
@@ -287,28 +434,42 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
                     onClick={() => {
                       setSelectedCell([r, c]);
                       if (val !== 0) setHighlightNum(val);
+                      if (!isMuted) sounds.playClick();
                     }}
                     className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center font-mono font-bold text-lg sm:text-xl transition-all relative ${borderBottom} ${borderRight} ${
                       isSelected
-                        ? "bg-[#fec01f]/25 ring-2 ring-[#fec01f] ring-inset"
+                        ? "bg-[#fec01f]/25 ring-2 ring-[#fec01f] ring-inset z-10"
+                        : isConflict
+                        ? "bg-rose-950/70 text-rose-300 ring-2 ring-rose-500 animate-pulse"
                         : isSameNum
-                        ? "bg-teal-500/20 text-[#fec01f]"
+                        ? "bg-[#00f0ff]/20 text-[#00f0ff] ring-1 ring-[#00f0ff]/40"
+                        : isInCrosshair
+                        ? "bg-white/[0.04]"
                         : "hover:bg-white/[0.08]"
                     } ${
-                      isConflict
-                        ? "bg-rose-950/60 text-rose-300 ring-1 ring-rose-500"
-                        : isGiven
+                      isGiven
                         ? "text-white font-extrabold"
-                        : "text-[#fec01f] font-semibold"
+                        : val !== 0
+                        ? "text-[#fec01f] font-semibold"
+                        : "text-white/40"
                     }`}
                   >
                     {val !== 0 ? (
                       val
                     ) : (
                       // Render notes inside empty cell
-                      <div className="grid grid-cols-3 gap-0.5 text-[8px] sm:text-[9px] text-white/50 leading-none pointer-events-none p-1">
+                      <div className="grid grid-cols-3 gap-0.5 text-[8px] sm:text-[9px] text-white/50 leading-none pointer-events-none p-0.5 w-full h-full place-items-center">
                         {[1, 2, 3, 4, 5, 6].map((num) => (
-                          <span key={num} className="w-2.5 h-2.5 text-center">
+                          <span
+                            key={num}
+                            className={`w-3 h-3 flex items-center justify-center rounded-sm ${
+                              cellNotes.includes(num)
+                                ? highlightNum === num
+                                  ? "text-[#00f0ff] font-bold bg-[#00f0ff]/20"
+                                  : "text-white/80 font-medium"
+                                : ""
+                            }`}
+                          >
                             {cellNotes.includes(num) ? num : ""}
                           </span>
                         ))}
@@ -324,32 +485,54 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
 
       {/* Conflict banner */}
       {conflicts.size > 0 && (
-        <div className="flex items-center justify-center gap-2 text-rose-300 font-mono text-xs">
-          <AlertTriangle size={13} />
-          <span>Duplicate number found in row, column, or 2x3 block!</span>
+        <div className="flex items-center justify-center gap-2 text-rose-300 font-mono text-xs bg-rose-950/30 border border-rose-800/40 py-2 px-3 rounded-lg">
+          <AlertTriangle size={14} className="shrink-0 text-rose-400" />
+          <span>Duplicate detected in row, column, or 2×3 partition!</span>
         </div>
       )}
 
       {/* Keypad & Controls */}
       <div className="space-y-3">
-        <div className="flex items-center justify-center gap-2">
-          {[1, 2, 3, 4, 5, 6].map((num) => (
-            <button
-              key={num}
-              onClick={() => inputNumber(num)}
-              className="w-11 h-12 sm:w-14 sm:h-14 rounded-xl bg-white/[0.06] hover:bg-[#fec01f] hover:text-black border border-white/15 hover:border-[#fec01f] font-mono font-bold text-lg sm:text-xl transition-all shadow-md active:scale-95"
-            >
-              {num}
-            </button>
-          ))}
+        {/* Digits 1-6 with occurrence count badges */}
+        <div className="grid grid-cols-6 gap-2">
+          {[1, 2, 3, 4, 5, 6].map((num) => {
+            const count = digitCounts[num] || 0;
+            const remaining = Math.max(0, 6 - count);
+            const isComplete = remaining === 0;
+
+            return (
+              <button
+                key={num}
+                onClick={() => inputNumber(num)}
+                className={`relative h-14 rounded-xl border font-mono font-bold text-lg sm:text-xl transition-all shadow-md active:scale-95 flex flex-col items-center justify-center ${
+                  isComplete
+                    ? "bg-white/[0.03] border-emerald-500/30 text-emerald-400/80 hover:bg-emerald-500/10"
+                    : "bg-white/[0.06] hover:bg-[#fec01f] hover:text-black border-white/15 hover:border-[#fec01f] text-white"
+                }`}
+              >
+                <span>{num}</span>
+                <span className="text-[9px] font-mono -mt-0.5">
+                  {isComplete ? (
+                    <Check size={10} className="inline text-emerald-400 stroke-[3]" />
+                  ) : (
+                    <span className="text-white/40">{remaining} left</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
+        {/* Action Toggles: Notes & Erase */}
         <div className="flex items-center justify-center gap-3">
           <button
-            onClick={() => setNotesMode(!notesMode)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider transition-colors border ${
+            onClick={() => {
+              setNotesMode(!notesMode);
+              if (!isMuted) sounds.playClick();
+            }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider transition-all border ${
               notesMode
-                ? "bg-[#fec01f] text-black font-bold border-[#fec01f]"
+                ? "bg-[#fec01f] text-black font-bold border-[#fec01f] shadow-md shadow-[#fec01f]/20"
                 : "bg-white/5 hover:bg-white/10 text-white/70 border-white/15"
             }`}
           >
@@ -359,7 +542,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
 
           <button
             onClick={handleErase}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider bg-white/5 hover:bg-white/10 text-white/70 border border-white/15 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider bg-white/5 hover:bg-white/10 text-white/70 border border-white/15 transition-colors"
           >
             <Eraser size={14} />
             <span>Erase</span>
@@ -374,11 +557,14 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
           levelName={currentLevel.name}
           secondsElapsed={secondsElapsed}
           mistakesCount={mistakesCount}
-          hasNextLevel={levelIndex < MINI_SUDOKU_LEVELS.length - 1}
-          onNextLevel={() => setLevelIndex((p) => p + 1)}
+          hasNextLevel={true}
+          onNextLevel={() => handleRandomPuzzle()}
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          isNewBestTime={isNewBestTime}
+          currentStreak={currentStreak}
+          educationalFact="Mini Sudoku demonstrates deterministic state machine verification and constraint propagation—analogous to how double-entry distributed ledgers validate that debits and credits balance across all account partitions without contradiction."
         />
       )}
     </div>

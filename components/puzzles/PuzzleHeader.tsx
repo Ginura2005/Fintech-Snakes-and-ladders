@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, RotateCcw, Undo2, Lightbulb, HelpCircle, Clock, Award } from "lucide-react";
+import {
+  ArrowLeft,
+  RotateCcw,
+  Undo2,
+  Lightbulb,
+  HelpCircle,
+  Clock,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Shuffle,
+} from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
 
 interface PuzzleHeaderProps {
@@ -17,6 +28,9 @@ interface PuzzleHeaderProps {
   onReset: () => void;
   onHint?: () => void;
   canHint?: boolean;
+  onNewPuzzle?: () => void;
+  isSoundMuted?: boolean;
+  onToggleSound?: () => void;
   onBackToHub: () => void;
   rulesContent: React.ReactNode;
 }
@@ -34,6 +48,9 @@ export default function PuzzleHeader({
   onReset,
   onHint,
   canHint = true,
+  onNewPuzzle,
+  isSoundMuted = false,
+  onToggleSound,
   onBackToHub,
   rulesContent,
 }: PuzzleHeaderProps) {
@@ -77,7 +94,7 @@ export default function PuzzleHeader({
         </div>
 
         {/* Stats & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Timer */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 font-mono text-xs text-[#fec01f]">
             <Clock size={13} className="opacity-80" />
@@ -97,6 +114,21 @@ export default function PuzzleHeader({
               <span className="text-white/50">Mistakes:</span>
               <span>{mistakesCount}</span>
             </div>
+          )}
+
+          {/* Sound Toggle */}
+          {onToggleSound && (
+            <button
+              onClick={onToggleSound}
+              title={isSoundMuted ? "Unmute audio" : "Mute audio"}
+              className="p-2 rounded-lg border border-white/10 bg-white/5 text-white/70 hover:text-white hover:border-[#fec01f]/40 transition-colors"
+            >
+              {isSoundMuted ? (
+                <VolumeX size={15} />
+              ) : (
+                <Volume2 size={15} className="text-[#fec01f]" />
+              )}
+            </button>
           )}
 
           {/* Undo Button */}
@@ -123,10 +155,22 @@ export default function PuzzleHeader({
             </button>
           )}
 
+          {/* New Random Puzzle Button */}
+          {onNewPuzzle && (
+            <button
+              onClick={onNewPuzzle}
+              title="Generate fresh procedural puzzle"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-teal-500/30 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 font-mono text-xs uppercase tracking-wider transition-colors"
+            >
+              <Shuffle size={13} />
+              <span className="hidden sm:inline">New</span>
+            </button>
+          )}
+
           {/* Reset Button */}
           <button
             onClick={onReset}
-            title="Restart current level"
+            title="Restart current puzzle"
             className="p-2 rounded-lg border border-white/10 bg-white/5 text-white/70 hover:text-rose-400 hover:border-rose-400/40 transition-colors"
           >
             <RotateCcw size={15} />
@@ -148,7 +192,7 @@ export default function PuzzleHeader({
       {levelNames.length > 1 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           <span className="text-xs font-mono uppercase tracking-wider text-white/40 shrink-0">
-            Level:
+            Mode / Difficulty:
           </span>
           {levelNames.map((name, i) => (
             <button

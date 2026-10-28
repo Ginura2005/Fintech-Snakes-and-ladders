@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Sparkles, Award } from "lucide-react";
+import { Shield, Sparkles, Award, Gem } from "lucide-react";
 
 interface TreasureOverlayProps {
   points: number;
@@ -12,8 +12,8 @@ export default function TreasureOverlay({ points, shieldAwarded, onClose }: Trea
   return (
     <div className="fixed inset-0 z-50 bg-[#06061f]/85 backdrop-blur-md flex items-center justify-center p-4 animate-slide-up">
       <div className="festival-panel max-w-sm w-full p-8 text-center bg-[#0a0a28]/95 border-2 border-orange-500/50 shadow-[0_0_50px_rgba(245,114,34,0.3)]">
-        <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/30 border border-orange-400/40 flex items-center justify-center text-4xl shadow-inner animate-float-gentle">
-          💰
+        <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-600/30 border border-orange-400/40 flex items-center justify-center shadow-inner animate-float-gentle text-orange-400">
+          <Gem size={38} className="text-[#fec01f] drop-shadow-[0_0_12px_rgba(254,192,31,0.6)]" />
         </div>
 
         <span className="section-badge section-badge-primary text-[10px] mb-3">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Share2, Check, ArrowRight, RotateCcw, Grid } from "lucide-react";
+import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Sparkles } from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
 
 interface PuzzleWinModalProps {
@@ -10,6 +10,9 @@ interface PuzzleWinModalProps {
   secondsElapsed: number;
   movesCount?: number;
   mistakesCount?: number;
+  isNewBestTime?: boolean;
+  currentStreak?: number;
+  educationalFact?: string;
   hasNextLevel: boolean;
   onNextLevel?: () => void;
   onReplay: () => void;
@@ -23,6 +26,9 @@ export default function PuzzleWinModal({
   secondsElapsed,
   movesCount,
   mistakesCount,
+  isNewBestTime = false,
+  currentStreak,
+  educationalFact,
   hasNextLevel,
   onNextLevel,
   onReplay,
@@ -65,12 +71,12 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="festival-panel max-w-md w-full p-6 sm:p-8 space-y-6 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative overflow-hidden">
+      <div className="festival-panel max-w-md w-full p-6 sm:p-8 space-y-5 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative overflow-hidden">
         {/* Glow decoration */}
         <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#fec01f]/15 rounded-full blur-3xl" />
 
         {/* Big Icon */}
-        <div className="relative mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-4xl shadow-inner animate-bounce">
+        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-3xl sm:text-4xl shadow-inner animate-bounce">
           {meta.icon}
         </div>
 
@@ -85,6 +91,20 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
           <p className="text-xs font-mono uppercase tracking-wider text-white/60">
             {meta.title} · {levelName}
           </p>
+        </div>
+
+        {/* Badges for New Best Time & Streak */}
+        <div className="flex items-center justify-center gap-2">
+          {isNewBestTime && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-[#fec01f]/20 border border-[#fec01f] text-[#fec01f] animate-pulse">
+              <Trophy size={13} /> New Best Time!
+            </span>
+          )}
+          {typeof currentStreak === "number" && currentStreak > 0 && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-rose-500/20 border border-rose-500 text-rose-300">
+              <Flame size={13} /> {currentStreak} Day Streak
+            </span>
+          )}
         </div>
 
         {/* Metrics Grid */}
@@ -117,6 +137,19 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
           </div>
         </div>
 
+        {/* Educational Fact / Takeaway Card if available */}
+        {educationalFact && (
+          <div className="p-3.5 rounded-xl bg-teal-950/30 border border-teal-500/30 text-left space-y-1">
+            <div className="flex items-center gap-1.5 text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
+              <Sparkles size={12} />
+              <span>FinTech Intelligence Takeaway</span>
+            </div>
+            <p className="text-xs text-white/80 leading-relaxed">
+              {educationalFact}
+            </p>
+          </div>
+        )}
+
         {/* LinkedIn-style Share Preview */}
         <div className="text-left p-3 rounded-lg bg-black/40 border border-white/10 font-mono text-xs text-white/70 space-y-1">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-white/40 pb-1 border-b border-white/5">
@@ -144,7 +177,7 @@ Play LinkedIn-style puzzles at fintechfestival.lk/puzzles`;
                 onClick={onNextLevel}
                 className="interactive-btn interactive-btn--outline text-xs uppercase tracking-wider py-2.5 flex items-center justify-center gap-1.5"
               >
-                <span>Next Level</span>
+                <span>Next Puzzle</span>
                 <ArrowRight size={14} />
               </button>
             ) : (

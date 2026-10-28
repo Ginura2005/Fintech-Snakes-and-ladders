@@ -1,16 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, HelpCircle, Send, CheckCircle, XCircle, Sparkles } from "lucide-react";
-import { PinpointPack } from "./puzzleTypes";
-import { PINPOINT_PACKS, PUZZLES_META } from "./puzzleData";
+import { Eye, HelpCircle, Send, CheckCircle, XCircle, Sparkles, Lightbulb, Volume2, VolumeX, Shuffle } from "lucide-react";
+import {
+  PINPOINT_KNOWLEDGE_BASE,
+  PinpointExpandedPack,
+  checkPinpointMatch,
+  getDailyPinpointPack,
+  getRandomPinpointPack,
+  getPinpointHint,
+} from "@/lib/puzzles/pinpoint-engine";
+import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
+import { sounds } from "@/lib/audio/sound-effects";
+import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
 export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void }) {
   const meta = PUZZLES_META.find((p) => p.id === "pinpoint")!;
   const [packIndex, setPackIndex] = useState(0);
-  const currentPack: PinpointPack = PINPOINT_PACKS[packIndex];
+  const currentPack: PinpointExpandedPack = PINPOINT_KNOWLEDGE_BASE[packIndex];
 
   // Game state
   const [revealedCount, setRevealedCount] = useState(1);
@@ -21,6 +30,11 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [errorShake, setErrorShake] = useState(false);
+  const [hintShown, setHintShown] = useState(false);
+
+  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [isNewBestTime, setIsNewBestTime] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
 
   // Reset on pack change
   useEffect(() => {
@@ -31,6 +45,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     setShowWinModal(false);
     setSecondsElapsed(0);
     setHasStarted(false);
+    setHintShown(false);
+    setIsNewBestTime(false);
   }, [packIndex]);
 
   // Timer
@@ -42,22 +58,6 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     return () => clearInterval(interval);
   }, [hasStarted, isWon]);
 
-  // Fuzzy answer checking
-  const checkAnswerMatch = (guess: string) => {
-    const cleanGuess = guess
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9 ]/g, "");
-
-    return currentPack.acceptedAnswers.some((accepted) => {
-      const cleanAccepted = accepted
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9 ]/g, "");
-      return cleanGuess === cleanAccepted || cleanGuess.includes(cleanAccepted);
-    });
-  };
-
   const handleSubmitGuess = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!userGuess.trim() || isWon) return;
@@ -66,11 +66,21 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     const guess = userGuess.trim();
     setUserGuess("");
 
-    if (checkAnswerMatch(guess)) {
+    if (checkPinpointMatch(guess, currentPack.acceptedAnswers)) {
       setIsWon(true);
       setShowWinModal(true);
+      if (!isMuted) sounds.playVictory();
+
+      const { isNewBestTime: isBest, newStreak } = recordPuzzleWin(
+        "pinpoint",
+        currentPack.topic,
+        secondsElapsed
+      );
+      setIsNewBestTime(isBest);
+      setCurrentStreak(newStreak);
     } else {
       // Wrong guess
+      if (!isMuted) sounds.playSnakeSlide();
       setGuesses((prev) => [...prev, guess]);
       setErrorShake(true);
       setTimeout(() => setErrorShake(false), 500);
@@ -86,6 +96,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     if (revealedCount < 5 && !isWon) {
       if (!hasStarted) setHasStarted(true);
       setRevealedCount((c) => c + 1);
+      if (!isMuted) sounds.playClick();
     }
   };
 
@@ -97,7 +108,20 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     setShowWinModal(false);
     setSecondsElapsed(0);
     setHasStarted(false);
+    setHintShown(false);
   };
+
+  const handleNewPuzzle = () => {
+    const nextIdx = (packIndex + 1) % PINPOINT_KNOWLEDGE_BASE.length;
+    setPackIndex(nextIdx);
+  };
+
+  const handleToggleSound = () => {
+    const muted = toggleGlobalPuzzleMute();
+    setIsMuted(muted);
+  };
+
+  const hintInfo = getPinpointHint(currentPack.category);
 
   const rulesContent = (
     <>
@@ -111,7 +135,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         <li>Guess in fewer clues to earn a higher rating (1 clue = 5 Stars!).</li>
       </ul>
       <p className="text-xs text-white/60">
-        💡 <strong>Tip:</strong> You don&apos;t need exact punctuation. E.g. &apos;payment methods&apos; or &apos;digital payments&apos; will both be accepted!
+        💡 <strong>Tip:</strong> Exact capitalization and punctuation are not required (e.g. &apos;payment methods&apos; or &apos;digital payments&apos; will both be accepted!).
       </p>
     </>
   );
@@ -120,13 +144,16 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     <div className="max-w-xl mx-auto space-y-6">
       <PuzzleHeader
         meta={meta}
-        levelNames={PINPOINT_PACKS.map((p) => p.topic)}
+        levelNames={PINPOINT_KNOWLEDGE_BASE.map((p) => p.topic)}
         currentLevelIndex={packIndex}
         onSelectLevel={setPackIndex}
         secondsElapsed={secondsElapsed}
         movesCount={guesses.length}
         mistakesCount={guesses.length}
         onReset={handleReset}
+        onNewPuzzle={handleNewPuzzle}
+        isSoundMuted={isMuted}
+        onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
       />
@@ -135,8 +162,8 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-white/50 px-1">
           <span>Revealed Clues ({revealedCount} / 5)</span>
-          <span className="text-[#fec01f]">
-            {revealedCount === 1 ? "5★ Potential" : `${6 - revealedCount}★ Rank`}
+          <span className="text-[#fec01f] font-bold">
+            {revealedCount === 1 ? "⭐⭐⭐⭐⭐ 5★ Rank" : `${6 - revealedCount}★ Potential`}
           </span>
         </div>
 
@@ -148,7 +175,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
                 key={idx}
                 className={`p-3.5 sm:p-4 rounded-xl border transition-all duration-300 flex items-center justify-between ${
                   isRevealed
-                    ? "bg-white/[0.05] border-[#fec01f]/40 shadow-sm"
+                    ? "bg-white/[0.05] border-[#fec01f]/40 shadow-sm animate-slideDown"
                     : "bg-white/[0.02] border-white/5 opacity-40 select-none"
                 }`}
               >
@@ -156,7 +183,7 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
                   <span
                     className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold ${
                       isRevealed
-                        ? "bg-[#fec01f] text-black"
+                        ? "bg-[#fec01f] text-black shadow-[0_0_8px_rgba(254,192,31,0.5)]"
                         : "bg-white/10 text-white/40"
                     }`}
                   >
@@ -208,19 +235,36 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
             </button>
           </form>
 
-          {/* Reveal Next Clue button */}
-          {revealedCount < 5 && (
-            <div className="flex justify-center">
+          {/* Reveal Next Clue & Hints bar */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {revealedCount < 5 && (
               <button
                 type="button"
                 onClick={handleRevealClue}
-                className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-[#fec01f] transition-colors py-1 px-3 rounded-lg border border-white/10 hover:border-[#fec01f]/30"
+                className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-[#fec01f] transition-colors py-1.5 px-3 rounded-lg border border-white/10 hover:border-[#fec01f]/30"
               >
                 <Eye size={13} />
-                <span>Reveal Clue #{revealedCount + 1} without guessing</span>
+                <span>Reveal Clue #{revealedCount + 1}</span>
               </button>
-            </div>
-          )}
+            )}
+
+            {!hintShown ? (
+              <button
+                type="button"
+                onClick={() => setHintShown(true)}
+                className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-amber-300 hover:text-amber-200 transition-colors py-1.5 px-3 rounded-lg border border-amber-500/30 bg-amber-500/10"
+              >
+                <Lightbulb size={13} />
+                <span>Need a Hint?</span>
+              </button>
+            ) : (
+              <div className="text-xs font-mono text-amber-300 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/30 flex items-center gap-2">
+                <span>Starts with: <strong>{hintInfo.firstLetter}</strong></span>
+                <span>•</span>
+                <span>{hintInfo.wordCount} words ({hintInfo.letterCount} letters)</span>
+              </div>
+            )}
+          </div>
 
           {/* Wrong Guesses chips */}
           {guesses.length > 0 && (
@@ -260,7 +304,10 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
           secondsElapsed={secondsElapsed}
           movesCount={revealedCount}
           mistakesCount={guesses.length}
-          hasNextLevel={packIndex < PINPOINT_PACKS.length - 1}
+          isNewBestTime={isNewBestTime}
+          currentStreak={currentStreak}
+          educationalFact={currentPack.educationalFact}
+          hasNextLevel={packIndex < PINPOINT_KNOWLEDGE_BASE.length - 1}
           onNextLevel={() => setPackIndex((p) => p + 1)}
           onReplay={handleReset}
           onBackToHub={onBackToHub}

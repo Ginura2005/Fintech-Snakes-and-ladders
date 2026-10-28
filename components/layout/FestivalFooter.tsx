@@ -145,6 +145,16 @@ export default function FestivalFooter() {
                   Live Festival Leaderboard
                 </Link>
               </li>
+              <li>
+                <Link href="/privacy" className="hover:text-[#fec01f] transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-[#fec01f] transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
 
             <div className="mt-5 p-3.5 rounded-xl border border-white/10 bg-white/[0.03]">
@@ -156,9 +166,19 @@ export default function FestivalFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© 2026 Sri Lanka FinTech Festival. All rights reserved.</p>
-          <p className="font-mono text-[11px] tracking-wider uppercase">
+        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/50">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
+            <p>© 2026 Sri Lanka FinTech Festival. All rights reserved.</p>
+            <span className="hidden sm:inline text-white/20">|</span>
+            <Link href="/privacy" className="hover:text-[#fec01f] transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-white/20">·</span>
+            <Link href="/terms" className="hover:text-[#fec01f] transition-colors">
+              Terms of Service
+            </Link>
+          </div>
+          <p className="font-mono text-[11px] tracking-wider uppercase text-center md:text-right">
             Powered by Sri Lanka FinTech Community &amp; Partners
           </p>
         </div>
