@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { PuzzleId } from "./puzzleTypes";
 import { PUZZLES_META } from "./puzzleData";
+import PuzzleIcon from "./PuzzleIcon";
 import {
   getPuzzleStats,
   toggleGlobalPuzzleMute,
@@ -199,7 +200,7 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
                         boxShadow: `0 0 24px ${puzzle.color}25`,
                       }}
                     >
-                      {puzzle.icon}
+                      <PuzzleIcon id={puzzle.id} size={28} />
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className="font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/15 bg-white/5 text-white/70">
@@ -232,13 +233,17 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
                 <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                   <div className="flex flex-col text-xs font-mono text-white/50">
                     <div className="flex items-center gap-2">
-                      <span>⏱ {puzzle.estimatedTime}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={11} />
+                        <span>{puzzle.estimatedTime}</span>
+                      </span>
                       <span>•</span>
                       <span>{puzzle.difficulty}</span>
                     </div>
                     {bestTime !== null && (
-                      <span className="text-[11px] text-[#00f0ff] font-semibold mt-0.5">
-                        ⚡ Best: {formatTime(bestTime)}
+                      <span className="text-[11px] text-[#00f0ff] font-semibold mt-0.5 inline-flex items-center gap-1">
+                        <Zap size={11} />
+                        <span>Best: {formatTime(bestTime)}</span>
                       </span>
                     )}
                   </div>
