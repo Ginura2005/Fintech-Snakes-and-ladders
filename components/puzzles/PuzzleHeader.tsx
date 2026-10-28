@@ -14,6 +14,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
+import PuzzleIcon from "./PuzzleIcon";
 
 interface PuzzleHeaderProps {
   meta: PuzzleMeta;
@@ -76,7 +77,7 @@ export default function PuzzleHeader({
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xl sm:text-2xl">{meta.icon}</span>
+            <PuzzleIcon id={meta.id} size={22} />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-heading text-lg sm:text-xl font-bold text-white">
@@ -215,8 +216,8 @@ export default function PuzzleHeader({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
           <div className="festival-panel max-w-lg w-full p-6 space-y-4 border border-white/20 shadow-2xl relative">
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{meta.icon}</span>
+              <div className="flex items-center gap-2.5">
+                <PuzzleIcon id={meta.id} size={24} />
                 <div>
                   <h3 className="font-heading font-bold text-white text-lg">
                     How to Play {meta.title}
