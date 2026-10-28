@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
-import { Play, Trophy, Sparkles, Heart, Star } from "lucide-react";
+import { Play, Trophy, Sparkles, Heart, Star, Link as LinkIcon, Dices, Gem, MessageSquare } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import { signInWithGoogle } from "@/lib/auth/google-sign-in";
@@ -74,7 +74,7 @@ export default function ChallengePage() {
     return (
       <div className="min-h-screen bg-[#06061f] text-white flex items-center justify-center p-4">
         <div className="festival-panel p-8 text-center max-w-sm">
-          <p className="text-4xl mb-4">🔗</p>
+          <LinkIcon size={36} className="text-white/40 mx-auto mb-4" />
           <h2 className="font-heading text-xl font-bold text-white mb-2">Challenge Not Found</h2>
           <p className="text-white/60 text-xs font-mono mb-6">{error}</p>
           <Link
@@ -116,7 +116,13 @@ export default function ChallengePage() {
               FESTIVAL ARENA CHALLENGE
             </span>
 
-            <div className="text-5xl mb-2 animate-float-gentle">{isWin ? "🏆" : "🎲"}</div>
+            <div className="my-3 flex items-center justify-center animate-float-gentle">
+              {isWin ? (
+                <Trophy size={48} className="text-[#fec01f] drop-shadow-[0_0_15px_rgba(254,192,31,0.6)]" />
+              ) : (
+                <Dices size={48} className="text-teal-400 drop-shadow-[0_0_15px_rgba(45,212,191,0.5)]" />
+              )}
+            </div>
 
             <h2 className="font-heading text-2xl font-black text-white mb-1">
               {cardData?.displayName}
@@ -150,7 +156,10 @@ export default function ChallengePage() {
                 <Star size={13} className="text-[#fec01f] fill-[#fec01f]" />
                 {cardData?.quizCorrect} quiz
               </span>
-              <span>💰 {cardData?.treasuresCollected} treasure</span>
+              <span className="flex items-center gap-1">
+                <Gem size={13} className="text-orange-400" />
+                {cardData?.treasuresCollected} treasure
+              </span>
             </div>
 
             <div className="border-t border-white/10 pt-3 text-[10px] font-mono text-white/50 space-y-1">
@@ -201,12 +210,13 @@ export default function ChallengePage() {
               </Link>
               <button
                 onClick={() => {
-                  const text = `🎲 Challenge: Can you beat ${cardData?.displayName || "my"}'s score of ${cardData?.finalScore?.toLocaleString()} in LANKA FINTECHVERSE? Check it out: ${window.location.href}`;
+                  const text = `Challenge: Can you beat ${cardData?.displayName || "my"}'s score of ${cardData?.finalScore?.toLocaleString()} in LANKA FINTECHVERSE? Check it out: ${window.location.href}`;
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
                 }}
-                className="font-mono text-xs text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                className="font-mono text-xs text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
               >
-                <span>💬 Forward via WhatsApp</span>
+                <MessageSquare size={13} />
+                <span>Forward via WhatsApp</span>
               </button>
             </div>
           </div>

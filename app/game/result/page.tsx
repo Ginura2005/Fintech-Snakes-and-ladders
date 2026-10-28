@@ -17,6 +17,15 @@ import {
   Image as ImageIcon,
   Sparkles,
   ExternalLink,
+  ShieldAlert,
+  Bot,
+  Gem,
+  Clock,
+  MessageSquare,
+  Linkedin,
+  Twitter,
+  Link as LinkIcon,
+  RotateCcw,
 } from "lucide-react";
 import VictoryConfetti from "@/components/game/VictoryConfetti";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
@@ -292,12 +301,18 @@ function ResultContent() {
               isWin ? "section-badge-primary" : isEliminated ? "section-badge-burgundy" : "section-badge-on-dark"
             }`}
           >
-            {isWin ? "★ MATCH VICTORY" : isEliminated ? "MATCH CONCLUDED" : "MATCH COMPLETED"}
+            {isWin ? "MATCH VICTORY" : isEliminated ? "MATCH CONCLUDED" : "MATCH COMPLETED"}
           </span>
 
           {/* Outcome Emblem */}
-          <div className="text-6xl sm:text-7xl mb-3 animate-float-gentle">
-            {isWin ? "🏆" : isEliminated ? "💔" : "🤖"}
+          <div className="my-4 animate-float-gentle flex items-center justify-center">
+            {isWin ? (
+              <Trophy size={60} className="text-[#fec01f] drop-shadow-[0_0_24px_rgba(254,192,31,0.65)]" />
+            ) : isEliminated ? (
+              <ShieldAlert size={60} className="text-rose-500 drop-shadow-[0_0_20px_rgba(244,63,94,0.5)]" />
+            ) : (
+              <Bot size={60} className="text-slate-400 drop-shadow-[0_0_20px_rgba(148,163,184,0.4)]" />
+            )}
           </div>
 
           <h1 className="font-heading text-3xl sm:text-4xl font-extrabold text-white mb-2">
@@ -357,7 +372,7 @@ function ResultContent() {
             </div>
 
             <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10">
-              <div className="text-base mb-0.5">💰</div>
+              <Gem size={16} className="text-orange-400 mx-auto mb-1" />
               <p className="font-mono text-xs font-bold text-white">
                 {(run.player_treasures_collected || []).length}
               </p>
@@ -368,8 +383,9 @@ function ResultContent() {
           </div>
 
           {durationMinutes !== null && (
-            <p className="font-mono text-xs text-white/40 mt-5">
-              ⏱ Duration: {durationMinutes}m {run.duration_seconds! % 60}s
+            <p className="font-mono text-xs text-white/40 mt-5 flex items-center justify-center gap-1.5">
+              <Clock size={12} />
+              <span>Duration: {durationMinutes}m {run.duration_seconds! % 60}s</span>
             </p>
           )}
         </div>
@@ -473,7 +489,7 @@ function ResultContent() {
               disabled={generatingLink}
               className="py-3 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              <span className="text-base">💬</span>
+              <MessageSquare size={15} />
               <span>Share to WhatsApp</span>
             </button>
             <button
@@ -481,7 +497,7 @@ function ResultContent() {
               disabled={generatingLink}
               className="py-3 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/50 text-sky-300 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              <span className="text-base">💼</span>
+              <Linkedin size={15} />
               <span>Post to LinkedIn</span>
             </button>
             <button
@@ -489,7 +505,7 @@ function ResultContent() {
               disabled={generatingLink}
               className="py-3 px-3 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-slate-500/50 text-slate-200 font-mono text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              <span className="text-base">🐦</span>
+              <Twitter size={15} />
               <span>Share on X</span>
             </button>
           </div>
@@ -498,9 +514,10 @@ function ResultContent() {
             <button
               onClick={handleGenerateLink}
               disabled={generatingLink}
-              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer"
+              className="w-full py-3 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
             >
-              {generatingLink ? "Generating Link…" : "🔗 Create Custom Challenge Link"}
+              <LinkIcon size={15} />
+              <span>{generatingLink ? "Generating Link…" : "Create Custom Challenge Link"}</span>
             </button>
           ) : (
             <div className="space-y-3">
@@ -536,21 +553,23 @@ function ResultContent() {
         <div className="flex flex-col sm:flex-row gap-4 pt-2">
           <Link
             href="/game?mode=practice"
-            className="flex-1 py-3 rounded-xl interactive-btn bg-teal-950/80 hover:bg-teal-900 border border-teal-400/50 text-teal-200 font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5"
+            className="flex-1 py-3 rounded-xl interactive-btn bg-teal-950/80 hover:bg-teal-900 border border-teal-400/50 text-teal-200 font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2"
           >
-            <span>🔄 Play Again (Practice)</span>
+            <RotateCcw size={14} />
+            <span>Play Again (Practice)</span>
           </Link>
           <Link
             href="/"
             className="flex-1 py-3 rounded-xl border border-white/15 bg-white/5 text-white/80 font-mono text-xs uppercase tracking-wider text-center hover:text-white hover:border-[#fec01f] transition-colors"
           >
-            ← Festival Home
+            Festival Home
           </Link>
           <Link
             href="/leaderboard"
-            className="flex-1 py-3 rounded-xl interactive-btn interactive-btn--primary font-mono text-xs uppercase tracking-wider text-center"
+            className="flex-1 py-3 rounded-xl interactive-btn interactive-btn--primary font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2"
           >
-            🏆 Full Leaderboard
+            <Trophy size={14} />
+            <span>Full Leaderboard</span>
           </Link>
         </div>
       </main>
