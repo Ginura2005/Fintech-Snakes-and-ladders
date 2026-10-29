@@ -280,21 +280,6 @@ export default function PuzzleHub({ onSelectPuzzle }: PuzzleHubProps) {
           })}
         </div>
       </div>
-
-      {/* Why LinkedIn Puzzles Section */}
-      <div className="festival-panel p-6 sm:p-8 space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-[#fec01f]" />
-          <h3 className="font-heading font-bold text-lg text-white">
-            Why We Built LinkedIn Puzzles for Lanka FinTechverse
-          </h3>
-        </div>
-        <p className="text-sm text-white/70 leading-relaxed max-w-3xl">
-          LinkedIn revolutionized professional downtime by introducing quick, tactile logic puzzles designed for coffee breaks.
-          For the Sri Lanka FinTech Festival 2026, we incorporated all 6 signature LinkedIn games into our arena—infused with digital payments,
-          banking trivia, and algorithmic challenges. Play daily, share your scores with colleagues, and warm up your strategic instincts!
-        </p>
-      </div>
     </div>
   );
 }
