@@ -1165,7 +1165,7 @@ function GameContent() {
   const gameOver = isTerminal(run.status);
 
   return (
-    <div className="min-h-screen min-h-dvh bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
+    <div className="min-h-screen min-h-dvh bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black overscroll-contain overflow-x-hidden touch-pan-y">
       {/* Festival Header */}
       <FestivalHeader
         user={user}

@@ -24,12 +24,11 @@ export default function Cinematic3DDiceOverlay({
   const [mounted, setMounted] = useState(show);
   const [visible, setVisible] = useState(false);
 
-  // Silky smooth mounting and unmounting fade
+  // Smooth mounting and unmounting fade
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (show) {
       setMounted(true);
-      // Ensure element is in DOM before triggering opacity transition
       const frame = requestAnimationFrame(() => {
         setVisible(true);
       });
@@ -66,75 +65,99 @@ export default function Cinematic3DDiceOverlay({
         "--throw-dur": `${physics.dur}s`,
       }}
       className={`
-        fixed inset-0 z-50 flex flex-col items-center justify-center p-4 select-none pointer-events-none
+        fixed inset-0 z-50 flex flex-col items-center justify-center p-4 select-none pointer-events-none overscroll-none
         transition-all duration-350 ease-out
         ${
           visible
-            ? "opacity-100 backdrop-blur-md bg-black/75"
+            ? "opacity-100 backdrop-blur-md bg-black/80"
             : "opacity-0 backdrop-blur-none bg-black/0"
         }
       `}
     >
-      {/* Tabletop Arena Felt Ring */}
-      <div
-        className={`
-          relative w-[min(17rem,86vw)] h-[min(17rem,86vw)] sm:w-88 sm:h-88 rounded-full border-2 flex flex-col items-center justify-center p-4 sm:p-6 text-center
-          transition-all duration-400 ease-out
-          ${
-            visible
-              ? "scale-100 opacity-100 translate-y-0"
-              : "scale-90 opacity-0 translate-y-3"
-          }
-          ${
-            isPlayer
-              ? "border-[#fec01f]/75 bg-gradient-to-b from-[#125252]/50 via-[#07191d]/90 to-black/95 shadow-[0_0_65px_rgba(254,192,31,0.35),inset_0_0_50px_rgba(18,82,82,0.6)]"
-              : "border-rose-500/75 bg-gradient-to-b from-[#8d1739]/50 via-[#270715]/90 to-black/95 shadow-[0_0_65px_rgba(244,63,94,0.35),inset_0_0_50px_rgba(141,23,57,0.6)]"
-          }
-        `}
-      >
-        {/* Arena Inner Concentric Track */}
-        <div className="absolute inset-3.5 rounded-full border border-white/10 pointer-events-none" />
-
-        {/* Top Header & Throw Style */}
-        <div className="absolute top-5 sm:top-7 flex flex-col items-center gap-1 font-mono uppercase">
-          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold tracking-widest">
+      <div className="flex flex-col items-center justify-center gap-3.5 sm:gap-4 max-w-sm w-full">
+        
+        {/* OUTSIDE THE CIRCLE (TOP): Actor badge & throw style */}
+        <div
+          className={`
+            flex flex-col items-center gap-1 text-center transition-all duration-300
+            ${visible ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 -translate-y-2"}
+          `}
+        >
+          <div
+            className={`
+              px-3.5 py-1 rounded-full text-xs sm:text-sm font-heading font-extrabold tracking-wider uppercase border shadow-lg flex items-center gap-1.5
+              ${
+                isPlayer
+                  ? "bg-[#fec01f]/15 border-[#fec01f]/60 text-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.25)]"
+                  : "bg-rose-500/15 border-rose-500/60 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.25)]"
+              }
+            `}
+          >
             {isPlayer ? (
-              <span className="text-[#fec01f] flex items-center gap-1.5">
-                <Sparkles size={13} className="animate-spin text-[#fec01f]" />
-                Your 3D Dice Throw
-              </span>
+              <>
+                <Sparkles size={14} className="text-[#fec01f] animate-pulse" />
+                <span>Your 3D Dice Throw</span>
+              </>
             ) : (
-              <span className="text-rose-300 flex items-center gap-1.5">
+              <>
                 <Bot size={14} className="text-rose-300" />
                 <span>Ava is Throwing</span>
-              </span>
+              </>
             )}
           </div>
+
           {isPlayer && (
-            <span className="text-[9px] sm:text-[10px] text-white/50 tracking-wider">
+            <span className="text-[10px] sm:text-xs font-mono text-white/60 tracking-widest uppercase">
               {throwStyleLabel}
             </span>
           )}
         </div>
 
-        {/* Real 3D Physical Cube Die Tumbling in Arena */}
-        <div className="my-auto relative flex items-center justify-center pt-3">
-          <Cube3D
-            value={rollValue}
-            isRolling={isRolling}
-            size={96}
-            color={isPlayer ? "teal" : "burgundy"}
-            tiltAngle={physics.tilt}
-          />
+        {/* INSIDE THE CIRCLE: Pure 3D Dice Arena */}
+        <div
+          className={`
+            relative w-[min(16rem,72vw)] h-[min(16rem,72vw)] sm:w-72 sm:h-72 rounded-full border-2 flex items-center justify-center
+            transition-all duration-400 ease-out shrink-0
+            ${
+              visible
+                ? "scale-100 opacity-100"
+                : "scale-90 opacity-0"
+            }
+            ${
+              isPlayer
+                ? "border-[#fec01f]/75 bg-gradient-to-b from-[#125252]/60 via-[#07191d]/90 to-black/95 shadow-[0_0_60px_rgba(254,192,31,0.35),inset_0_0_45px_rgba(18,82,82,0.6)]"
+                : "border-rose-500/75 bg-gradient-to-b from-[#8d1739]/60 via-[#270715]/90 to-black/95 shadow-[0_0_60px_rgba(244,63,94,0.35),inset_0_0_45px_rgba(141,23,57,0.6)]"
+            }
+          `}
+        >
+          {/* Inner concentric track for tabletop depth */}
+          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
+          <div className="absolute inset-6 rounded-full border border-white/5 pointer-events-none" />
+
+          {/* Real 3D Physical Cube Die Tumbling Centered in Arena */}
+          <div className="relative flex items-center justify-center">
+            <Cube3D
+              value={rollValue}
+              isRolling={isRolling}
+              size={90}
+              color={isPlayer ? "teal" : "burgundy"}
+              tiltAngle={physics.tilt}
+            />
+          </div>
         </div>
 
-        {/* Bottom Landing Announcement Banner */}
-        <div className="absolute bottom-5 sm:bottom-7 w-full px-4 flex justify-center">
+        {/* OUTSIDE THE CIRCLE (BOTTOM): Landing outcome or tumbling pulse */}
+        <div
+          className={`
+            w-full flex justify-center transition-all duration-300 min-h-[46px] items-center
+            ${visible ? "scale-100 opacity-100 translate-y-0" : "scale-95 opacity-0 translate-y-2"}
+          `}
+        >
           {rollValue !== null ? (
             <div
               className={`
-                px-4 py-1.5 sm:px-5 sm:py-2 rounded-full font-heading font-black text-xs sm:text-sm tracking-wider uppercase
-                shadow-2xl animate-dice-settle border flex flex-col items-center gap-0.5
+                px-5 py-2 rounded-xl font-heading font-black text-xs sm:text-sm tracking-wider uppercase
+                shadow-2xl animate-dice-settle border flex flex-col items-center gap-0.5 max-w-[90%] text-center
                 ${
                   isOvershoot
                     ? "bg-amber-600 text-white border-amber-300 shadow-[0_0_30px_rgba(217,119,6,0.8)]"
@@ -144,24 +167,25 @@ export default function Cinematic3DDiceOverlay({
                 }
               `}
             >
-              <span className="flex items-center gap-1.5">
-                <Dices size={14} />
+              <div className="flex items-center gap-1.5">
+                <Dices size={16} />
                 <span>ROLLED A {rollValue}!</span>
-              </span>
+              </div>
               {isOvershoot && (
-                <span className="text-[9px] font-mono tracking-normal normal-case font-bold flex items-center gap-1">
-                  <Target size={11} />
-                  <span>Needs exact roll for 25</span>
-                </span>
+                <div className="text-[10px] font-mono tracking-normal normal-case font-bold flex items-center gap-1 mt-0.5">
+                  <Target size={12} />
+                  <span>Overshot 25 · Exact roll required</span>
+                </div>
               )}
             </div>
           ) : (
-            <div className="text-[11px] sm:text-xs font-mono text-white/70 tracking-wider uppercase animate-pulse flex items-center gap-1.5">
+            <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] sm:text-xs font-mono text-white/75 tracking-wider uppercase animate-pulse flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#fec01f] animate-ping" />
-              Tumbling across felt arena…
+              <span>Rolling in Arena…</span>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
