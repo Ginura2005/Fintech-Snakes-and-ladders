@@ -146,9 +146,9 @@ export default function GameBoard({
   };
 
   return (
-    <div className="w-full select-none">
+    <div className="w-full select-none overscroll-contain">
       {/* 5x5 Arena Board with Aspect-Square Canvas */}
-      <div className="relative w-full max-w-[min(100vw-1rem,560px)] mx-auto p-1 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#080824]/95 border border-white/15 backdrop-blur-xl shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden">
+      <div className="relative w-full max-w-[min(100vw-1rem,560px)] mx-auto p-1 sm:p-2.5 rounded-xl sm:rounded-2xl bg-[#080824]/95 border border-white/15 backdrop-blur-xl shadow-[0_16px_50px_rgba(0,0,0,0.8)] overflow-hidden touch-none sm:touch-manipulation">
         
         {/* Floating Event Toast */}
         {floatingMessage && (

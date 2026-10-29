@@ -1,30 +1,71 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit3, Eraser, AlertTriangle, Check, SlidersHorizontal, Calendar, Lightbulb } from "lucide-react";
+import { Edit3, Eraser, AlertTriangle, Check, Shuffle, SlidersHorizontal, Calendar, Lightbulb } from "lucide-react";
 import { MiniSudokuLevel } from "./puzzleTypes";
 import { MINI_SUDOKU_LEVELS, PUZZLES_META } from "./puzzleData";
 import { generateMiniSudokuLevel } from "@/lib/puzzles/mini-sudoku-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
 
 type Difficulty = "Easy" | "Medium" | "Hard";
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
-export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => void }) {
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface MiniSudokuGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
+
+export default function MiniSudokuGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: MiniSudokuGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "mini-sudoku")!;
 
-  const [difficulty, setDifficulty] = useState<Difficulty>("Easy");
-  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => {
+    if (challengeInfo?.difficulty) {
+      const match = DIFFICULTIES.find((d) =>
+        d.toLowerCase() === challengeInfo.difficulty?.toLowerCase()
+      );
+      if (match) return match;
+    }
+    return "Easy";
+  });
+
+  const initialSeed =
+    customSeed ||
+    (dateStr ? getDailyPuzzleSeed(new Date(dateStr)) : getDailyPuzzleSeed());
+  const [levelSeed, setLevelSeed] = useState(() => initialSeed);
   const [useProcedural, setUseProcedural] = useState(true);
   const [presetIndex, setPresetIndex] = useState(0);
 
   // Active level calculation
   const [currentLevel, setCurrentLevel] = useState<MiniSudokuLevel>(() =>
-    generateMiniSudokuLevel("Easy", getDailyPuzzleSeed())
+    generateMiniSudokuLevel(difficulty, initialSeed)
   );
 
   // Grid of 6x6 numbers: 0 for empty
@@ -47,9 +88,13 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   // Audio mute state
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
 
   // Regeneration helper
   const loadNewLevel = (diff: Difficulty, seed: number) => {
@@ -93,8 +138,8 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
   };
 
   const handleToggleMute = () => {
-    const next = toggleGlobalPuzzleMute();
-    setIsMuted(next);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   // Timer
@@ -176,7 +221,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         if (grid[r][c] === 0) filled = false;
       }
     }
-    if (filled && conflicts.size === 0 && !isWon) {
+    if (filled && conflicts.size === 0 && !isWon && !isSolutionRevealed) {
       let matches = true;
       for (let r = 0; r < 6; r++) {
         for (let c = 0; c < 6; c++) {
@@ -186,20 +231,35 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
       if (matches) {
         setIsWon(true);
         setShowWinModal(true);
-        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+        const winResult = recordPuzzleWin(
           "mini-sudoku",
           difficulty,
           secondsElapsed,
           mistakesCount
         );
-        setIsNewBestTime(isBest);
-        setCurrentStreak(newStreak);
-        setPointsEarned(pts);
-        setArenaBonusPoints(arenaPts);
+        setIsNewBestTime(winResult.isNewBestTime);
+        setCurrentStreak(winResult.newStreak);
+        setPointsEarned(winResult.pointsEarned);
+        setArenaBonusPoints(winResult.arenaBonusPoints);
+        setSpeedTier(winResult.speedTier);
+        setNewCodexCard(winResult.newCodexCard);
+        if (winResult.newCodexCard && !isMuted) {
+          sounds.playCodexUnlock();
+        }
         if (!isMuted) sounds.playVictory();
       }
     }
-  }, [grid, conflicts.size, isWon, currentLevel.solution, secondsElapsed, difficulty, isMuted]);
+  }, [
+    grid,
+    conflicts.size,
+    isWon,
+    isSolutionRevealed,
+    currentLevel.solution,
+    secondsElapsed,
+    difficulty,
+    mistakesCount,
+    isMuted,
+  ]);
 
   // Handle number input
   const inputNumber = (num: number) => {
@@ -299,7 +359,26 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
     setIsWon(false);
     setShowWinModal(false);
     setMistakesCount(0);
+    setIsSolutionRevealed(false);
     if (!isMuted) sounds.playClick();
+  };
+
+  const handleRevealSolution = () => {
+    setGrid(currentLevel.solution.map((r) => [...r]));
+    setNotes({});
+    setIsSolutionRevealed(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
+  };
+
+  const handleToggleSound = () => {
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   const handleHint = () => {
@@ -359,8 +438,13 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
         isSoundMuted={isMuted}
-        onToggleSound={handleToggleMute}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
+        onToggleSound={handleToggleSound}
         onNewPuzzle={handleRandomPuzzle}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty & Generator Controls */}
@@ -398,7 +482,7 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 transition-colors text-[11px] font-bold"
             title="Generate a brand new unique Mini Sudoku level"
           >
-            <SlidersHorizontal size={11} />
+            <Shuffle size={11} />
             <span>Shuffle</span>
           </button>
         </div>
@@ -573,6 +657,11 @@ export default function MiniSudokuGame({ onBackToHub }: { onBackToHub: () => voi
           currentStreak={currentStreak}
           pointsEarned={pointsEarned}
           arenaBonusPoints={arenaBonusPoints}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={levelSeed}
+          challengeInfo={challengeInfo}
           educationalFact="Mini Sudoku demonstrates deterministic state machine verification and constraint propagation—analogous to how double-entry distributed ledgers validate that debits and credits balance across all account partitions without contradiction."
         />
       )}

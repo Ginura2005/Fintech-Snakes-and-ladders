@@ -914,3 +914,116 @@ code, kbd, pre, .font-mono, .font-caps {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================
+   Official Sri Lanka FinTech Festival Custom Cursor Animation
+   ============================================================ */
+html.has-custom-cursor,
+html.has-custom-cursor [data-cursor],
+html.has-custom-cursor a,
+html.has-custom-cursor body,
+html.has-custom-cursor button {
+  cursor: none !important;
+}
+
+.custom-cursor-root {
+  pointer-events: none;
+}
+
+.custom-cursor-dot {
+  background: #fec01f;
+  border-radius: 9999px;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  box-shadow: 0 0 10px #fec01f8c;
+}
+
+.custom-cursor-ring {
+  --cursor-scale: 1;
+  background: #fec01f0a;
+  border: 1px solid #fec01f8c;
+  border-radius: 9999px;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  transition: border-color 0.28s, background 0.28s, box-shadow 0.28s;
+  box-shadow: 0 0 18px #fec01f1f;
+}
+
+.custom-cursor-ring[data-energetic="true"] {
+  background: #fec01f1a;
+  border-color: #f57222b3;
+  box-shadow: 0 0 24px #fec01f38;
+}
+
+.custom-cursor-ring[data-mode="close"] {
+  border-color: #8d1739bf;
+}
+
+.custom-cursor-label {
+  color: #fec01f;
+  font-family: var(--font-jetbrains, monospace);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0;
+  will-change: transform, opacity;
+  background: #06061fd1;
+  border: 1px solid #fec01f73;
+  border-radius: 9999px;
+  margin: 18px 0 0 18px;
+  padding: 0.2rem 0.45rem;
+  font-size: 9px;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.custom-cursor-label[data-visible="true"] {
+  opacity: 1;
+}
+
+/* ============================================================
+   Official Festival Footer Wordmark
+   ============================================================ */
+.footer-wordmark {
+  pointer-events: none;
+  user-select: none;
+  justify-content: center;
+  height: 0.86em;
+  margin-top: -0.14em;
+  font-size: 13.5vw;
+  display: flex;
+  overflow: hidden;
+}
+
+.footer-wordmark__text {
+  font-family: var(--font-sora, sans-serif);
+  letter-spacing: -0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.24) 15%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0.02) 65%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  padding-top: 0.04em;
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1.1;
+  display: flex;
+  gap: 0.2em;
+}
+
+@media (max-width: 640px) {
+  .footer-wordmark {
+    height: 1.72em;
+    font-size: 21vw;
+  }
+  .footer-wordmark__text {
+    flex-direction: column;
+    align-items: center;
+  }
+  .footer-wordmark__text > span + span {
+    margin-top: -0.3em;
+  }
+}
+

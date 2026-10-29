@@ -5,8 +5,16 @@ import { Zap, RotateCcw, Check, Flag, Shuffle, Volume2, VolumeX } from "lucide-r
 import { ZipLevel, ZipWaypoint } from "./puzzleTypes";
 import { generateZipLevel } from "@/lib/puzzles/zip-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
 import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
@@ -17,14 +25,46 @@ const ZIP_SIZES: Array<{ label: string; size: 5 | 6 | 7 }> = [
   { label: "7×7 Hard", size: 7 },
 ];
 
-export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface ZipGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
+
+export default function ZipGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: ZipGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "zip")!;
-  const [sizeIndex, setSizeIndex] = useState(0);
+  const [sizeIndex, setSizeIndex] = useState(() => {
+    if (challengeInfo?.difficulty) {
+      const match = ZIP_SIZES.findIndex((z) =>
+        challengeInfo.difficulty?.toLowerCase().includes(z.size.toString())
+      );
+      if (match >= 0) return match;
+    }
+    return 0;
+  });
   const currentSize = ZIP_SIZES[sizeIndex].size;
 
-  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const initialSeed =
+    customSeed ||
+    (dateStr ? getDailyPuzzleSeed(new Date(dateStr)) : getDailyPuzzleSeed());
+  const [levelSeed, setLevelSeed] = useState(() => initialSeed);
   const [currentLevel, setCurrentLevel] = useState<ZipLevel>(() =>
-    generateZipLevel(currentSize, getDailyPuzzleSeed())
+    generateZipLevel(currentSize, initialSeed)
   );
   const { rows, cols, waypoints } = currentLevel;
   const totalCells = rows * cols;
@@ -42,7 +82,11 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   const isDraggingRef = useRef(false);
 
@@ -83,23 +127,43 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
 
   // Check win condition: path covers all cells and final waypoint is reached
   useEffect(() => {
-    if (path.length === totalCells && lastWaypointHit === waypoints.length && !isWon) {
+    if (
+      path.length === totalCells &&
+      lastWaypointHit === waypoints.length &&
+      !isWon &&
+      !isSolutionRevealed
+    ) {
       setIsWon(true);
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
       const diffName = ZIP_SIZES[sizeIndex].label.split(" ")[1];
-      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+      const winResult = recordPuzzleWin(
         "zip",
         diffName,
         secondsElapsed
       );
-      setIsNewBestTime(isBest);
-      setCurrentStreak(newStreak);
-      setPointsEarned(pts);
-      setArenaBonusPoints(arenaPts);
+      setIsNewBestTime(winResult.isNewBestTime);
+      setCurrentStreak(winResult.newStreak);
+      setPointsEarned(winResult.pointsEarned);
+      setArenaBonusPoints(winResult.arenaBonusPoints);
+      setSpeedTier(winResult.speedTier);
+      setNewCodexCard(winResult.newCodexCard);
+      if (winResult.newCodexCard && !isMuted) {
+        sounds.playCodexUnlock();
+      }
     }
-  }, [path.length, totalCells, lastWaypointHit, waypoints.length, isWon, currentSize, secondsElapsed, isMuted]);
+  }, [
+    path.length,
+    totalCells,
+    lastWaypointHit,
+    waypoints.length,
+    isWon,
+    isSolutionRevealed,
+    sizeIndex,
+    secondsElapsed,
+    isMuted,
+  ]);
 
   // Extend or rewind path
   const tryMoveTo = (r: number, c: number) => {
@@ -184,10 +248,12 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
+    setIsSolutionRevealed(false);
   };
 
   const handleNewPuzzle = () => {
     setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+    setIsSolutionRevealed(false);
   };
 
   const handleHint = () => {
@@ -198,9 +264,21 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
     }
   };
 
+  const handleRevealSolution = () => {
+    setPath([...currentLevel.solutionPath]);
+    setIsSolutionRevealed(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
+  };
+
   const handleToggleSound = () => {
-    const muted = toggleGlobalPuzzleMute();
-    setIsMuted(muted);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   const rulesContent = (
@@ -234,9 +312,14 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
         canHint={!isWon}
         onNewPuzzle={handleNewPuzzle}
         isSoundMuted={isMuted}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
         onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty Tabs */}
@@ -427,6 +510,11 @@ export default function ZipGame({ onBackToHub }: { onBackToHub: () => void }) {
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={levelSeed}
+          challengeInfo={challengeInfo}
         />
       )}
     </div>

@@ -5,8 +5,31 @@ import { Crown, X, CheckCircle2, SlidersHorizontal, Check, AlertTriangle, Lightb
 import { QueensLevel } from "./puzzleTypes";
 import { generateQueensLevel } from "@/lib/puzzles/queens-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
+
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface QueensGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
 import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
@@ -32,15 +55,32 @@ const DIFFICULTY_SIZES: Array<{ label: string; size: 6 | 7 | 8 | 9 }> = [
   { label: "9×9 Expert", size: 9 },
 ];
 
-export default function QueensGame({ onBackToHub }: { onBackToHub: () => void }) {
+export default function QueensGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: QueensGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "queens")!;
-  const [sizeIndex, setSizeIndex] = useState(0);
+  const [sizeIndex, setSizeIndex] = useState(() => {
+    if (challengeInfo?.difficulty) {
+      const match = DIFFICULTY_SIZES.findIndex((d) =>
+        challengeInfo.difficulty?.toLowerCase().includes(d.size.toString())
+      );
+      if (match >= 0) return match;
+    }
+    return 0;
+  });
   const currentSize = DIFFICULTY_SIZES[sizeIndex].size;
 
-  // Active level state (Daily seed or random seed)
-  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  // Active level state (Custom seed, archive date seed, or daily seed)
+  const initialSeed =
+    customSeed ||
+    (dateStr ? getDailyPuzzleSeed(new Date(dateStr)) : getDailyPuzzleSeed());
+  const [levelSeed, setLevelSeed] = useState(() => initialSeed);
   const [currentLevel, setCurrentLevel] = useState<QueensLevel>(() =>
-    generateQueensLevel(currentSize, getDailyPuzzleSeed())
+    generateQueensLevel(currentSize, initialSeed)
   );
 
   const size = currentLevel.size;
@@ -53,8 +93,9 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const [mode, setMode] = useState<"queen" | "x">("queen");
   const [autoX, setAutoX] = useState(true);
 
-  // Sound state
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  // Sound profile state
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
 
   // Drag-to-cross state
   const isDraggingCrossRef = useRef(false);
@@ -69,6 +110,9 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   // Regenerate level on size change or new puzzle trigger
   useEffect(() => {
@@ -142,7 +186,7 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
 
   // Check win condition
   useEffect(() => {
-    if (queensCount === size && conflictingCells.size === 0 && !isWon) {
+    if (queensCount === size && conflictingCells.size === 0 && !isWon && !isSolutionRevealed) {
       const allRows = rowQueens.every((cnt) => cnt === 1);
       const allCols = colQueens.every((cnt) => cnt === 1);
       const allRegs = regQueens.every((cnt) => cnt === 1);
@@ -154,28 +198,35 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
 
         // Record win
         const difficultyName = DIFFICULTY_SIZES[sizeIndex].label.split(" ")[1];
-        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+        const winResult = recordPuzzleWin(
           "queens",
           difficultyName,
           secondsElapsed,
           mistakesCount
         );
-        setIsNewBestTime(isBest);
-        setCurrentStreak(newStreak);
-        setPointsEarned(pts);
-        setArenaBonusPoints(arenaPts);
+        setIsNewBestTime(winResult.isNewBestTime);
+        setCurrentStreak(winResult.newStreak);
+        setPointsEarned(winResult.pointsEarned);
+        setArenaBonusPoints(winResult.arenaBonusPoints);
+        setSpeedTier(winResult.speedTier);
+        setNewCodexCard(winResult.newCodexCard);
+        if (winResult.newCodexCard && !isMuted) {
+          sounds.playCodexUnlock();
+        }
       }
     }
   }, [
     queensCount,
     conflictingCells.size,
     isWon,
+    isSolutionRevealed,
     size,
     rowQueens,
     colQueens,
     regQueens,
-    currentSize,
+    sizeIndex,
     secondsElapsed,
+    mistakesCount,
     isMuted,
   ]);
 
@@ -276,10 +327,12 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
+    setIsSolutionRevealed(false);
   };
 
   const handleNewPuzzle = () => {
     setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+    setIsSolutionRevealed(false);
   };
 
   const handleHint = () => {
@@ -294,9 +347,28 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
     }
   };
 
+  const handleRevealSolution = () => {
+    const sol = currentLevel.solution;
+    const solGrid: CellMark[][] = Array.from({ length: size }, () =>
+      Array(size).fill("x")
+    );
+    for (let r = 0; r < size; r++) {
+      solGrid[r][sol[r]] = "queen";
+    }
+    setGrid(solGrid);
+    setIsSolutionRevealed(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
+  };
+
   const handleToggleSound = () => {
-    const muted = toggleGlobalPuzzleMute();
-    setIsMuted(muted);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   // Border classes to separate different colored regions visually
@@ -346,9 +418,14 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
         canHint={!isWon}
         onNewPuzzle={handleNewPuzzle}
         isSoundMuted={isMuted}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
         onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty Tabs */}
@@ -521,6 +598,11 @@ export default function QueensGame({ onBackToHub }: { onBackToHub: () => void })
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={levelSeed}
+          challengeInfo={challengeInfo}
         />
       )}
     </div>

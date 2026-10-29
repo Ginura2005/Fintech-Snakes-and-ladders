@@ -10,8 +10,16 @@ import {
   getRandomPinpointPack,
   getPinpointHint,
 } from "@/lib/puzzles/pinpoint-engine";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
 import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
@@ -22,11 +30,45 @@ const PINPOINT_DIFFICULTIES: Array<"Easy" | "Medium" | "Hard"> = [
   "Hard",
 ];
 
-export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void }) {
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface PinpointGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
+
+export default function PinpointGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: PinpointGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "pinpoint")!;
-  const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Medium");
+  const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">(() => {
+    if (challengeInfo?.difficulty) {
+      const match = PINPOINT_DIFFICULTIES.find((d) =>
+        d.toLowerCase() === challengeInfo.difficulty?.toLowerCase()
+      );
+      if (match) return match;
+    }
+    return "Medium";
+  });
+
+  const activeSeed =
+    customSeed ||
+    (dateStr ? new Date(dateStr).getTime() : Date.now());
+
   const [currentPack, setCurrentPack] = useState<PinpointExpandedPack>(() =>
-    getDailyPinpointPack("Medium")
+    dateStr ? getDailyPinpointPack(difficulty, new Date(dateStr)) : getDailyPinpointPack(difficulty)
   );
 
   // Game state
@@ -40,11 +82,15 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
   const [errorShake, setErrorShake] = useState(false);
   const [hintShown, setHintShown] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
   const [isNewBestTime, setIsNewBestTime] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   // Handle difficulty switch
   const handleDifficultyChange = (diff: "Easy" | "Medium" | "Hard") => {
@@ -80,21 +126,26 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     const guess = userGuess.trim();
     setUserGuess("");
 
-    if (checkPinpointMatch(guess, currentPack.acceptedAnswers)) {
+    if (checkPinpointMatch(guess, currentPack.acceptedAnswers) && !isSolutionRevealed) {
       setIsWon(true);
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
-      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+      const winResult = recordPuzzleWin(
         "pinpoint",
         difficulty,
         secondsElapsed,
         guesses.length
       );
-      setIsNewBestTime(isBest);
-      setCurrentStreak(newStreak);
-      setPointsEarned(pts);
-      setArenaBonusPoints(arenaPts);
+      setIsNewBestTime(winResult.isNewBestTime);
+      setCurrentStreak(winResult.newStreak);
+      setPointsEarned(winResult.pointsEarned);
+      setArenaBonusPoints(winResult.arenaBonusPoints);
+      setSpeedTier(winResult.speedTier);
+      setNewCodexCard(winResult.newCodexCard);
+      if (winResult.newCodexCard && !isMuted) {
+        sounds.playCodexUnlock();
+      }
     } else {
       // Wrong guess
       if (!isMuted) sounds.playSnakeSlide();
@@ -126,6 +177,20 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     setSecondsElapsed(0);
     setHasStarted(false);
     setHintShown(false);
+    setIsSolutionRevealed(false);
+  };
+
+  const handleRevealSolution = () => {
+    setRevealedCount(5);
+    setIsSolutionRevealed(true);
+    setIsWon(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
   };
 
   const handleNewPuzzle = () => {
@@ -140,11 +205,12 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
     setHasStarted(false);
     setHintShown(false);
     setIsNewBestTime(false);
+    setIsSolutionRevealed(false);
   };
 
   const handleToggleSound = () => {
-    const muted = toggleGlobalPuzzleMute();
-    setIsMuted(muted);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   const hintInfo = getPinpointHint(currentPack.category);
@@ -180,9 +246,14 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
         onReset={handleReset}
         onNewPuzzle={handleNewPuzzle}
         isSoundMuted={isMuted}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
         onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty Tabs */}
@@ -365,6 +436,11 @@ export default function PinpointGame({ onBackToHub }: { onBackToHub: () => void 
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={activeSeed}
+          challengeInfo={challengeInfo}
         />
       )}
     </div>

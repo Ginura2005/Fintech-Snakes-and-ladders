@@ -1,9 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Star } from "lucide-react";
+import {
+  Award,
+  Share2,
+  Check,
+  ArrowRight,
+  RotateCcw,
+  Grid,
+  Flame,
+  Trophy,
+  Star,
+  Zap,
+  Swords,
+  BookOpen,
+} from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
 import PuzzleIcon from "./PuzzleIcon";
+import { SpeedTierInfo, createChallengeUrl, getSpeedTier } from "@/lib/puzzles/puzzle-storage";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
+
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
 
 interface PuzzleWinModalProps {
   meta: PuzzleMeta;
@@ -21,6 +43,11 @@ interface PuzzleWinModalProps {
   onReplay: () => void;
   onBackToHub: () => void;
   onClose: () => void;
+  speedTier?: SpeedTierInfo;
+  newCodexCard?: CodexCard | null;
+  onOpenCodex?: () => void;
+  levelSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
 }
 
 export default function PuzzleWinModal({
@@ -39,8 +66,14 @@ export default function PuzzleWinModal({
   onReplay,
   onBackToHub,
   onClose,
+  speedTier,
+  newCodexCard,
+  onOpenCodex,
+  levelSeed,
+  challengeInfo,
 }: PuzzleWinModalProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedChallenge, setCopiedChallenge] = useState(false);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -62,10 +95,29 @@ export default function PuzzleWinModal({
   const starCount = getStarCount();
   const getStarRatingString = () => "★".repeat(starCount) + "☆".repeat(3 - starCount);
 
+  // Compute speed tier if not provided
+  const activeSpeedTier = speedTier || getSpeedTier(meta.id, levelName, secondsElapsed);
+
+  // Challenge resolution if playing vs a challenger
+  const isChallengerDuel = Boolean(challengeInfo && challengeInfo.targetSeconds > 0);
+  const beatChallenger = isChallengerDuel && secondsElapsed < (challengeInfo?.targetSeconds || 9999);
+  const challengerDiff = isChallengerDuel
+    ? Math.abs(secondsElapsed - (challengeInfo?.targetSeconds || 0))
+    : 0;
+
+  // Challenge URL for sharing 1v1
+  const challengeLink = createChallengeUrl({
+    puzzleId: meta.id,
+    seed: levelSeed || 20261029,
+    difficulty: levelName,
+    seconds: secondsElapsed,
+  });
+
   const shareText = `Lanka FinTechverse Puzzles | ${meta.title}
-Solved ${meta.title} — ${levelName} in ${formatTime(secondsElapsed)}!
-${typeof pointsEarned === "number" ? `Earned +${pointsEarned} Challenge Points · ` : ""}Rating: ${getStarRatingString()}${typeof movesCount === "number" ? ` · ${movesCount} moves` : ""}
-Play daily logic puzzles at fintechfestival.lk/puzzles`;
+Solved ${meta.title} (${levelName}) in ${formatTime(secondsElapsed)}!
+${activeSpeedTier.shareBadge} · Rating: ${getStarRatingString()}
+${typeof pointsEarned === "number" ? `+${pointsEarned} Challenge Points · ` : ""}Can you beat my time?
+Play this exact board: ${challengeLink}`;
 
   const handleCopy = async () => {
     try {
@@ -77,10 +129,28 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
     }
   };
 
+  const handleCopyChallenge = async () => {
+    try {
+      const challengeMsg = `⚔️ 1v1 Challenge on Lanka FinTechverse!
+I cleared ${meta.title} (${levelName}) in ${formatTime(secondsElapsed)} (${activeSpeedTier.rankTitle}).
+Think you're faster? Duel me on this identical board:
+${challengeLink}`;
+      await navigator.clipboard.writeText(challengeMsg);
+      setCopiedChallenge(true);
+      setTimeout(() => setCopiedChallenge(false), 2500);
+    } catch {
+      // Fallback
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="festival-panel max-w-md w-full max-h-[88dvh] overflow-y-auto p-4 sm:p-8 space-y-3.5 sm:space-y-5 border border-primary/40 text-center relative scrollbar-none pb-safe">
-        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center text-primary">
+      <div className="festival-panel max-w-md w-full max-h-[92vh] overflow-y-auto p-4 sm:p-8 space-y-4 sm:space-y-5 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative scrollbar-none">
+        {/* Glow decoration */}
+        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#fec01f]/15 rounded-full blur-3xl" />
+
+        {/* Big Icon */}
+        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-[#fec01f] shadow-inner animate-bounce">
           <PuzzleIcon id={meta.id} size={36} />
         </div>
 
@@ -95,6 +165,60 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
           <p className="text-xs font-mono uppercase tracking-wider text-white/60">
             {meta.title} · {levelName}
           </p>
+        </div>
+
+        {/* 1v1 Duel Battle Result Banner (if challenged) */}
+        {isChallengerDuel && (
+          <div
+            className={`p-3.5 rounded-xl border text-left shadow-lg transition-all ${
+              beatChallenger
+                ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
+                : "bg-amber-950/40 border-amber-500/50 text-amber-300"
+            }`}
+          >
+            <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider mb-1">
+              <Swords size={15} />
+              <span>
+                {beatChallenger
+                  ? `🏆 Defeated ${challengeInfo?.challengerName || "Challenger"}!`
+                  : `⏱️ ${challengeInfo?.challengerName || "Challenger"} Remains Champion!`}
+              </span>
+            </div>
+            <p className="text-xs text-white/80">
+              {beatChallenger
+                ? `You cleared this board in ${formatTime(secondsElapsed)}, beating their ${formatTime(
+                    challengeInfo?.targetSeconds || 0
+                  )} by ${challengerDiff}s!`
+                : `Their record was ${formatTime(
+                    challengeInfo?.targetSeconds || 0
+                  )}. You were behind by ${challengerDiff}s. Replay to claim the crown!`}
+            </p>
+          </div>
+        )}
+
+        {/* Speed Tier & Percentile Banner */}
+        <div className="p-3.5 rounded-xl bg-gradient-to-r from-white/[0.04] to-white/[0.08] border border-white/15 flex items-center justify-between text-left shadow-inner">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] uppercase tracking-wider bg-[#fec01f] text-black">
+                {activeSpeedTier.badge}
+              </span>
+              <span className="font-heading font-bold text-white text-sm">
+                {activeSpeedTier.rankTitle}
+              </span>
+            </div>
+            <p className="text-[11px] text-white/70 leading-snug">
+              {activeSpeedTier.description}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <span className="font-mono text-xs font-bold text-[#00f0ff] block">
+              Top {100 - activeSpeedTier.percentile}%
+            </span>
+            <span className="text-[9px] font-mono uppercase tracking-wider text-white/40">
+              Percentile
+            </span>
+          </div>
         </div>
 
         {/* Badges for New Best Time & Streak */}
@@ -164,7 +288,7 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
                 <p className="text-[11px] text-white/70 leading-tight">
                   {typeof arenaBonusPoints === "number" && arenaBonusPoints > 0
                     ? `Contributes to Arena game score (Active Bonus: +${arenaBonusPoints} pts, max 50)`
-                    : "Contributes +10 pts to your Arena game score (up to 50 max)"}
+                    : "Contributes to your Arena game score (up to 50 max)"}
                 </p>
               </div>
             </div>
@@ -179,11 +303,44 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
           </div>
         )}
 
+        {/* New FinTech Codex Card Celebration (if unlocked) */}
+        {newCodexCard && (
+          <div className="p-3.5 rounded-xl bg-gradient-to-r from-purple-950/40 via-purple-900/20 to-teal-950/40 border border-purple-500/40 text-left flex items-center justify-between shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+                <BookOpen size={18} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                    Codex Decrypted
+                  </span>
+                  <span className="text-xs font-bold text-white">
+                    {newCodexCard.title}
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/70 line-clamp-1">
+                  {newCodexCard.summary}
+                </p>
+              </div>
+            </div>
+            {onOpenCodex && (
+              <button
+                onClick={onOpenCodex}
+                className="interactive-btn interactive-btn--outline text-[11px] py-1.5 px-2.5 shrink-0 uppercase tracking-wider ml-2"
+              >
+                Inspect
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Educational Fact / Takeaway Card if available */}
         {educationalFact && (
           <div className="p-3.5 rounded-xl bg-teal-950/30 border border-teal-500/30 text-left space-y-1">
-            <div className="text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
-              FinTech Intelligence Takeaway
+            <div className="flex items-center gap-1.5 text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
+              <BookOpen size={12} />
+              <span>FinTech Intelligence Takeaway</span>
             </div>
             <p className="text-xs text-white/80 leading-relaxed">
               {educationalFact}
@@ -195,15 +352,25 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
         <div className="text-left p-3 rounded-lg bg-black/40 border border-white/10 font-mono text-xs text-white/70 space-y-1">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-white/40 pb-1 border-b border-white/5">
             <span>Shareable Result</span>
-            <span>LinkedIn Style</span>
+            <span>LinkedIn &amp; Duel</span>
           </div>
           <p className="font-bold text-white/90">Lanka FinTechverse Puzzles · {meta.title}</p>
-          <p>Solved {meta.title} in {formatTime(secondsElapsed)} ({getStarRatingString()})</p>
-          <p className="text-[11px] text-[#fec01f]/80">fintechfestival.lk/puzzles</p>
+          <p>{activeSpeedTier.shareBadge}</p>
+          <p>Solved in {formatTime(secondsElapsed)} ({getStarRatingString()})</p>
         </div>
 
         {/* Action Buttons */}
         <div className="space-y-2.5">
+          {/* 1v1 Challenge button */}
+          <button
+            onClick={handleCopyChallenge}
+            className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-teal-500/20 to-[#00f0ff]/20 hover:from-teal-500/30 hover:to-[#00f0ff]/30 border border-[#00f0ff]/50 font-mono text-xs uppercase font-bold text-[#00f0ff] flex items-center justify-center gap-2 transition-all shadow-md active:scale-98"
+          >
+            {copiedChallenge ? <Check size={16} /> : <Swords size={16} />}
+            <span>{copiedChallenge ? "1v1 Duel Link Copied!" : "⚔️ Challenge a Colleague (1v1 Duel)"}</span>
+          </button>
+
+          {/* Copy LinkedIn Score */}
           <button
             onClick={handleCopy}
             className="w-full interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3 flex items-center justify-center gap-2"

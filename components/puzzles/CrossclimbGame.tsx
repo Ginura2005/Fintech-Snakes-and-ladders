@@ -9,8 +9,16 @@ import {
   generateCrossclimbLevel,
 } from "@/lib/puzzles/crossclimb-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
 import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
@@ -21,14 +29,46 @@ const CLIMB_DIFFICULTIES: Array<"Easy" | "Medium" | "Hard"> = [
   "Hard",
 ];
 
-export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => void }) {
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface CrossclimbGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
+
+export default function CrossclimbGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: CrossclimbGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "crossclimb")!;
-  const [diffIndex, setDiffIndex] = useState(0);
+  const [diffIndex, setDiffIndex] = useState(() => {
+    if (challengeInfo?.difficulty) {
+      const match = CLIMB_DIFFICULTIES.findIndex((d) =>
+        d.toLowerCase() === challengeInfo.difficulty?.toLowerCase()
+      );
+      if (match >= 0) return match;
+    }
+    return 0;
+  });
   const difficulty = CLIMB_DIFFICULTIES[diffIndex];
 
-  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const initialSeed =
+    customSeed ||
+    (dateStr ? getDailyPuzzleSeed(new Date(dateStr)) : getDailyPuzzleSeed());
+  const [levelSeed, setLevelSeed] = useState(() => initialSeed);
   const [currentLevel, setCurrentLevel] = useState<CrossclimbLevel>(() =>
-    generateCrossclimbLevel(difficulty, getDailyPuzzleSeed())
+    generateCrossclimbLevel(difficulty, initialSeed)
   );
 
   // Scramble ladder words initially
@@ -41,7 +81,8 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
   const [topAnswer, setTopAnswer] = useState("");
   const [bottomAnswer, setBottomAnswer] = useState("");
 
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [isWon, setIsWon] = useState(false);
@@ -50,6 +91,9 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   // Reset on level change
   useEffect(() => {
@@ -105,22 +149,42 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
 
   // Win condition: ladder fully connected AND top and bottom solved!
   useEffect(() => {
-    if (isLadderFullyConnected && isTopSolved && isBottomSolved && !isWon) {
+    if (
+      isLadderFullyConnected &&
+      isTopSolved &&
+      isBottomSolved &&
+      !isWon &&
+      !isSolutionRevealed
+    ) {
       setIsWon(true);
       setShowWinModal(true);
       if (!isMuted) sounds.playVictory();
 
-      const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+      const winResult = recordPuzzleWin(
         "crossclimb",
         difficulty,
         secondsElapsed
       );
-      setIsNewBestTime(isBest);
-      setCurrentStreak(newStreak);
-      setPointsEarned(pts);
-      setArenaBonusPoints(arenaPts);
+      setIsNewBestTime(winResult.isNewBestTime);
+      setCurrentStreak(winResult.newStreak);
+      setPointsEarned(winResult.pointsEarned);
+      setArenaBonusPoints(winResult.arenaBonusPoints);
+      setSpeedTier(winResult.speedTier);
+      setNewCodexCard(winResult.newCodexCard);
+      if (winResult.newCodexCard && !isMuted) {
+        sounds.playCodexUnlock();
+      }
     }
-  }, [isLadderFullyConnected, isTopSolved, isBottomSolved, isWon, difficulty, secondsElapsed, isMuted]);
+  }, [
+    isLadderFullyConnected,
+    isTopSolved,
+    isBottomSolved,
+    isWon,
+    isSolutionRevealed,
+    difficulty,
+    secondsElapsed,
+    isMuted,
+  ]);
 
   // Reordering ladder rungs
   const moveRung = (index: number, direction: "up" | "down") => {
@@ -166,6 +230,25 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     }
   };
 
+  const handleRevealSolution = () => {
+    setLadder([...currentLevel.ladderWords]);
+    const solAnswers: Record<string, string> = {};
+    currentLevel.ladderWords.forEach((w) => {
+      solAnswers[w.id] = w.word;
+    });
+    setAnswers(solAnswers);
+    setTopAnswer(currentLevel.topWord.word);
+    setBottomAnswer(currentLevel.bottomWord.word);
+    setIsSolutionRevealed(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
+  };
+
   const handleReset = () => {
     const shuffled = [...currentLevel.ladderWords].reverse();
     setLadder(shuffled);
@@ -176,15 +259,17 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
+    setIsSolutionRevealed(false);
   };
 
   const handleNewPuzzle = () => {
     setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+    setIsSolutionRevealed(false);
   };
 
   const handleToggleSound = () => {
-    const muted = toggleGlobalPuzzleMute();
-    setIsMuted(muted);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   const rulesContent = (
@@ -218,9 +303,14 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
         canHint={!isWon}
         onNewPuzzle={handleNewPuzzle}
         isSoundMuted={isMuted}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
         onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty Tabs */}
@@ -258,7 +348,7 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
           >
             {isLadderFullyConnected ? (
               <>
-                <Check size={13} className="text-teal-300 shrink-0" />
+                <Unlock size={13} className="text-teal-300 shrink-0" />
                 <span>Ladder Complete! Top &amp; Bottom Unlocked</span>
               </>
             ) : (
@@ -447,6 +537,11 @@ export default function CrossclimbGame({ onBackToHub }: { onBackToHub: () => voi
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={levelSeed}
+          challengeInfo={challengeInfo}
         />
       )}
     </div>

@@ -16,7 +16,6 @@ import {
   FileText,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   ArrowRight,
   ArrowLeft,
   Printer,
@@ -26,11 +25,13 @@ import {
   KeyRound,
   Server,
   Share2,
+  MapPin,
+  Building,
 } from "lucide-react";
 
 export default function PrivacyContent() {
   const [user, setUser] = useState<User | null>(null);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("who-we-are");
   const supabase = createClient();
 
   useEffect(() => {
@@ -48,17 +49,16 @@ export default function PrivacyContent() {
   }, [supabase.auth]);
 
   const navItems = [
-    { id: "overview", label: "1. Overview & Scope" },
-    { id: "data-collection", label: "2. Information We Collect" },
-    { id: "google-data", label: "3. Google User Data & Limited Use" },
-    { id: "data-usage", label: "4. How We Use Data" },
-    { id: "legal-basis", label: "5. Legal Grounds & PDPA" },
-    { id: "leaderboard-privacy", label: "6. Leaderboard & Privacy Controls" },
-    { id: "cookies-storage", label: "7. Cookies & Local Storage" },
-    { id: "security-retention", label: "8. Storage, Security & Retention" },
-    { id: "user-rights", label: "9. Your Rights Under Sri Lanka Law" },
-    { id: "children", label: "10. Children's Privacy" },
-    { id: "contact", label: "11. Contact & Data Controller" },
+    { id: "who-we-are", label: "01. Who We Are" },
+    { id: "what-we-collect", label: "02. What We Collect" },
+    { id: "how-we-use-it", label: "03. How We Use It" },
+    { id: "who-we-share-it-with", label: "04. Who We Share It With" },
+    { id: "how-long-we-keep-it", label: "05. How Long We Keep It" },
+    { id: "cookies", label: "06. Cookies & Storage" },
+    { id: "security", label: "07. Security" },
+    { id: "your-rights", label: "08. Your Rights" },
+    { id: "contact-us", label: "09. Contact Us" },
+    { id: "changes", label: "10. Changes & Revisions" },
   ];
 
   const handlePrint = () => {
@@ -77,13 +77,14 @@ export default function PrivacyContent() {
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Link
               href="/"
+              data-cursor="link"
               className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-[#fec01f] transition-colors"
             >
               <ArrowLeft size={14} /> Back to Arena
             </Link>
             <span className="text-white/30">/</span>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-widest bg-[#fec01f]/10 text-[#fec01f] border border-[#fec01f]/30">
-              Official Legal Document
+              Official Festival Policy
             </span>
           </div>
 
@@ -93,17 +94,18 @@ export default function PrivacyContent() {
                 Privacy Policy
               </h1>
               <p className="mt-3 text-base sm:text-lg text-white/70 max-w-2xl leading-relaxed">
-                How <strong className="text-white">Lanka FinTechverse</strong> and the{" "}
-                <strong className="text-[#fec01f]">Sri Lanka FinTech Festival 2026</strong> collect,
-                protect, and honor your personal data in full compliance with the Sri Lanka Personal Data
-                Protection Act (PDPA) No. 9 of 2022 and Google API Services User Data Policies.
+                How <strong className="text-white">FinTech Forum (Guarantee) Limited</strong>, the{" "}
+                <strong className="text-[#fec01f]">Sri Lanka FinTech Festival 2026</strong>, and the{" "}
+                <strong className="text-white">Lanka FinTechverse</strong> arena collect, protect,
+                and honor your personal data under Sri Lanka&#39;s Personal Data Protection Act, No. 9 of 2022 (PDPA).
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 text-xs font-mono uppercase tracking-wider text-white/80 transition-all"
+                data-cursor="button"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/30 text-xs font-mono uppercase tracking-wider text-white/80 transition-all cursor-pointer"
                 title="Print or save PDF"
               >
                 <Printer size={14} />
@@ -111,6 +113,7 @@ export default function PrivacyContent() {
               </button>
               <Link
                 href="/terms"
+                data-cursor="link"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#fec01f]/30 bg-[#fec01f]/10 hover:bg-[#fec01f]/20 text-xs font-mono uppercase tracking-wider text-[#fec01f] transition-all"
               >
                 <Scale size={14} />
@@ -119,23 +122,50 @@ export default function PrivacyContent() {
             </div>
           </div>
 
+          {/* 3 Official Core Assurances */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center gap-3">
+              <Shield className="h-6 w-6 text-emerald-400 shrink-0" />
+              <div>
+                <p className="font-heading text-sm font-bold text-white">We Never Sell Your Data</p>
+                <p className="text-xs text-white/70">No data brokers, no advertising exchanges, zero commercial monetization.</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-[#fec01f]/30 bg-[#fec01f]/10 flex items-center gap-3">
+              <CheckCircle2 className="h-6 w-6 text-[#fec01f] shrink-0" />
+              <div>
+                <p className="font-heading text-sm font-bold text-white">Marketing Only if You Agree</p>
+                <p className="text-xs text-white/70">Leaderboard display and marketing are 100% opt-in. Unsubscribe at any time.</p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 flex items-center gap-3">
+              <Scale className="h-6 w-6 text-blue-400 shrink-0" />
+              <div>
+                <p className="font-heading text-sm font-bold text-white">Protected by Sri Lankan Law</p>
+                <p className="text-xs text-white/70">Fully aligned with the Personal Data Protection Act, No. 9 of 2022 (PDPA).</p>
+              </div>
+            </div>
+          </div>
+
           {/* Metadata chips */}
           <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center gap-4 sm:gap-8 text-xs font-mono text-white/60">
             <div>
-              <span className="text-white/40 block">APPLICATION</span>
-              <span className="text-white font-semibold">Lanka FinTechverse</span>
+              <span className="text-white/40 block">CONTROLLER</span>
+              <span className="text-white font-semibold">FinTech Forum (Guarantee) Limited</span>
             </div>
             <div>
-              <span className="text-white/40 block">ORGANIZATION</span>
-              <span className="text-white font-semibold">Sri Lanka FinTech Festival 2026</span>
+              <span className="text-white/40 block">PLATFORM</span>
+              <span className="text-white font-semibold">fintechfestival.lk &amp; verse arena</span>
             </div>
             <div>
-              <span className="text-white/40 block">JURISDICTION</span>
-              <span className="text-white font-semibold">Sri Lanka (PDPA No. 9 of 2022)</span>
+              <span className="text-white/40 block">STATUTE</span>
+              <span className="text-white font-semibold">Sri Lanka PDPA No. 9 of 2022</span>
             </div>
             <div>
-              <span className="text-white/40 block">EFFECTIVE DATE</span>
-              <span className="text-[#fec01f] font-semibold">October 28, 2026</span>
+              <span className="text-white/40 block">LAST REVISED</span>
+              <span className="text-[#fec01f] font-semibold">January 2026</span>
             </div>
           </div>
         </div>
@@ -158,6 +188,7 @@ export default function PrivacyContent() {
                       key={item.id}
                       href={`#${item.id}`}
                       onClick={() => setActiveSection(item.id)}
+                      data-cursor="link"
                       className={`block py-1.5 px-2.5 rounded-lg text-xs font-medium transition-colors ${
                         activeSection === item.id
                           ? "bg-[#fec01f]/15 text-[#fec01f] font-bold"
@@ -199,55 +230,56 @@ export default function PrivacyContent() {
               {/* Contact Card */}
               <div className="p-5 rounded-2xl border border-white/10 bg-white/[0.02]">
                 <p className="font-mono text-xs uppercase tracking-wider text-white/50 mb-1">
-                  Need Assistance?
+                  Data Protection Officer
                 </p>
                 <p className="text-xs text-white/80 leading-relaxed mb-3">
-                  Have questions about your data or want to request account deletion?
+                  FinTech Forum (Guarantee) Limited
+                  <br />
+                  No.161A, Dharmapala Mawatha, Colombo 07
                 </p>
                 <a
-                  href="mailto:privacy@fintechfestival.lk"
+                  href="mailto:connect@fintechfestival.lk"
+                  data-cursor="link"
                   className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fec01f] hover:underline"
                 >
                   <Mail size={13} />
-                  privacy@fintechfestival.lk
+                  connect@fintechfestival.lk
                 </a>
               </div>
             </div>
           </aside>
 
-          {/* Legal Prose Content */}
+          {/* Legal Prose Content: 10 Official Sections */}
           <main className="lg:col-span-8 xl:col-span-9 space-y-12">
-            {/* Section 1 */}
-            <section id="overview" className="scroll-mt-28 space-y-4">
+            {/* Section 01: Who We Are */}
+            <section id="who-we-are" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   01
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Overview &amp; Scope
+                  Who We Are
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                Welcome to <strong>Lanka FinTechverse</strong> (accessible via{" "}
+                <strong>FinTech Forum (Guarantee) Limited</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;),
+                located at <strong>No.161A, Dharmapala Mawatha, Colombo 07, Sri Lanka</strong>, runs{" "}
+                <code className="text-[#fec01f] text-xs bg-white/5 px-2 py-0.5 rounded">
+                  fintechfestival.lk
+                </code>
+                , the <strong>Sri Lanka FinTech Festival 2026</strong>, and its official digital game and logic arena{" "}
                 <code className="text-[#fec01f] text-xs bg-white/5 px-2 py-0.5 rounded">
                   verse.fintechfestival.lk
                 </code>
-                ), the official interactive digital game developed for the{" "}
-                <strong>Sri Lanka FinTech Festival 2026</strong> (&ldquo;Festival&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;),
-                taking place in Colombo, Sri Lanka.
+                .
               </p>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                This Privacy Policy explains how the Sri Lanka FinTech Festival Committee collects,
-                processes, stores, and safeguards personal data when you access our web application,
-                authenticate via Google, play the Snakes &amp; Ladders or LinkedIn-style Puzzles arena,
-                and participate in our festival leaderboard. We are deeply committed to safeguarding
-                your digital privacy in accordance with the{" "}
-                <strong>Sri Lanka Personal Data Protection Act (PDPA) No. 9 of 2022</strong> and
-                international data protection principles.
+                We protect your personal data in strict compliance with Sri Lanka&rsquo;s{" "}
+                <strong>Personal Data Protection Act, No. 9 of 2022 (PDPA)</strong> and international privacy standards.
               </p>
               <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
                 <p className="text-xs text-white/70 leading-relaxed">
-                  <strong className="text-white">Non-Commercial Educational Purpose:</strong> Lanka
+                  <strong className="text-white">Educational &amp; Capacity-Building Purpose:</strong> Lanka
                   FinTechverse is an educational, non-gambling festival game created to build capacity,
                   spark financial technology awareness, and celebrate Sri Lanka&rsquo;s digital finance
                   ecosystem. We never sell, monetize, or market personal information.
@@ -255,109 +287,180 @@ export default function PrivacyContent() {
               </div>
             </section>
 
-            {/* Section 2 */}
-            <section id="data-collection" className="scroll-mt-28 space-y-4">
+            {/* Section 02: What We Collect */}
+            <section id="what-we-collect" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   02
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Information We Collect &amp; Receive
+                  What We Collect
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                We believe in strict data minimization. We only collect the minimal information necessary
-                to securely authenticate you, prevent duplicate festival game entries, compute your
-                score, and optionally display your ranking.
+                We collect only the minimum data required to deliver our festival experiences, ticketing, awards, and digital arena:
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
                   <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                    <KeyRound size={16} className="text-[#fec01f]" />
-                    <span>A. Google Account Identity</span>
+                    <UserCheck size={16} className="text-[#fec01f]" />
+                    <span>Details You Give Us</span>
                   </div>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    When you sign in using Google Identity Services / OAuth, we receive:
-                  </p>
-                  <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
-                    <li>Your verified email address</li>
-                    <li>Your full name (as registered with Google)</li>
-                    <li>Your public profile photo / avatar URL</li>
-                    <li>A unique Google OAuth identifier (Subject ID)</li>
-                  </ul>
-                  <p className="text-[11px] text-white/50 italic pt-1">
-                    Your Google email is kept strictly private and is never shown on public screens.
+                    Name, job title, company, email, phone number, ticket details, billing details, and any accessibility or dietary needs you communicate to us.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
                   <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                    <UserCheck size={16} className="text-teal-400" />
-                    <span>B. Public Player Handle</span>
+                    <Building size={16} className="text-teal-400" />
+                    <span>Awards, Enquiries &amp; Exhibits</span>
                   </div>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    Upon onboarding, you choose a customizable public display name (e.g.,{" "}
-                    <code className="text-[#fec01f]">Satoshi_LK</code>):
+                    The information you submit when you apply for an award, submit a speaker proposal, or enquire about sponsorship, exhibiting, or media passes.
                   </p>
-                  <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
-                    <li>Between 2 and 30 characters in length</li>
-                    <li>Can be a pseudonym, handle, or professional alias</li>
-                    <li>Stored separately from your Google email</li>
-                    <li>Can be updated at any time in your player profile</li>
-                  </ul>
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
                   <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                    <Server size={16} className="text-purple-400" />
-                    <span>C. Game Telemetry &amp; Runs</span>
+                    <KeyRound size={16} className="text-purple-400" />
+                    <span>Google Account &amp; Player Profile</span>
                   </div>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    To compute game logic server-authoritatively and prevent manipulation:
+                    When you sign in using Google OAuth for the arena: verified email address, Google full name, profile picture URL, and a unique Subject ID. Your email address remains private and is never published on leaderboards.
                   </p>
-                  <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
-                    <li>Dice roll outcomes and timestamped move sequences</li>
-                    <li>Board position, hearts remaining, and shields collected</li>
-                    <li>FinTech quiz answers (correct/incorrect tally)</li>
-                    <li>Match duration and completion timestamp</li>
-                    <li>Daily puzzle completion times and streaks</li>
-                  </ul>
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
                   <div className="flex items-center gap-2 text-white font-semibold text-sm">
-                    <Globe size={16} className="text-blue-400" />
-                    <span>D. Technical &amp; Security Data</span>
+                    <Server size={16} className="text-blue-400" />
+                    <span>Arena Moves &amp; Telemetry</span>
                   </div>
                   <p className="text-xs text-white/70 leading-relaxed">
-                    Standard web server logs collected automatically for system defense:
+                    Dice roll sequences, board position, hearts remaining, shields collected, quiz responses, daily puzzle completion streaks, and match timestamps to verify competitive integrity.
                   </p>
-                  <ul className="text-xs text-white/60 space-y-1 list-disc list-inside">
-                    <li>IP address (for rate-limiting and DDoS mitigation)</li>
-                    <li>Browser user-agent and operating system</li>
-                    <li>Session authentication tokens managed by Supabase Auth</li>
-                    <li>Cryptographic challenge link tokens</li>
-                  </ul>
+                </div>
+
+                <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
+                  <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                    <Mail size={16} className="text-amber-400" />
+                    <span>Messages</span>
+                  </div>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    Emails, web forms, and WhatsApp messages sent to our official support and sales lines (+94 77 793 0472).
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-white/10 bg-white/[0.03] space-y-2">
+                  <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                    <Globe size={16} className="text-rose-400" />
+                    <span>Website &amp; Event Presence</span>
+                  </div>
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    Device and browser type, IP address, and pages visited (through essential cookies). At physical venue events: attendance records, badge scans, and official event photographs or videos.
+                  </p>
                 </div>
               </div>
             </section>
 
-            {/* Section 3: Google Limited Use */}
-            <section id="google-data" className="scroll-mt-28 space-y-4">
+            {/* Section 03: How We Use It */}
+            <section id="how-we-use-it" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   03
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Google API Services User Data Policy Compliance
+                  How We Use It
                 </h2>
               </div>
+              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
+                Your data is processed strictly for the execution, fair administration, and safety of the festival and its interactive games:
+              </p>
+              <ul className="space-y-2.5 text-sm text-white/80">
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To sell tickets, process payments, and manage your festival registration.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To send you event updates, schedules, speaker notifications, and important attendee advisories.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To manage the FinTech Awards, speaker sessions, and exhibition booths.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To enforce fair tournament play in the Snakes &amp; Ladders arena (one official game run per player account).</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To display voluntary leaderboard scores and generate customized social sharing cards.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To answer your questions, resolve technical support requests, and address feedback.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To send marketing about future events, <em>only if you explicitly agree</em>. You can unsubscribe at any time.</span>
+                </li>
+                <li className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                  <span>To run the event safely, protect against fraud or bot manipulation, and meet statutory Sri Lankan accounting requirements.</span>
+                </li>
+              </ul>
+            </section>
 
-              <div className="p-5 rounded-2xl border-2 border-[#fec01f]/40 bg-gradient-to-br from-[#fec01f]/10 via-[#0a0a28] to-[#06061f] space-y-3">
+            {/* Section 04: Who We Share It With */}
+            <section id="who-we-share-it-with" className="scroll-mt-28 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
+                  04
+                </span>
+                <h2 className="font-heading text-2xl font-bold text-white">
+                  Who We Share It With
+                </h2>
+              </div>
+              <p className="text-white/80 leading-relaxed text-sm sm:text-base font-semibold text-white">
+                We do not sell your personal data. Under no circumstances do we trade, lease, or monetize your information.
+              </p>
+              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
+                We share it only with:
+              </p>
+              <div className="space-y-3 text-xs sm:text-sm text-white/80">
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">• Trusted Service Providers:</strong>
+                  <span>
+                    Infrastructure and technology partners who help us run the website, database, and event (Supabase PostgreSQL, Vercel cloud hosting, Google OAuth authentication, payment processing, and event badge check-in).
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">• Sponsors or Exhibitors:</strong>
+                  <span>
+                    <em>Only if you agree</em> (for example, by voluntarily consenting to let an exhibitor scan your conference badge or participating in sponsored partner quizzes).
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">• Awards Judges:</strong>
+                  <span>
+                    Independent evaluation panels assessing festival award submissions.
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">• Legal Authorities &amp; Professional Advisers:</strong>
+                  <span>
+                    Where required by Sri Lankan law or statutory regulatory bodies.
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Limited Use Callout Box */}
+              <div className="mt-4 p-5 rounded-2xl border-2 border-[#fec01f]/40 bg-gradient-to-br from-[#fec01f]/10 via-[#0a0a28] to-[#06061f] space-y-3">
                 <div className="flex items-center gap-2 text-[#fec01f] font-heading font-bold text-base">
                   <Lock size={18} />
-                  <span>Google Limited Use Disclosure</span>
+                  <span>Google API Services User Data Policy Compliance</span>
                 </div>
                 <p className="text-sm text-white/90 leading-relaxed">
                   Lanka FinTechverse&rsquo;s use and transfer of information received from Google APIs
@@ -371,434 +474,226 @@ export default function PrivacyContent() {
                     Google API Services User Data Policy
                     <ExternalLink size={12} />
                   </a>
-                  , including the <strong>Limited Use</strong> requirements.
+                  , including the <strong>Limited Use</strong> requirements. We never transfer Google user data to advertising networks or AI model trainers.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-white/80">
-                  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
-                      <XCircle size={14} className="shrink-0" />
-                      <span>NEVER SOLD OR RENTED</span>
-                    </span>
-                    <span>
-                      We never sell, lease, transfer, or exchange your Google user data with any advertising
-                      network, data broker, or commercial third party.
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
-                      <XCircle size={14} className="shrink-0" />
-                      <span>NO AD TARGETING</span>
-                    </span>
-                    <span>
-                      Your Google profile data is never used to serve targeted advertisements, retargeting
-                      campaigns, or behavioral user profiling.
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-rose-400 font-bold flex items-center gap-1.5 mb-1">
-                      <XCircle size={14} className="shrink-0" />
-                      <span>NO AI/ML TRAINING</span>
-                    </span>
-                    <span>
-                      We do not feed your Google personal information or user credentials into generative AI
-                      or machine learning training models.
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/10">
-                    <span className="text-teal-400 font-bold flex items-center gap-1.5 mb-1">
-                      <CheckCircle2 size={14} className="shrink-0" />
-                      <span>STRICTLY ESSENTIAL</span>
-                    </span>
-                    <span>
-                      Google authentication is used exclusively to verify identity, establish secure sessions,
-                      and enforce the one-official-run game rule.
-                    </span>
-                  </div>
-                </div>
               </div>
-            </section>
 
-            {/* Section 4 */}
-            <section id="data-usage" className="scroll-mt-28 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
-                  04
-                </span>
-                <h2 className="font-heading text-2xl font-bold text-white">
-                  How We Use Your Data
-                </h2>
-              </div>
-              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                Your data is processed strictly for the execution and fair administration of the festival
-                digital experience:
+              <p className="text-xs text-white/60 leading-relaxed pt-2">
+                Your name, job title, and company may appear on your attendee badge. Speakers and award winners may be named on the website and in festival promotional material. Some of our cloud providers may store data outside Sri Lanka; we ensure all cross-border transfers are protected as the law requires.
               </p>
-              <ul className="space-y-3 text-sm text-white/80">
-                <li className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <span className="w-6 h-6 rounded-md bg-[#fec01f]/20 text-[#fec01f] flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
-                    1
-                  </span>
-                  <div>
-                    <strong className="text-white">Tournament Fairness &amp; One-Run Enforcement:</strong>{" "}
-                    To ensure competitive integrity for festival prizes and recognition, each authenticated
-                    player is granted exactly one official game run. Your Google account ID ensures no
-                    duplicate runs are submitted under multiple aliases.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <span className="w-6 h-6 rounded-md bg-[#fec01f]/20 text-[#fec01f] flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
-                    2
-                  </span>
-                  <div>
-                    <strong className="text-white">Authoritative Score Computation:</strong> All dice rolls,
-                    ladder climbs, snake hazards, and quiz point deltas are calculated on the server to prevent
-                    client-side game tampering or manipulation.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <span className="w-6 h-6 rounded-md bg-[#fec01f]/20 text-[#fec01f] flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
-                    3
-                  </span>
-                  <div>
-                    <strong className="text-white">Voluntary Leaderboard Presentation:</strong> If and only if
-                    you choose to opt in, your public display handle, score, win/loss status, and duration
-                    are published on the live festival leaderboard displayed at venue screens and online.
-                  </div>
-                </li>
-                <li className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                  <span className="w-6 h-6 rounded-md bg-[#fec01f]/20 text-[#fec01f] flex items-center justify-center text-xs font-mono font-bold shrink-0 mt-0.5">
-                    4
-                  </span>
-                  <div>
-                    <strong className="text-white">Dynamic Challenge Links &amp; Share Cards:</strong> When
-                    you share your game result, our system generates cryptographic tokens that allow colleagues
-                    to challenge your run without exposing your personal email or Google account ID.
-                  </div>
-                </li>
-              </ul>
             </section>
 
-            {/* Section 5 */}
-            <section id="legal-basis" className="scroll-mt-28 space-y-4">
+            {/* Section 05: How Long We Keep It */}
+            <section id="how-long-we-keep-it" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   05
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Legal Grounds &amp; Sri Lanka PDPA Compliance
+                  How Long We Keep It
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                Under the <strong>Personal Data Protection Act No. 9 of 2022 of Sri Lanka</strong>, we process
-                your personal data on the following statutory legal bases:
+                We keep your data only until the Festival and its audit activities are concluded:
               </p>
-              <div className="space-y-3 text-xs sm:text-sm text-white/80">
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-[#fec01f] block mb-1">
-                    • Consent (Section 5, PDPA)
-                  </strong>
-                  <span>
-                    When you sign in with Google, opt into the public leaderboard, or choose your custom handle,
-                    you provide explicit, informed consent for those specific purposes. You may withdraw consent
-                    at any time.
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-teal-400 block mb-1">
-                    • Performance of Contract / Service Terms (Section 5, PDPA)
-                  </strong>
-                  <span>
-                    Processing necessary to deliver the game functionality, calculate game state, and provide
-                    authenticated session access as requested by you.
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-purple-400 block mb-1">
-                    • Legitimate Interests (Section 5, PDPA)
-                  </strong>
-                  <span>
-                    Maintaining the technical integrity and security of the game application, preventing bot
-                    abuse, enforcing tournament fairness, and defending against unauthorized API tampering.
-                  </span>
-                </div>
-              </div>
+              <ul className="space-y-2 text-xs sm:text-sm text-white/80 list-disc list-inside">
+                <li>If you have agreed to receive marketing about future FinTech Festival editions, we keep your contact details until you unsubscribe.</li>
+                <li>Official tournament scores and leaderboard records are retained for the duration of the 2026 campaign to distribute awards and prizes.</li>
+                <li>Where the law requires us to keep certain records (for example, payment, invoicing, and accounting records), we keep those for the period mandated by Sri Lankan statute.</li>
+                <li>After that, we securely delete or permanently anonymise your data.</li>
+              </ul>
             </section>
 
-            {/* Section 6: Leaderboard Privacy */}
-            <section id="leaderboard-privacy" className="scroll-mt-28 space-y-4">
+            {/* Section 06: Cookies */}
+            <section id="cookies" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   06
-                </span>
-                <h2 className="font-heading text-2xl font-bold text-white">
-                  Leaderboard &amp; Privacy By Design
-                </h2>
-              </div>
-              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                We designed Lanka FinTechverse with strict privacy boundaries:
-              </p>
-              <div className="space-y-3 text-xs sm:text-sm">
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10">
-                  <Eye size={18} className="text-[#fec01f] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white block mb-0.5">Opt-In By Default is FALSE</strong>
-                    <span className="text-white/70">
-                      When your match completes, your score is NOT publicly visible until you explicitly check
-                      the opt-in box. If you do not opt in, your match remains completely private between you
-                      and our server.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10">
-                  <UserCheck size={18} className="text-teal-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white block mb-0.5">Strict Identity Decoupling</strong>
-                    <span className="text-white/70">
-                      The public leaderboard view only queries your self-chosen display name, final score, quiz
-                      points, and duration. Your Google email address, internal UUIDs, and private OAuth tokens
-                      are never exposed in public views or API payloads.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/[0.02] border border-white/10">
-                  <Share2 size={18} className="text-purple-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white block mb-0.5">Instant Opt-Out Anytime</strong>
-                    <span className="text-white/70">
-                      You can toggle your leaderboard participation off at any time directly on your results
-                      screen or by calling our profile API. Opting out takes effect immediately and removes
-                      your name from the public leaderboard table.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Section 7 */}
-            <section id="cookies-storage" className="scroll-mt-28 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
-                  07
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
                   Cookies &amp; Local Storage
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                We use strictly essential cookies and browser storage required for core game functionality:
+                We use cookies and local browser storage to make the website and game arena work seamlessly:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-[#fec01f] block text-sm mb-1">Essential Session Cookies</strong>
+                  <strong className="text-[#fec01f] block text-sm mb-1">Essential Session Authentication</strong>
                   <p className="text-white/70 leading-relaxed">
-                    Managed by Supabase Auth (
-                    <code className="text-white/90">sb-*-auth-token</code>) to maintain your secure login
-                    across page navigation and verify server API requests.
+                    Managed by Supabase Auth (<code className="text-white/90">sb-*-auth-token</code>) to verify your secure session token across pages.
                   </p>
                 </div>
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-teal-400 block text-sm mb-1">Browser Local Storage</strong>
+                  <strong className="text-teal-400 block text-sm mb-1">Game Progress &amp; Preferences</strong>
                   <p className="text-white/70 leading-relaxed">
-                    Used to store offline daily puzzle states (e.g. Queens grid placements, Tango rules progress)
-                    and unranked practice session telemetry so you don&rsquo;t lose progress if reloaded.
+                    Local storage records your sound mute preferences, daily puzzle draft moves, and share card customizations so they persist when you return.
                   </p>
                 </div>
               </div>
-              <p className="text-xs text-white/50 italic">
-                Notice: We do NOT use third-party analytics pixels, Meta Pixels, advertising cookies, or
-                cross-site tracking beacons.
+              <p className="text-xs text-white/70 leading-relaxed">
+                The main festival portal (<code className="text-[#fec01f]">fintechfestival.lk</code>) may use Google Analytics and Meta Pixel to understand event traffic. You can block or delete cookies in your browser settings, though authenticated arena features require cookies to stay logged in.
               </p>
             </section>
 
-            {/* Section 8 */}
-            <section id="security-retention" className="scroll-mt-28 space-y-4">
+            {/* Section 07: Security */}
+            <section id="security" className="scroll-mt-28 space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
+                  07
+                </span>
+                <h2 className="font-heading text-2xl font-bold text-white">
+                  Security
+                </h2>
+              </div>
+              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
+                We use reasonable organizational and technical measures to protect your personal data. All web traffic is transmitted via HTTPS/TLS 1.3 encryption, and database tables are protected with PostgreSQL Row Level Security (RLS).
+              </p>
+              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
+                No online system is completely infallible, but if a data security incident affects you, we will promptly notify you and the Data Protection Authority of Sri Lanka as required by law. All card payments for festival passes are processed directly through secure PCI-DSS compliant payment gateways; we never store your payment card numbers.
+              </p>
+            </section>
+
+            {/* Section 08: Your Rights */}
+            <section id="your-rights" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   08
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Data Storage, Security &amp; Retention
+                  Your Rights Under Sri Lanka PDPA
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                We deploy robust technological and operational safeguards to protect your data against
-                unauthorized access, accidental loss, or unlawful processing:
+                Under the <strong>Personal Data Protection Act, No. 9 of 2022</strong>, you have the right to:
               </p>
-              <ul className="space-y-2.5 text-xs sm:text-sm text-white/75">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-white">End-to-End Encryption:</strong> All web traffic is
-                    encrypted in transit via TLS 1.3 / HTTPS. All backend database storage is encrypted at
-                    rest using industry-standard AES-256.
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">Access Your Personal Data</strong>
+                  <span className="text-white/70">
+                    Ask us to show you the personal data and player records we hold about you.
                   </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-white">PostgreSQL Row Level Security (RLS):</strong> Strict database
-                    access policies ensure players can only read and write their own active game state. Cross-account
-                    data querying is blocked at the database engine level.
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">Correction &amp; Rectification</strong>
+                  <span className="text-white/70">
+                    Update or correct inaccurate display names, profile pictures, or contact details.
                   </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-white">Retention Schedule:</strong> Official match data and
-                    leaderboard statistics are retained during the Sri Lanka FinTech Festival 2026 and for an
-                    audit archive period not exceeding 12 months following festival conclusion. After this
-                    period, personal identifiers are purged or permanently anonymized.
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">Deletion &amp; Erasure</strong>
+                  <span className="text-white/70">
+                    Ask us to erase your player account, scores, and match runs completely.
                   </span>
-                </li>
-              </ul>
+                </div>
+                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
+                  <strong className="text-white block mb-1">Withdraw Consent</strong>
+                  <span className="text-white/70">
+                    Stop using your data for marketing or immediately remove your name from the public leaderboard.
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-white/70 leading-relaxed pt-1">
+                You also have the right to lodge a complaint with the <strong>Data Protection Authority of Sri Lanka</strong> if you believe your data has been handled inconsistently with the law. To make any request, please reach out to our team below.
+              </p>
             </section>
 
-            {/* Section 9 */}
-            <section id="user-rights" className="scroll-mt-28 space-y-4">
+            {/* Section 09: Contact Us */}
+            <section id="contact-us" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   09
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Your Rights Under Sri Lanka Law
+                  Contact Us
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                Under the Sri Lanka Personal Data Protection Act (PDPA), you are entitled to several rights
-                as a data subject:
+                For any question about this policy, or to exercise your rights under the PDPA regarding your personal data, please get in touch with our team:
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-white block mb-1">Right of Access</strong>
-                  <span className="text-white/70">
-                    You have the right to request a copy of the personal data we hold about your player account.
+
+              <div className="p-6 rounded-2xl border border-white/15 bg-white/[0.03] space-y-5">
+                <div>
+                  <span className="text-white/50 block font-mono text-xs uppercase tracking-wider">
+                    Data Protection Enquiries &amp; Controller
                   </span>
+                  <strong className="text-white font-heading text-lg block mt-0.5">
+                    FinTech Forum (Guarantee) Limited
+                  </strong>
+                  <div className="flex items-start gap-2 text-white/70 text-sm mt-1">
+                    <MapPin size={16} className="text-[#fec01f] shrink-0 mt-0.5" />
+                    <span>No.161A, Dharmapala Mawatha, Colombo 07, Sri Lanka</span>
+                  </div>
                 </div>
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-white block mb-1">Right to Rectification</strong>
-                  <span className="text-white/70">
-                    You have the right to modify or update inaccurate display names and profile details at any time.
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-white block mb-1">Right to Erasure (&ldquo;To Be Forgotten&rdquo;)</strong>
-                  <span className="text-white/70">
-                    You can request complete deletion of your account, scores, and match runs by contacting us.
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-xl border border-white/10 bg-white/[0.02]">
-                  <strong className="text-white block mb-1">Right to Withdraw Consent</strong>
-                  <span className="text-white/70">
-                    You may revoke your leaderboard opt-in at any time with immediate effect.
-                  </span>
+
+                <div className="pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
+                  <div>
+                    <span className="text-white/50 block">GENERAL ENQUIRIES</span>
+                    <a
+                      href="mailto:connect@fintechfestival.lk"
+                      data-cursor="link"
+                      className="text-[#fec01f] hover:underline font-bold text-sm inline-flex items-center gap-1.5 mt-0.5"
+                    >
+                      <Mail size={14} />
+                      connect@fintechfestival.lk
+                    </a>
+                  </div>
+
+                  <div>
+                    <span className="text-white/50 block">SALES &amp; SPONSORSHIPS</span>
+                    <a
+                      href="mailto:sales@fintechfestival.lk"
+                      data-cursor="link"
+                      className="text-white hover:text-[#fec01f] font-medium text-sm inline-flex items-center gap-1.5 mt-0.5"
+                    >
+                      <Mail size={14} />
+                      sales@fintechfestival.lk
+                    </a>
+                  </div>
+
+                  <div>
+                    <span className="text-white/50 block">SALES WHATSAPP</span>
+                    <a
+                      href="https://wa.me/94777930472"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-cursor="link"
+                      className="text-white hover:text-[#fec01f] font-medium text-sm inline-flex items-center gap-1.5 mt-0.5"
+                    >
+                      +94 77 793 0472
+                    </a>
+                  </div>
                 </div>
               </div>
             </section>
 
-            {/* Section 10 */}
-            <section id="children" className="scroll-mt-28 space-y-4">
+            {/* Section 10: Changes */}
+            <section id="changes" className="scroll-mt-28 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
                   10
                 </span>
                 <h2 className="font-heading text-2xl font-bold text-white">
-                  Children&rsquo;s Privacy
+                  Changes &amp; Revisions
                 </h2>
               </div>
               <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                Lanka FinTechverse is designed for festival attendees, university students, industry
-                professionals, and the general public interested in financial innovation. We do not knowingly
-                collect personal information from individuals under the age of 13. If you believe a minor has
-                provided personal data through Google sign-in without parental authorization, please contact us
-                promptly and we will remove the record.
+                We may update this policy periodically to reflect evolving festival features or statutory guidance from the Data Protection Authority of Sri Lanka. The latest version and effective date will always be posted on this page.
               </p>
-            </section>
-
-            {/* Section 11: Contact */}
-            <section id="contact" className="scroll-mt-28 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center font-mono text-xs text-[#fec01f] font-bold">
-                  11
-                </span>
-                <h2 className="font-heading text-2xl font-bold text-white">
-                  Contact Information &amp; Data Controller
-                </h2>
-              </div>
-              <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                The data controller responsible for the processing of your personal data under this policy is
-                the <strong>Sri Lanka FinTech Festival 2026 Committee</strong>.
-              </p>
-
-              <div className="p-6 rounded-2xl border border-white/15 bg-white/[0.03] space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                  <div>
-                    <span className="text-white/50 block font-mono text-xs uppercase">Organizer</span>
-                    <strong className="text-white font-heading text-base">
-                      Sri Lanka FinTech Festival 2026
-                    </strong>
-                    <p className="text-white/60 text-xs mt-1">
-                      Connecting financial institutions, technology builders, policymakers, and innovators.
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-white/50 block font-mono text-xs uppercase">Location</span>
-                    <p className="text-white font-medium">Colombo, Sri Lanka</p>
-                    <p className="text-white/60 text-xs mt-1">
-                      Festival Dates: 2–3 November 2026
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/10 flex flex-wrap items-center gap-6 text-xs font-mono">
-                  <div>
-                    <span className="text-white/50 block">DATA PROTECTION &amp; PRIVACY INQUIRIES</span>
-                    <a
-                      href="mailto:privacy@fintechfestival.lk"
-                      className="text-[#fec01f] hover:underline font-bold text-sm inline-flex items-center gap-1.5 mt-0.5"
-                    >
-                      <Mail size={14} />
-                      privacy@fintechfestival.lk
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-white/50 block">GENERAL FESTIVAL SECRETARIAT</span>
-                    <a
-                      href="mailto:secretariat@fintechfestival.lk"
-                      className="text-white hover:text-[#fec01f] font-medium text-sm inline-flex items-center gap-1.5 mt-0.5"
-                    >
-                      <Mail size={14} />
-                      secretariat@fintechfestival.lk
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-white/50 block">OFFICIAL FESTIVAL PORTAL</span>
-                    <a
-                      href="https://fintechfestival.lk"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:text-[#fec01f] font-medium text-sm inline-flex items-center gap-1.5 mt-0.5"
-                    >
-                      <Globe size={14} />
-                      fintechfestival.lk
-                      <ExternalLink size={12} />
-                    </a>
-                  </div>
-                </div>
-              </div>
             </section>
 
             {/* Bottom Actions */}
             <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
               <Link
                 href="/terms"
+                data-cursor="link"
                 className="inline-flex items-center gap-2 text-sm font-bold text-[#fec01f] hover:text-[#fec01f]/80 transition-colors"
               >
-                Read Application Terms of Service <ArrowRight size={16} />
+                Read Arena Terms of Service <ArrowRight size={16} />
               </Link>
               <Link
                 href="/"
+                data-cursor="button"
                 className="py-2.5 px-5 rounded-xl interactive-btn interactive-btn--primary font-bold text-xs font-mono uppercase tracking-wider"
               >
                 Back to Game Arena

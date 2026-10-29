@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Trophy, Dices, HelpCircle, ArrowRight } from "lucide-react";
+import { Info, Heart, Shield, Zap, HelpCircle, Trophy, Dices, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import FestivalButton from "@/components/ui/FestivalButton";
-import SectionBadge from "@/components/ui/SectionBadge";
 
 interface OnboardingModalProps {
   googleName: string;
@@ -47,8 +45,15 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
   };
 
   return (
-    <div className="min-h-screen min-h-dvh bg-background flex items-center justify-center p-3 sm:p-4 relative overflow-y-auto pt-safe pb-safe">
-      <div className="festival-panel max-w-md w-full overflow-hidden relative z-10 max-h-[90dvh] overflow-y-auto">
+    <div className="min-h-screen min-h-dvh bg-[#06061f] flex items-center justify-center p-3 sm:p-4 relative overflow-y-auto pt-safe pb-safe">
+      {/* Background glow and rings */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-gradient-to-b from-[#fec01f]/15 to-transparent blur-3xl opacity-60" />
+      <div className="pointer-events-none absolute right-[-10%] top-[-10%] w-[500px] h-[500px] opacity-10">
+        <Image src="/elements/circles.webp" alt="" fill className="object-contain" />
+      </div>
+
+      <div className="festival-panel max-w-md w-full overflow-hidden bg-[#0a0a28]/95 border-2 border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative z-10 max-h-[90dvh] overflow-y-auto">
+        {/* Header with Festival Logo */}
         <div className="p-5 sm:p-6 text-center border-b border-white/10 bg-white/[0.02]">
           <div className="relative h-9 w-40 sm:h-10 sm:w-48 mx-auto mb-2.5 sm:mb-3">
             <Image
@@ -59,11 +64,11 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
               priority
             />
           </div>
-          <SectionBadge variant="primary" className="text-[9px] sm:text-[10px] mb-1.5 sm:mb-2">
-            Official festival game
-          </SectionBadge>
+          <span className="section-badge section-badge-primary text-[9px] sm:text-[10px] mb-1.5 sm:mb-2">
+            OFFICIAL FESTIVAL ARENA
+          </span>
           <h1 className="font-heading text-lg sm:text-xl font-bold text-white mt-1">LANKA FINTECHVERSE</h1>
-          <p className="font-mono text-xs text-white/60">Snakes &amp; Ladders</p>
+          <p className="font-mono text-xs text-white/60">Snakes &amp; Ladders Arena</p>
         </div>
 
         <div className="p-5 sm:p-8">
@@ -98,31 +103,32 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
                 </p>
               </div>
 
-              <FestivalButton
+              <button
                 onClick={handleNext}
-                className="w-full text-sm sm:text-base touch-manipulation"
+                className="w-full min-h-[48px] py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm sm:text-base shadow-[0_0_20px_rgba(254,192,31,0.3)] touch-manipulation flex items-center justify-center"
               >
-                Continue
-              </FestivalButton>
+                Proceed to Briefing →
+              </button>
             </div>
           )}
 
           {step === 2 && (
             <div className="animate-slide-up space-y-4 sm:space-y-5">
-              <h2 className="font-heading text-lg sm:text-xl font-bold text-white">Quick rules</h2>
+              <h2 className="font-heading text-lg sm:text-xl font-bold text-white">Arena Briefing</h2>
 
+              {/* Rules highlight */}
               <div className="space-y-2 text-xs font-mono text-white/80">
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-2.5 sm:gap-3">
-                  <Dices size={16} className="text-primary shrink-0" aria-hidden />
-                  <span><strong>1 Official Run:</strong> Your official score is locked when the match ends.</span>
+                  <Dices size={16} className="text-[#fec01f] shrink-0" />
+                  <span><strong>1 Official Run:</strong> Your official score is locked upon match conclusion.</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-2.5 sm:gap-3">
-                  <Heart size={16} className="text-brand-rose shrink-0" aria-hidden />
+                  <Heart size={16} className="text-rose-400 shrink-0" />
                   <span><strong>3 Hearts:</strong> Major-risk snakes deduct 1 heart. Reach 0 and you are eliminated.</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-2.5 sm:gap-3">
-                  <HelpCircle size={16} className="text-primary shrink-0" aria-hidden />
-                  <span><strong>Quizzes &amp; Treasures:</strong> Answer correctly for bonus score and collect shields.</span>
+                  <HelpCircle size={16} className="text-[#fec01f] shrink-0" />
+                  <span><strong>Quizzes &amp; Treasures:</strong> Answer correctly for bonus score &amp; collect shields.</span>
                 </div>
               </div>
 
@@ -154,13 +160,13 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
                 >
                   Back
                 </button>
-                <FestivalButton
+                <button
                   onClick={handleStart}
-                  className="flex-1 text-sm touch-manipulation"
+                  className="flex-1 min-h-[46px] py-3.5 rounded-xl interactive-btn interactive-btn--primary font-bold text-sm shadow-[0_0_20px_rgba(254,192,31,0.3)] flex items-center justify-center gap-1.5 touch-manipulation"
                 >
-                  Enter the Arena
-                  <ArrowRight size={15} aria-hidden />
-                </FestivalButton>
+                  <span>Enter the Arena</span>
+                  <ArrowRight size={15} />
+                </button>
               </div>
 
               <p className="text-[10px] sm:text-[11px] text-center text-white/50 leading-relaxed font-mono pt-1">

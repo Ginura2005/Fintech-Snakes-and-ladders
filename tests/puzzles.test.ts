@@ -30,7 +30,14 @@ import {
 import {
   calculatePuzzlePoints,
   getArenaPuzzleBonus,
+  getSpeedTier,
+  createChallengeUrl,
+  getDailyProgress,
 } from "@/lib/puzzles/puzzle-storage";
+import {
+  FINTECH_CODEX_CARDS,
+  unlockRandomCodexCard,
+} from "@/lib/puzzles/fintech-codex";
 
 function getHammingDistance(w1: string, w2: string) {
   if (w1.length !== w2.length) return 99;
@@ -611,5 +618,123 @@ describe("Puzzle Challenge Points & Arena Score Contribution", () => {
         totalPuzzlePoints: 1000,
       })
     ).toBe(50);
+  });
+
+  /* =====================================================================
+     8. ADVANCED FEATURES: SPEED TIERS, 1v1 CHALLENGES, DAILY PROGRESS & CODEX
+     ===================================================================== */
+  it("calculates FinTech Speed Tiers accurately across difficulties", () => {
+    // Easy clear under 35s -> Top 5% Digital Architect
+    const fastEasy = getSpeedTier("queens", "Easy", 30);
+    expect(fastEasy.tier).toBe("architect");
+    expect(fastEasy.percentile).toBe(95);
+    expect(fastEasy.rankTitle).toBe("Digital Architect");
+
+    // Medium clear in 75s -> Top 20% Senior Quant
+    const medQuant = getSpeedTier("tango", "Medium", 75);
+    expect(medQuant.tier).toBe("quant");
+    expect(medQuant.percentile).toBe(80);
+
+    // Hard clear in 180s -> Top 50% FinTech Analyst
+    const hardAnalyst = getSpeedTier("crossclimb", "Hard", 180);
+    expect(hardAnalyst.tier).toBe("analyst");
+    expect(hardAnalyst.percentile).toBe(50);
+
+    // Slow clear over 220s on Hard -> FinTech Strategist
+    const slowHard = getSpeedTier("zip", "Hard", 300);
+    expect(slowHard.tier).toBe("strategist");
+    expect(slowHard.percentile).toBe(25);
+  });
+
+  it("generates valid 1v1 challenge duel links", () => {
+    const link = createChallengeUrl({
+      puzzleId: "queens",
+      seed: 20261029,
+      difficulty: "Hard",
+      seconds: 48,
+      challengerName: "Kasun",
+    });
+
+    expect(link).toContain("game=queens");
+    expect(link).toContain("seed=20261029");
+    expect(link).toContain("challenge=1");
+    expect(link).toContain("target=48");
+    expect(link).toContain("diff=Hard");
+    expect(link).toContain("from=Kasun");
+  });
+
+  it("tracks Daily Trifecta (3/6) and Grand Slam (6/6) progress with bonuses", () => {
+    // 0 solved
+    const p0 = getDailyProgress("2026-10-29", {
+      totalWins: 0,
+      currentStreak: 0,
+      lastPlayedDate: null,
+      bestTimes: {},
+      completedLevels: {},
+      soundMuted: false,
+      totalPuzzlePoints: 0,
+      dailySolves: { "2026-10-29": [] },
+    });
+    expect(p0.solvedCount).toBe(0);
+    expect(p0.isTrifecta).toBe(false);
+    expect(p0.isGrandSlam).toBe(false);
+    expect(p0.bonusPoints).toBe(0);
+
+    // 3 solved -> Trifecta (+15)
+    const p3 = getDailyProgress("2026-10-29", {
+      totalWins: 3,
+      currentStreak: 1,
+      lastPlayedDate: "2026-10-29",
+      bestTimes: {},
+      completedLevels: {},
+      soundMuted: false,
+      totalPuzzlePoints: 75,
+      dailySolves: { "2026-10-29": ["queens", "tango", "zip"] },
+    });
+    expect(p3.solvedCount).toBe(3);
+    expect(p3.isTrifecta).toBe(true);
+    expect(p3.isGrandSlam).toBe(false);
+    expect(p3.bonusPoints).toBe(15);
+
+    // 6 solved -> Grand Slam (+35)
+    const p6 = getDailyProgress("2026-10-29", {
+      totalWins: 6,
+      currentStreak: 1,
+      lastPlayedDate: "2026-10-29",
+      bestTimes: {},
+      completedLevels: {},
+      soundMuted: false,
+      totalPuzzlePoints: 180,
+      dailySolves: {
+        "2026-10-29": ["queens", "tango", "zip", "crossclimb", "pinpoint", "mini-sudoku"],
+      },
+    });
+    expect(p6.solvedCount).toBe(6);
+    expect(p6.isTrifecta).toBe(true);
+    expect(p6.isGrandSlam).toBe(true);
+    expect(p6.bonusPoints).toBe(35);
+  });
+
+  it("contains 24 FinTech Codex cards and supports random card unlock", () => {
+    expect(FINTECH_CODEX_CARDS.length).toBe(24);
+
+    // Verify all cards have non-empty titles, summaries, and categories
+    for (const card of FINTECH_CODEX_CARDS) {
+      expect(card.id).toBeTruthy();
+      expect(card.title).toBeTruthy();
+      expect(card.summary).toBeTruthy();
+      expect(card.detail).toBeTruthy();
+      expect(card.festivalRelevance).toBeTruthy();
+    }
+
+    // Unlocking when none are unlocked
+    const firstUnlocked = unlockRandomCodexCard([]);
+    expect(firstUnlocked).not.toBeNull();
+    expect(FINTECH_CODEX_CARDS.some((c) => c.id === firstUnlocked?.id)).toBe(true);
+
+    // Unlocking when all 24 are unlocked
+    const allIds = FINTECH_CODEX_CARDS.map((c) => c.id);
+    const nothingLeft = unlockRandomCodexCard(allIds);
+    expect(nothingLeft).toBeNull();
   });
 });
