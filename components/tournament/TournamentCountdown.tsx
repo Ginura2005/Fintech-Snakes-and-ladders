@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Ticket, Clock, Award, Sparkles } from "lucide-react";
+import { Ticket, Clock, Award } from "lucide-react";
 
 interface TimeLeft {
   days: number;

@@ -5,7 +5,6 @@ import {
   BookOpen,
   X,
   Lock,
-  Sparkles,
   ShieldCheck,
   Zap,
   Landmark,
@@ -75,7 +74,7 @@ function renderCodexIcon(name: string, size = 20) {
     case "Cpu": return <Cpu size={size} />;
     case "Store": return <Store size={size} />;
     case "Compass": return <Compass size={size} />;
-    default: return <Sparkles size={size} />;
+    default: return <BookOpen size={size} />;
   }
 }
 
@@ -268,7 +267,7 @@ export default function FintechCodexDrawer({
 
                 <div className="p-3 rounded-xl bg-teal-950/30 border border-teal-500/30">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-teal-300 font-bold block mb-1 flex items-center gap-1.5">
-                    <Sparkles size={12} /> Festival Context (Sri Lanka 2026)
+                    <Landmark size={12} /> Festival Context (Sri Lanka 2026)
                   </span>
                   <p className="text-white/80">
                     {selectedCard.festivalRelevance}

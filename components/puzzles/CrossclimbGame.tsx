@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUp, ArrowDown, Check, Lock, Unlock, Link2, Sparkles, HelpCircle, Shuffle } from "lucide-react";
+import { ArrowUp, ArrowDown, Check, Lock, Unlock, Link2, HelpCircle, Shuffle } from "lucide-react";
 import { CrossclimbLevel, CrossclimbLadderWord } from "./puzzleTypes";
 import {
   CROSSCLIMB_TEMPLATES,
@@ -348,7 +348,7 @@ export default function CrossclimbGame({
           >
             {isLadderFullyConnected ? (
               <>
-                <Sparkles size={13} className="text-teal-300 shrink-0" />
+                <Unlock size={13} className="text-teal-300 shrink-0" />
                 <span>Ladder Complete! Top &amp; Bottom Unlocked</span>
               </>
             ) : (

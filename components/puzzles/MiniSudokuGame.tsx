@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit3, Eraser, AlertTriangle, Check, Sparkles, SlidersHorizontal, Calendar, Lightbulb } from "lucide-react";
+import { Edit3, Eraser, AlertTriangle, Check, Shuffle, SlidersHorizontal, Calendar, Lightbulb } from "lucide-react";
 import { MiniSudokuLevel } from "./puzzleTypes";
 import { MINI_SUDOKU_LEVELS, PUZZLES_META } from "./puzzleData";
 import { generateMiniSudokuLevel } from "@/lib/puzzles/mini-sudoku-engine";
@@ -482,7 +482,7 @@ export default function MiniSudokuGame({
             className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-[#00f0ff] border border-[#00f0ff]/30 transition-colors text-[11px] font-bold"
             title="Generate a brand new unique Mini Sudoku level"
           >
-            <Sparkles size={11} />
+            <Shuffle size={11} />
             <span>Shuffle</span>
           </button>
         </div>

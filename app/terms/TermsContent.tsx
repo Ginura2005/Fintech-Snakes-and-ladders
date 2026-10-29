@@ -24,7 +24,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   HelpCircle,
-  Sparkles,
+  Puzzle,
   Award,
   Globe,
   Share2,
@@ -336,7 +336,7 @@ export default function TermsContent() {
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
                   <div className="flex items-center gap-2 text-purple-300 font-semibold">
-                    <Sparkles size={16} />
+                    <Puzzle size={16} />
                     <span>LinkedIn-Style Puzzle Arena</span>
                   </div>
                   <p className="text-white/70 leading-relaxed">

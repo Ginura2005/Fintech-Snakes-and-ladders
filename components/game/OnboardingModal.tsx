@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Info, Heart, Shield, Zap, Sparkles, Trophy, Dices, ArrowRight } from "lucide-react";
+import { Info, Heart, Shield, Zap, HelpCircle, Trophy, Dices, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 interface OnboardingModalProps {
@@ -127,7 +127,7 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
                   <span><strong>3 Hearts:</strong> Major-risk snakes deduct 1 heart. Reach 0 and you are eliminated.</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-white/[0.03] border border-white/10 flex items-center gap-2.5 sm:gap-3">
-                  <Sparkles size={16} className="text-[#fec01f] shrink-0" />
+                  <HelpCircle size={16} className="text-[#fec01f] shrink-0" />
                   <span><strong>Quizzes &amp; Treasures:</strong> Answer correctly for bonus score &amp; collect shields.</span>
                 </div>
               </div>

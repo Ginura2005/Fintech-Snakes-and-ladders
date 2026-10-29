@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, CheckCircle2, Clock } from "lucide-react";
+import { HelpCircle, CheckCircle2, Award } from "lucide-react";
 
 interface QuizQuestion {
   id: string;
@@ -35,35 +35,44 @@ export default function QuizOverlay({ question, onAnswer }: QuizOverlayProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#06061f]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-slide-up">
-      <div className="festival-panel max-w-lg w-full max-h-[88dvh] overflow-y-auto p-4 sm:p-7 bg-[#0a0a28]/95 border-2 border-[#fec01f]/40 shadow-[0_0_60px_rgba(0,0,0,0.8)] pb-safe">
-        {/* Header Badges */}
-        <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
-          <div>
-            <span className="section-badge section-badge-primary text-[10px] sm:text-[11px] mb-1.5">
-              <Sparkles size={12} className="text-[#fec01f]" />
-              FinTech Challenge · Square {question.squareNumber}
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
-              <span className="px-2 py-0.5 rounded font-mono text-[9px] sm:text-[10px] uppercase tracking-wider bg-white/5 border border-white/10 text-white/70">
-                {question.category}
+    <div className="fixed inset-0 z-50 bg-[#06061f]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-slide-up overscroll-none">
+      <div className="festival-panel max-w-lg w-full max-h-[90dvh] overflow-y-auto p-4 sm:p-7 bg-[#0a0a28]/95 border-2 border-[#fec01f]/40 shadow-[0_0_60px_rgba(0,0,0,0.85)] pb-safe rounded-2xl">
+        
+        {/* Header: Title, Tags & Clear +50 PTS Reward Badge */}
+        <div className="mb-4 pb-3.5 border-b border-white/10 space-y-2.5">
+          <div className="flex items-center justify-between gap-2.5">
+            {/* Left: Square & Challenge Label */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#fec01f]/10 border border-[#fec01f]/30 font-mono text-[11px] sm:text-xs font-bold text-[#fec01f] uppercase tracking-wider shrink-0">
+                <HelpCircle size={13} className="text-[#fec01f]" />
+                <span>Square {question.squareNumber} Quiz</span>
               </span>
-              <span
-                className={`px-2 py-0.5 rounded font-mono text-[9px] sm:text-[10px] uppercase tracking-wider ${
-                  question.difficulty === "easy"
-                    ? "bg-teal-950/60 border border-teal-500/40 text-teal-300"
-                    : question.difficulty === "medium"
-                    ? "bg-amber-950/60 border border-amber-500/40 text-amber-300"
-                    : "bg-rose-950/60 border border-rose-500/40 text-rose-300"
-                }`}
-              >
-                {question.difficulty}
+            </div>
+
+            {/* Right: Unbroken, Prominent +50 PTS Reward Pill */}
+            <div className="shrink-0">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-mono text-xs sm:text-sm font-black tracking-wide whitespace-nowrap shadow-[0_0_15px_rgba(16,185,129,0.25)]">
+                <Award size={14} className="text-emerald-400" />
+                <span>+50 PTS</span>
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <span className="font-mono text-[11px] sm:text-xs font-bold text-[#fec01f] bg-[#fec01f]/10 border border-[#fec01f]/30 px-2 py-1 rounded shrink-0">
-              +50 PTS
+
+          {/* Sub-row: Category & Difficulty Tags */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="px-2 py-0.5 rounded font-mono text-[9px] sm:text-[10px] uppercase tracking-wider bg-white/5 border border-white/10 text-white/70">
+              {question.category}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded font-mono text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold ${
+                question.difficulty === "easy"
+                  ? "bg-teal-950/60 border border-teal-500/40 text-teal-300"
+                  : question.difficulty === "medium"
+                  ? "bg-amber-950/60 border border-amber-500/40 text-amber-300"
+                  : "bg-rose-950/60 border border-rose-500/40 text-rose-300"
+              }`}
+            >
+              {question.difficulty}
             </span>
           </div>
         </div>
@@ -125,7 +134,7 @@ export default function QuizOverlay({ question, onAnswer }: QuizOverlayProps) {
             ${
               selected === null || submitted
                 ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
-                : "interactive-btn interactive-btn--primary shadow-[0_0_20px_rgba(254,192,31,0.35)]"
+                : "interactive-btn interactive-btn--primary shadow-[0_0_20px_rgba(254,192,31,0.35)] cursor-pointer"
             }
           `}
         >

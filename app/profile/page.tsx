@@ -15,7 +15,6 @@ import {
   Check,
   Trophy,
   Shield,
-  Sparkles,
   RotateCcw,
   Save,
   ArrowLeft,
@@ -657,7 +656,7 @@ export default function ProfilePage() {
 
                   <div className="flex items-center justify-between py-1.5 border-b border-white/5">
                     <span className="text-white/50 flex items-center gap-1.5">
-                      <Sparkles size={13} />
+                      <Shield size={13} />
                       <span>Provider</span>
                     </span>
                     <span className="font-mono text-white/90 uppercase">

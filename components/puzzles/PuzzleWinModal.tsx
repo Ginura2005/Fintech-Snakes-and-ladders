@@ -10,7 +10,6 @@ import {
   Grid,
   Flame,
   Trophy,
-  Sparkles,
   Star,
   Zap,
   Swords,
@@ -340,7 +339,7 @@ ${challengeLink}`;
         {educationalFact && (
           <div className="p-3.5 rounded-xl bg-teal-950/30 border border-teal-500/30 text-left space-y-1">
             <div className="flex items-center gap-1.5 text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
-              <Sparkles size={12} />
+              <BookOpen size={12} />
               <span>FinTech Intelligence Takeaway</span>
             </div>
             <p className="text-xs text-white/80 leading-relaxed">

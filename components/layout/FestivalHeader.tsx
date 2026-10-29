@@ -15,7 +15,7 @@ import {
   Gamepad2,
   Puzzle,
   User as UserIcon,
-  Sparkles,
+  Home,
   ShieldCheck,
 } from "lucide-react";
 
@@ -249,7 +249,7 @@ export default function FestivalHeader({
               onClick={() => setMobileMenuOpen(false)}
               className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Sparkles size={17} className="text-[#fec01f]" />
+              <Home size={17} className="text-[#fec01f]" />
               <span>Home</span>
             </Link>
             <Link

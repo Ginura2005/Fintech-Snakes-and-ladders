@@ -5,7 +5,7 @@ import {
   Flame,
   Trophy,
   Clock,
-  Sparkles,
+  Award,
   Brain,
   ArrowRight,
   Volume2,
@@ -195,7 +195,7 @@ export default function PuzzleHub({
                 </div>
 
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fec01f]/10 border border-[#fec01f]/25 text-[#fec01f]">
-                  <Sparkles size={14} className="text-[#fec01f]" />
+                  <Award size={14} className="text-[#fec01f]" />
                   <span className="font-bold">{stats.totalPuzzlePoints || 0} Challenge Pts</span>
                 </div>
 

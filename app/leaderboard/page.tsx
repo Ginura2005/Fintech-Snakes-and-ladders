@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { Trophy, ArrowLeft, Sparkles, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award, Crown } from "lucide-react";
+import { Trophy, ArrowLeft, Clock, CheckCircle, Search, UserCheck, MapPin, Calendar, Award, Crown } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";

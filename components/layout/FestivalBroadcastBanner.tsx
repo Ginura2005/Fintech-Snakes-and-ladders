@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Megaphone, X, Radio, AlertTriangle, Sparkles } from "lucide-react";
+import { Megaphone, X, Radio, AlertTriangle } from "lucide-react";
 
 export default function FestivalBroadcastBanner() {
   const [banner, setBanner] = useState<{

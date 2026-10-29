@@ -13,7 +13,6 @@ import {
   Camera,
   Upload,
   User as UserIcon,
-  Sparkles,
   RotateCcw,
   Smartphone,
   Square,
@@ -291,7 +290,7 @@ export default function ShareCardCustomizerModal({
         <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#fec01f]/15 border border-[#fec01f]/40 flex items-center justify-center text-[#fec01f]">
-              <Sparkles size={16} />
+              <Share2 size={16} />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">

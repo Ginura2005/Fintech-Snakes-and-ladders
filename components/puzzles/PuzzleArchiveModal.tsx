@@ -9,7 +9,6 @@ import {
   Flame,
   ArrowRight,
   RotateCcw,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { PuzzleStatsData, getDailyProgress } from "@/lib/puzzles/puzzle-storage";
@@ -136,7 +135,7 @@ export default function PuzzleArchiveModal({
                       </span>
                     ) : progress.isTrifecta ? (
                       <span className="text-teal-300" title="Daily Trifecta (3/6)">
-                        <Sparkles size={16} />
+                        <Zap size={16} />
                       </span>
                     ) : progress.solvedCount > 0 ? (
                       <span className="text-emerald-400">
@@ -170,7 +169,7 @@ export default function PuzzleArchiveModal({
         <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-white/60 shrink-0">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1 text-teal-300">
-              <Sparkles size={12} /> Trifecta: 3+ Solved (+15 pts)
+              <Zap size={12} /> Trifecta: 3+ Solved (+15 pts)
             </span>
             <span className="flex items-center gap-1 text-[#fec01f]">
               <Trophy size={12} /> Grand Slam: 6/6 (+35 pts)
