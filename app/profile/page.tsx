@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import FestivalLoadingScreen from "@/components/ui/FestivalLoadingScreen";
 import {
   User as UserIcon,
   Camera,
@@ -282,6 +283,15 @@ export default function ProfilePage() {
 
   const winRate =
     stats.totalRuns > 0 ? Math.round((stats.wins / stats.totalRuns) * 100) : 0;
+
+  if (loading) {
+    return (
+      <FestivalLoadingScreen
+        label="Loading Player Dossier…"
+        sublabel="Synchronizing FinTech Profile & Assets"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#06061f] text-white flex flex-col font-sans">

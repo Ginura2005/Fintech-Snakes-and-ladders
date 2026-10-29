@@ -52,7 +52,7 @@ export default function OnboardingModal({ googleName, onComplete }: OnboardingMo
         <Image src="/elements/circles.webp" alt="" fill className="object-contain" />
       </div>
 
-      <div className="festival-panel max-w-md w-full overflow-hidden bg-[#0a0a28]/95 border-2 border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative z-10 max-h-[90dvh] overflow-y-auto">
+      <div className="festival-panel max-w-md w-full overflow-hidden bg-[#0a0a28]/95 border-2 border-[#fec01f]/40 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(254,192,31,0.2)] relative z-10 max-h-[90dvh] overflow-y-auto">
         {/* Header with Festival Logo */}
         <div className="p-5 sm:p-6 text-center border-b border-white/10 bg-white/[0.02]">
           <div className="relative h-9 w-40 sm:h-10 sm:w-48 mx-auto mb-2.5 sm:mb-3">

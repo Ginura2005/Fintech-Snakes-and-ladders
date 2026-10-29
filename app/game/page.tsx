@@ -1124,34 +1124,63 @@ export default function GamePage() {
     );
   }
 
+  if (!run && !error) {
+    return (
+      <FestivalLoadingScreen
+        label="Preparing FinTech Arena…"
+        sublabel="Setting Up Match Board & Physics"
+      />
+    );
+  }
+
   if (!run) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#06061f] text-white p-4">
-        <div className="max-w-md w-full festival-card p-6 border-white/10 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[#fec01f]/10 border border-[#fec01f]/30 flex items-center justify-center mx-auto mb-4 text-[#fec01f]">
-            <Gamepad2 size={28} />
+      <div className="fixed inset-0 min-h-screen min-h-dvh bg-[#06061f] text-white flex flex-col items-center justify-center p-4 select-none z-50 overflow-hidden">
+        {/* Background ambient radial glows */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] h-[460px] rounded-full bg-[#fec01f]/10 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full bg-teal-500/10 blur-[140px] pointer-events-none" />
+
+        {/* Top badge */}
+        <div className="mb-3 sm:mb-4 z-10 flex flex-col items-center gap-1">
+          <span className="px-3.5 py-1 rounded-full text-[10px] sm:text-xs font-heading font-black tracking-widest uppercase bg-[#fec01f]/15 border border-[#fec01f]/50 text-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.25)]">
+            OFFICIAL FESTIVAL ARENA
+          </span>
+        </div>
+
+        {/* Prominent Circular Arena Disk */}
+        <div className="relative w-[min(22rem,88vw)] h-[min(22rem,88vw)] sm:w-[400px] sm:h-[400px] rounded-full border-2 sm:border-3 border-[#fec01f] bg-gradient-to-b from-[#141a4a]/95 via-[#0b0e30]/98 to-[#040618] shadow-[0_0_80px_rgba(254,192,31,0.4),inset_0_0_55px_rgba(18,22,60,0.9)] flex flex-col items-center justify-center p-6 text-center shrink-0 z-10 overflow-hidden">
+          {/* Orbital rings */}
+          <div
+            className="absolute -inset-1 rounded-full border-2 border-transparent border-t-[#fec01f] border-r-teal-400 border-b-[#fec01f]/40 animate-spin pointer-events-none"
+            style={{ animationDuration: "3s" }}
+          />
+          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
+          <div className="absolute inset-6 rounded-full border border-[#fec01f]/20 pointer-events-none" />
+
+          <div className="w-12 h-12 rounded-full bg-[#fec01f]/15 border border-[#fec01f]/40 flex items-center justify-center mx-auto mb-2 text-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.3)] z-10">
+            <Gamepad2 size={24} />
           </div>
 
-          <h2 className="text-xl font-bold font-mono text-[#fec01f] mb-2">
+          <h2 className="text-base sm:text-lg font-heading font-extrabold uppercase tracking-widest text-[#fec01f] mb-1 z-10">
             Arena Launch Console
           </h2>
 
-          <p className="text-sm text-white/80 mb-6 leading-relaxed">
+          <p className="text-[11px] sm:text-xs font-mono text-white/80 mb-4 px-2 line-clamp-2 z-10">
             {error || "Ready to experience the digital Snakes and Ladders arena?"}
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2 w-full max-w-[220px] z-10">
             <button
               onClick={() => startPracticeGame()}
-              className="w-full py-3.5 rounded-xl interactive-btn interactive-btn--primary font-mono text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(254,192,31,0.4)]"
+              className="w-full py-2.5 px-4 rounded-full interactive-btn interactive-btn--primary font-mono text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-[0_0_20px_rgba(254,192,31,0.4)]"
             >
-              <Play size={18} />
-              <span>Launch Practice Arena Now</span>
+              <Play size={14} />
+              <span>Launch Practice Arena</span>
             </button>
 
             <a
               href="/"
-              className="block w-full py-3 rounded-xl border border-white/10 text-white/80 font-mono text-xs font-semibold hover:bg-white/5 transition-colors"
+              className="block w-full py-2 px-4 rounded-full border border-white/20 text-white/80 font-mono text-[11px] font-semibold hover:bg-white/10 transition-colors"
             >
               Return Home
             </a>

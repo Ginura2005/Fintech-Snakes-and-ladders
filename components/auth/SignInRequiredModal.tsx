@@ -85,7 +85,7 @@ export default function SignInRequiredModal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="relative z-10 w-full sm:max-w-md festival-panel border-[3px] border-black bg-surface-container shadow-[0_24px_60px_rgba(0,0,0,0.65)] animate-slide-up rounded-t-2xl sm:rounded-xl overflow-hidden pb-safe"
+        className="relative z-10 w-full sm:max-w-md rounded-3xl border-2 border-[#fec01f]/40 bg-[#0a0a28]/95 shadow-[0_24px_70px_rgba(0,0,0,0.8),0_0_40px_rgba(254,192,31,0.15)] animate-slide-up overflow-hidden pb-safe backdrop-blur-xl"
       >
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
           <SectionBadge variant="primary">Sign in required</SectionBadge>
@@ -94,7 +94,7 @@ export default function SignInRequiredModal({
             type="button"
             onClick={onClose}
             disabled={signingIn}
-            className="h-10 w-10 inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white/80 hover:text-white hover:border-primary transition-colors disabled:opacity-50"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/80 hover:text-white hover:border-[#fec01f] transition-colors disabled:opacity-50"
             aria-label="Close"
           >
             <X size={18} />
@@ -111,7 +111,7 @@ export default function SignInRequiredModal({
             />
           </div>
 
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border-2 border-primary/50 bg-primary/10 text-primary">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#fec01f]/50 bg-[#fec01f]/10 text-[#fec01f] shadow-[0_0_20px_rgba(254,192,31,0.25)]">
             <Lock size={26} aria-hidden />
           </div>
 

@@ -8,6 +8,7 @@ import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import FestivalLoadingScreen from "@/components/ui/FestivalLoadingScreen";
 import Skeleton from "@/components/ui/Skeleton";
 import { getOutcomeBadgeLabel } from "@/lib/tournament/deadline";
 
@@ -98,6 +99,15 @@ export default function LeaderboardPage() {
   const filteredEntries = entries.filter((entry) =>
     entry.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <FestivalLoadingScreen
+        label="Loading Festival Leaderboard…"
+        sublabel="Retrieving Verified Competitor Standings"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#06061f] text-white flex flex-col selection:bg-[#fec01f] selection:text-black">
