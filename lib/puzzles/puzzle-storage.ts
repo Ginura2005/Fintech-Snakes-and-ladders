@@ -1,6 +1,10 @@
 /**
  * Local storage manager for LinkedIn Puzzles statistics, streaks, settings, and points.
+ * Extended with FinTech Codex, Speed Tiers, 1v1 Challenge links, and Daily Grand Slam tracking.
  */
+
+import { CodexCard, unlockRandomCodexCard } from "./fintech-codex";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
 
 export interface PuzzleStatsData {
   totalWins: number;
@@ -9,7 +13,29 @@ export interface PuzzleStatsData {
   bestTimes: Record<string, number>; // key: `${puzzleId}-${levelOrDiff}`, value: seconds
   completedLevels: Record<string, boolean>; // key: `${puzzleId}-${levelOrDiff}`
   soundMuted: boolean;
+  soundProfile?: SoundProfile;
   totalPuzzlePoints: number; // accumulated puzzle points
+  unlockedCodexCards?: string[]; // IDs of collected FinTech Codex cards
+  dailySolves?: Record<string, string[]>; // YYYY-MM-DD -> array of puzzleIds completed
+}
+
+export interface SpeedTierInfo {
+  tier: "architect" | "quant" | "analyst" | "strategist";
+  badge: string;
+  percentile: number;
+  rankTitle: string;
+  colorClass: string;
+  shareBadge: string;
+  description: string;
+}
+
+export interface DailyProgressInfo {
+  date: string;
+  solvedCount: number;
+  solvedPuzzles: string[];
+  isTrifecta: boolean; // >= 3
+  isGrandSlam: boolean; // == 6
+  bonusPoints: number; // +15 for Trifecta, +35 for Grand Slam
 }
 
 export interface PuzzleWinResult {
@@ -21,9 +47,13 @@ export interface PuzzleWinResult {
     speedBonus: number;
     cleanBonus: number;
     streakBonus: number;
+    dailyBonus?: number;
   };
   totalPoints: number;
   arenaBonusPoints: number;
+  speedTier: SpeedTierInfo;
+  newCodexCard: CodexCard | null;
+  dailyProgress: DailyProgressInfo;
 }
 
 const STORAGE_KEY = "fintechverse_puzzles_stats_v2";
@@ -37,7 +67,10 @@ export function getPuzzleStats(): PuzzleStatsData {
       bestTimes: {},
       completedLevels: {},
       soundMuted: false,
+      soundProfile: "arcade",
       totalPuzzlePoints: 0,
+      unlockedCodexCards: [],
+      dailySolves: {},
     };
   }
 
@@ -51,7 +84,10 @@ export function getPuzzleStats(): PuzzleStatsData {
         bestTimes: {},
         completedLevels: {},
         soundMuted: false,
+        soundProfile: "arcade",
         totalPuzzlePoints: 0,
+        unlockedCodexCards: [],
+        dailySolves: {},
       };
     }
     const parsed = JSON.parse(raw);
@@ -62,7 +98,10 @@ export function getPuzzleStats(): PuzzleStatsData {
       bestTimes: parsed.bestTimes || {},
       completedLevels: parsed.completedLevels || {},
       soundMuted: Boolean(parsed.soundMuted),
+      soundProfile: parsed.soundProfile || (parsed.soundMuted ? "muted" : "arcade"),
       totalPuzzlePoints: parsed.totalPuzzlePoints || 0,
+      unlockedCodexCards: Array.isArray(parsed.unlockedCodexCards) ? parsed.unlockedCodexCards : [],
+      dailySolves: parsed.dailySolves || {},
     };
   } catch {
     return {
@@ -72,7 +111,10 @@ export function getPuzzleStats(): PuzzleStatsData {
       bestTimes: {},
       completedLevels: {},
       soundMuted: false,
+      soundProfile: "arcade",
       totalPuzzlePoints: 0,
+      unlockedCodexCards: [],
+      dailySolves: {},
     };
   }
 }
@@ -87,10 +129,73 @@ export function savePuzzleStats(stats: PuzzleStatsData): void {
 }
 
 /**
+ * Calculates FinTech Speed Tier & percentile ranking for a clear.
+ */
+export function getSpeedTier(
+  _puzzleId: string,
+  difficultyOrLevel: string | number,
+  seconds: number
+): SpeedTierInfo {
+  const diffStr = String(difficultyOrLevel ?? "").toLowerCase();
+  const isHard =
+    diffStr.includes("hard") ||
+    diffStr.includes("expert") ||
+    diffStr.includes("8") ||
+    diffStr.includes("9");
+  const isMedium = diffStr.includes("medium") || diffStr.includes("7");
+
+  // Thresholds: [Architect (Top 5%), Quant (Top 20%), Analyst (Top 50%)]
+  const thresholds = isHard
+    ? [80, 140, 220]
+    : isMedium
+    ? [50, 95, 150]
+    : [35, 65, 110];
+
+  if (seconds <= thresholds[0]) {
+    return {
+      tier: "architect",
+      badge: "⚡ TOP 5%",
+      percentile: 95,
+      rankTitle: "Digital Architect",
+      colorClass: "from-[#fec01f] to-amber-400 text-black border-[#fec01f]",
+      shareBadge: "⚡ Speed: Digital Architect (Top 5%)",
+      description: "Sub-second analytical reflexes. Executed with institutional speed.",
+    };
+  } else if (seconds <= thresholds[1]) {
+    return {
+      tier: "quant",
+      badge: "🚀 TOP 20%",
+      percentile: 80,
+      rankTitle: "Senior Quant",
+      colorClass: "from-[#00f0ff] to-cyan-400 text-black border-[#00f0ff]",
+      shareBadge: "🚀 Speed: Senior Quant (Top 20%)",
+      description: "Fast, disciplined algorithmic execution with minimal hesitation.",
+    };
+  } else if (seconds <= thresholds[2]) {
+    return {
+      tier: "analyst",
+      badge: "🎯 TOP 50%",
+      percentile: 50,
+      rankTitle: "FinTech Analyst",
+      colorClass: "from-emerald-400 to-teal-400 text-black border-emerald-400",
+      shareBadge: "🎯 Speed: FinTech Analyst (Top 50%)",
+      description: "Solid strategic patience. Solved well within standard coffee-break time.",
+    };
+  } else {
+    return {
+      tier: "strategist",
+      badge: "💼 STRATEGIST",
+      percentile: 25,
+      rankTitle: "FinTech Strategist",
+      colorClass: "from-purple-400 to-indigo-400 text-white border-purple-400",
+      shareBadge: "💼 Speed: FinTech Strategist",
+      description: "Methodical, deliberate calculation. Focused on precision over rush.",
+    };
+  }
+}
+
+/**
  * Calculates challenge points for a puzzle clear based on difficulty.
- * - Easy: Base 15 pts (+5 speed, +5 clean, +5 streak) -> max 30 pts
- * - Medium: Base 25 pts (+10 speed, +5 clean, +5 streak) -> max 45 pts
- * - Hard / Expert: Base 40 pts (+15 speed, +10 clean, +5 streak) -> max 70 pts
  */
 export function calculatePuzzlePoints(
   difficultyOrLevel: string | number,
@@ -156,7 +261,6 @@ export function calculatePuzzlePoints(
 
 /**
  * Calculates the modest Arena Game bonus contributed by puzzle challenges.
- * Differentiates by difficulty: Easy (+5), Medium (+10), Hard (+15).
  * Capped strictly at +50 points max ("just a bit. Not too much.")
  */
 export function getArenaPuzzleBonus(providedStats?: PuzzleStatsData): number {
@@ -188,8 +292,55 @@ export function getArenaPuzzleBonus(providedStats?: PuzzleStatsData): number {
   const typeBonus = uniqueTypes.size * 10;
   const winsBonus = Math.min(50, (stats.totalWins || 0) * 5);
 
-  // Maximum cap of 50 points (equivalent to 1 FinTech quiz answer)
   return Math.min(50, Math.max(difficultyBonus, typeBonus, winsBonus));
+}
+
+/**
+ * Returns progress toward today's Daily Trifecta (3) & Grand Slam (6).
+ */
+export function getDailyProgress(dateStr?: string, providedStats?: PuzzleStatsData): DailyProgressInfo {
+  const stats = providedStats || getPuzzleStats();
+  const today = dateStr || new Date().toISOString().split("T")[0];
+  const list = stats.dailySolves?.[today] || [];
+  const uniqueList = Array.from(new Set(list));
+  const count = uniqueList.length;
+
+  const isTrifecta = count >= 3;
+  const isGrandSlam = count >= 6;
+  let bonusPoints = 0;
+  if (isGrandSlam) bonusPoints = 35;
+  else if (isTrifecta) bonusPoints = 15;
+
+  return {
+    date: today,
+    solvedCount: count,
+    solvedPuzzles: uniqueList,
+    isTrifecta,
+    isGrandSlam,
+    bonusPoints,
+  };
+}
+
+/**
+ * Creates a 1v1 Challenge link with URL search params.
+ */
+export function createChallengeUrl(options: {
+  puzzleId: string;
+  seed: number;
+  difficulty?: string;
+  seconds: number;
+  challengerName?: string;
+}): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://fintechfestival.lk";
+  const params = new URLSearchParams({
+    game: options.puzzleId,
+    seed: String(options.seed),
+    challenge: "1",
+    target: String(options.seconds),
+  });
+  if (options.difficulty) params.set("diff", options.difficulty);
+  if (options.challengerName) params.set("from", options.challengerName);
+  return `${origin}/puzzles?${params.toString()}`;
 }
 
 export function recordPuzzleWin(
@@ -212,8 +363,15 @@ export function recordPuzzleWin(
     isNewBestTime = true;
   }
 
-  // Update streak based on day
+  // Update daily solves
   const today = new Date().toISOString().split("T")[0];
+  if (!stats.dailySolves) stats.dailySolves = {};
+  if (!stats.dailySolves[today]) stats.dailySolves[today] = [];
+  if (!stats.dailySolves[today].includes(puzzleId)) {
+    stats.dailySolves[today].push(puzzleId);
+  }
+
+  // Update streak based on day
   if (stats.lastPlayedDate === today) {
     // Already played today, streak remains
   } else if (stats.lastPlayedDate) {
@@ -240,10 +398,19 @@ export function recordPuzzleWin(
     stats.currentStreak
   );
 
+  // Check for newly unlocked Codex knowledge card
+  if (!stats.unlockedCodexCards) stats.unlockedCodexCards = [];
+  const newCodexCard = unlockRandomCodexCard(stats.unlockedCodexCards);
+  if (newCodexCard) {
+    stats.unlockedCodexCards.push(newCodexCard.id);
+  }
+
   stats.totalPuzzlePoints = (stats.totalPuzzlePoints || 0) + pointsEarned;
   savePuzzleStats(stats);
 
   const arenaBonusPoints = getArenaPuzzleBonus(stats);
+  const speedTier = getSpeedTier(puzzleId, difficultyOrLevel, secondsElapsed);
+  const dailyProgress = getDailyProgress(today, stats);
 
   return {
     isNewBestTime,
@@ -252,12 +419,29 @@ export function recordPuzzleWin(
     breakdown,
     totalPoints: stats.totalPuzzlePoints,
     arenaBonusPoints,
+    speedTier,
+    newCodexCard,
+    dailyProgress,
   };
+}
+
+export function setGlobalSoundProfile(profile: SoundProfile): void {
+  const stats = getPuzzleStats();
+  stats.soundProfile = profile;
+  stats.soundMuted = profile === "muted";
+  savePuzzleStats(stats);
+  sounds.setProfile(profile);
+}
+
+export function getGlobalSoundProfile(): SoundProfile {
+  const stats = getPuzzleStats();
+  return stats.soundProfile || (stats.soundMuted ? "muted" : "arcade");
 }
 
 export function toggleGlobalPuzzleMute(): boolean {
   const stats = getPuzzleStats();
-  stats.soundMuted = !stats.soundMuted;
-  savePuzzleStats(stats);
-  return stats.soundMuted;
+  const current = stats.soundProfile || (stats.soundMuted ? "muted" : "arcade");
+  const next: SoundProfile = current === "muted" ? "arcade" : "muted";
+  setGlobalSoundProfile(next);
+  return next === "muted";
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Epilogue, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
+import CustomCursor from "@/components/ui/CustomCursor";
 import "./globals.css";
 
 const sora = Sora({
@@ -65,7 +66,11 @@ export const metadata: Metadata = {
     canonical: "https://verse.fintechfestival.lk",
   },
   icons: {
-    icon: "/short-logo-removebg-preview.png",
+    icon: [
+      { url: "/short-logo-removebg-preview.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
     shortcut: "/short-logo-removebg-preview.png",
     apple: "/apple-icon.png",
   },
@@ -107,6 +112,7 @@ export default function RootLayout({
       className={`${sora.variable} ${epilogue.variable} ${jetbrainsMono.variable} dark`}
     >
       <body className="min-h-screen bg-[#06061f] text-white selection:bg-[#fec01f] selection:text-black">
+        <CustomCursor />
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"

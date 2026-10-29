@@ -5,8 +5,16 @@ import { Sun, Moon, AlertTriangle, Check, Volume2, VolumeX, Lightbulb } from "lu
 import { TangoLevel, TangoSymbol } from "./puzzleTypes";
 import { generateTangoLevel } from "@/lib/puzzles/tango-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";
-import { recordPuzzleWin, getPuzzleStats, toggleGlobalPuzzleMute } from "@/lib/puzzles/puzzle-storage";
-import { sounds } from "@/lib/audio/sound-effects";
+import {
+  recordPuzzleWin,
+  getPuzzleStats,
+  toggleGlobalPuzzleMute,
+  getGlobalSoundProfile,
+  setGlobalSoundProfile,
+  SpeedTierInfo,
+} from "@/lib/puzzles/puzzle-storage";
+import { SoundProfile, sounds } from "@/lib/audio/sound-effects";
+import { CodexCard } from "@/lib/puzzles/fintech-codex";
 import { PUZZLES_META } from "./puzzleData";
 import PuzzleHeader from "./PuzzleHeader";
 import PuzzleWinModal from "./PuzzleWinModal";
@@ -17,14 +25,46 @@ const TANGO_DIFFICULTIES: Array<"Easy" | "Medium" | "Hard"> = [
   "Hard",
 ];
 
-export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) {
+interface ChallengeInfo {
+  challengerName: string;
+  targetSeconds: number;
+  seed: number;
+  difficulty?: string;
+}
+
+interface TangoGameProps {
+  onBackToHub: () => void;
+  customSeed?: number;
+  challengeInfo?: ChallengeInfo | null;
+  dateStr?: string;
+  onOpenCodex?: () => void;
+}
+
+export default function TangoGame({
+  onBackToHub,
+  customSeed,
+  challengeInfo,
+  dateStr,
+  onOpenCodex,
+}: TangoGameProps) {
   const meta = PUZZLES_META.find((p) => p.id === "tango")!;
-  const [diffIndex, setDiffIndex] = useState(1); // Medium by default
+  const [diffIndex, setDiffIndex] = useState(() => {
+    if (challengeInfo?.difficulty) {
+      const match = TANGO_DIFFICULTIES.findIndex((d) =>
+        d.toLowerCase() === challengeInfo.difficulty?.toLowerCase()
+      );
+      if (match >= 0) return match;
+    }
+    return 1;
+  }); // Medium by default
   const difficulty = TANGO_DIFFICULTIES[diffIndex];
 
-  const [levelSeed, setLevelSeed] = useState(() => getDailyPuzzleSeed());
+  const initialSeed =
+    customSeed ||
+    (dateStr ? getDailyPuzzleSeed(new Date(dateStr)) : getDailyPuzzleSeed());
+  const [levelSeed, setLevelSeed] = useState(() => initialSeed);
   const [currentLevel, setCurrentLevel] = useState<TangoLevel>(() =>
-    generateTangoLevel(difficulty, getDailyPuzzleSeed())
+    generateTangoLevel(difficulty, initialSeed)
   );
   const size = currentLevel.size;
 
@@ -33,7 +73,8 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
     currentLevel.givens.map((r) => [...r])
   );
   const [history, setHistory] = useState<TangoSymbol[][][]>([]);
-  const [isMuted, setIsMuted] = useState(() => getPuzzleStats().soundMuted);
+  const [soundProfile, setSoundProfileState] = useState<SoundProfile>(() => getGlobalSoundProfile());
+  const isMuted = soundProfile === "muted";
 
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -44,6 +85,9 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
   const [currentStreak, setCurrentStreak] = useState(0);
   const [pointsEarned, setPointsEarned] = useState<number | undefined>(undefined);
   const [arenaBonusPoints, setArenaBonusPoints] = useState<number | undefined>(undefined);
+  const [speedTier, setSpeedTier] = useState<SpeedTierInfo | undefined>(undefined);
+  const [newCodexCard, setNewCodexCard] = useState<CodexCard | null>(null);
+  const [isSolutionRevealed, setIsSolutionRevealed] = useState(false);
 
   // Reset / regenerate on difficulty or seed change
   useEffect(() => {
@@ -170,7 +214,7 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
         if (board[r][c] === null) filled = false;
       }
     }
-    if (filled && conflictCells.size === 0 && !isWon) {
+    if (filled && conflictCells.size === 0 && !isWon && !isSolutionRevealed) {
       let correct = true;
       for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
@@ -182,19 +226,35 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
         setShowWinModal(true);
         if (!isMuted) sounds.playVictory();
 
-        const { isNewBestTime: isBest, newStreak, pointsEarned: pts, arenaBonusPoints: arenaPts } = recordPuzzleWin(
+        const winResult = recordPuzzleWin(
           "tango",
           difficulty,
           secondsElapsed,
           mistakesCount
         );
-        setIsNewBestTime(isBest);
-        setCurrentStreak(newStreak);
-        setPointsEarned(pts);
-        setArenaBonusPoints(arenaPts);
+        setIsNewBestTime(winResult.isNewBestTime);
+        setCurrentStreak(winResult.newStreak);
+        setPointsEarned(winResult.pointsEarned);
+        setArenaBonusPoints(winResult.arenaBonusPoints);
+        setSpeedTier(winResult.speedTier);
+        setNewCodexCard(winResult.newCodexCard);
+        if (winResult.newCodexCard && !isMuted) {
+          sounds.playCodexUnlock();
+        }
       }
     }
-  }, [board, conflictCells.size, isWon, size, currentLevel.solution, difficulty, secondsElapsed, isMuted]);
+  }, [
+    board,
+    conflictCells.size,
+    isWon,
+    isSolutionRevealed,
+    size,
+    currentLevel.solution,
+    difficulty,
+    secondsElapsed,
+    mistakesCount,
+    isMuted,
+  ]);
 
   const handleCellClick = (r: number, c: number) => {
     if (isWon) return;
@@ -237,10 +297,12 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
     setHasStarted(false);
     setIsWon(false);
     setShowWinModal(false);
+    setIsSolutionRevealed(false);
   };
 
   const handleNewPuzzle = () => {
     setLevelSeed(Math.floor(Math.random() * 1000000) + 1);
+    setIsSolutionRevealed(false);
   };
 
   const handleHint = () => {
@@ -258,9 +320,21 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
     }
   };
 
+  const handleRevealSolution = () => {
+    setBoard(currentLevel.solution.map((r) => [...r]));
+    setIsSolutionRevealed(true);
+    setHasStarted(false);
+    sounds.playGiveUpReveal();
+  };
+
+  const handleSoundProfileChange = (profile: SoundProfile) => {
+    setGlobalSoundProfile(profile);
+    setSoundProfileState(profile);
+  };
+
   const handleToggleSound = () => {
-    const muted = toggleGlobalPuzzleMute();
-    setIsMuted(muted);
+    const nextMuted = toggleGlobalPuzzleMute();
+    setSoundProfileState(nextMuted ? "muted" : "arcade");
   };
 
   const rulesContent = (
@@ -304,9 +378,14 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
         canHint={!isWon}
         onNewPuzzle={handleNewPuzzle}
         isSoundMuted={isMuted}
+        soundProfile={soundProfile}
+        onChangeSoundProfile={handleSoundProfileChange}
         onToggleSound={handleToggleSound}
         onBackToHub={onBackToHub}
         rulesContent={rulesContent}
+        onRevealSolution={handleRevealSolution}
+        isSolutionRevealed={isSolutionRevealed}
+        challengeInfo={challengeInfo}
       />
 
       {/* Difficulty Tabs */}
@@ -469,6 +548,11 @@ export default function TangoGame({ onBackToHub }: { onBackToHub: () => void }) 
           onReplay={handleReset}
           onBackToHub={onBackToHub}
           onClose={() => setShowWinModal(false)}
+          speedTier={speedTier}
+          newCodexCard={newCodexCard}
+          onOpenCodex={onOpenCodex}
+          levelSeed={levelSeed}
+          challengeInfo={challengeInfo}
         />
       )}
     </div>

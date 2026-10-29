@@ -370,10 +370,6 @@ export default function ProfilePage() {
                         )}
                       </div>
                     </div>
-                    {/* Crown badge indicator */}
-                    <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-[#fec01f] text-black text-[10px] font-black uppercase shadow-md">
-                      Pawn
-                    </div>
                   </div>
 
                   <div className="space-y-1.5 text-center sm:text-left">
