@@ -33,6 +33,7 @@ import {
 import VictoryConfetti from "@/components/game/VictoryConfetti";
 import TournamentCountdown from "@/components/tournament/TournamentCountdown";
 import { generateResultCardBlob } from "@/lib/utils/card-generator";
+import ShareCardCustomizerModal from "@/components/game/ShareCardCustomizerModal";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -54,6 +55,7 @@ interface GameRun {
 interface Profile {
   display_name: string;
   leaderboard_opt_in: boolean;
+  avatar_url?: string | null;
 }
 
 function ResultContent() {
@@ -82,6 +84,14 @@ function ResultContent() {
   const [copyingCardImage, setCopyingCardImage] = useState(false);
   const [copiedLinkedInText, setCopiedLinkedInText] = useState(false);
   const [sharingChannel, setSharingChannel] = useState<string | null>(null);
+  const [customizerModalOpen, setCustomizerModalOpen] = useState(false);
+  const [customizerFormat, setCustomizerFormat] = useState<"post" | "story">("post");
+
+  const openCardCustomizer = async (format: "post" | "story" = "post") => {
+    await getOrGenerateShareUrl();
+    setCustomizerFormat(format);
+    setCustomizerModalOpen(true);
+  };
 
   const searchParams = useSearchParams();
 
@@ -643,29 +653,26 @@ ${targetUrl}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <button
-              onClick={() => handleDownloadCard("post")}
-              disabled={downloadingPost || downloadingStory || copyingCardImage}
-              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3 px-3 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              onClick={() => openCardCustomizer("post")}
+              className="interactive-btn interactive-btn--primary text-xs uppercase tracking-wider py-3 px-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
             >
               <Download size={14} />
-              <span>{downloadingPost ? "Generating…" : "Feed Card (4:5)"}</span>
+              <span>Preview &amp; Get Feed Card (4:5)</span>
             </button>
             <button
-              onClick={() => handleDownloadCard("story")}
-              disabled={downloadingPost || downloadingStory || copyingCardImage}
-              className="interactive-btn interactive-btn--burgundy text-xs uppercase tracking-wider py-3 px-3 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              onClick={() => openCardCustomizer("story")}
+              className="interactive-btn interactive-btn--burgundy text-xs uppercase tracking-wider py-3 px-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-md"
             >
-              <Download size={14} />
-              <span>{downloadingStory ? "Generating…" : "Story Card (9:16)"}</span>
+              <Smartphone size={14} />
+              <span>Preview &amp; Get Story (9:16)</span>
             </button>
             <button
-              onClick={handleCopyCardImage}
-              disabled={downloadingPost || downloadingStory || copyingCardImage}
-              className="py-3 px-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-mono text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-              title="Copy card image directly to clipboard to paste into WhatsApp Web, LinkedIn, or Slack"
+              onClick={() => openCardCustomizer("post")}
+              className="py-3 px-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 hover:border-[#fec01f] text-white font-mono text-xs uppercase tracking-wider font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              title="Customize your name and photo before copying or downloading"
             >
-              {copiedCardImage ? <Check size={14} className="text-teal-400" /> : <Copy size={14} />}
-              <span>{copiedCardImage ? "Image Copied!" : copyingCardImage ? "Copying…" : "Copy Image (Ctrl+V)"}</span>
+              <Copy size={14} />
+              <span>Customize &amp; Copy (Ctrl+V)</span>
             </button>
           </div>
         </div>
@@ -899,7 +906,7 @@ ${targetUrl}
                   <span className="w-4 h-4 rounded-full bg-[#fec01f] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
                     2
                   </span>
-                  <span>Tap the Sticker icon and select <strong>Link</strong> (🔗).</span>
+                  <span>Tap the Sticker icon and select <strong>Link</strong>.</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="w-4 h-4 rounded-full bg-[#fec01f] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">
@@ -921,6 +928,29 @@ ${targetUrl}
               </button>
             </div>
           </div>
+        )}
+
+        {/* Share Card Customizer & Live Preview Modal */}
+        {run && (
+          <ShareCardCustomizerModal
+            isOpen={customizerModalOpen}
+            onClose={() => setCustomizerModalOpen(false)}
+            initialFormat={customizerFormat}
+            finalScore={run.player_score}
+            rank={leaderboardOptIn ? rank : null}
+            outcome={run.status as any}
+            heartsRemaining={run.player_hearts}
+            quizCorrect={run.player_quiz_correct}
+            treasuresCollected={(run.player_treasures_collected || []).length}
+            challengeUrl={shareUrl || (typeof window !== "undefined" ? window.location.origin : "")}
+            festivalDates="2–3 November 2026"
+            defaultDisplayName={profile?.display_name || "Festival Player"}
+            defaultAvatarUrl={profile?.avatar_url || null}
+            googleAvatarUrl={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null}
+            onProfileUpdated={(name, avUrl) => {
+              setProfile((prev) => (prev ? { ...prev, display_name: name, avatar_url: avUrl } : null));
+            }}
+          />
         )}
 
         {/* Back navigation */}

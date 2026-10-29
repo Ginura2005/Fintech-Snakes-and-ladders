@@ -60,11 +60,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (data?.user) {
-      // Auto-create or verify profile
+      // Auto-create or verify profile and extract Google account avatar
       try {
+        const googleAvatar =
+          data.user.user_metadata?.avatar_url ||
+          data.user.user_metadata?.picture ||
+          null;
+
         const { data: existing } = await supabase
           .from("player_profiles")
-          .select("id")
+          .select("id, avatar_url")
           .eq("id", data.user.id)
           .maybeSingle();
 
@@ -80,9 +85,15 @@ export async function GET(request: NextRequest) {
           await supabase.from("player_profiles").insert({
             id: data.user.id,
             display_name: displayName,
-            avatar_url: data.user.user_metadata?.avatar_url ?? null,
+            avatar_url: googleAvatar,
             leaderboard_opt_in: false,
           });
+        } else if (!existing.avatar_url && googleAvatar) {
+          // If profile exists without an avatar, sync Google avatar
+          await supabase
+            .from("player_profiles")
+            .update({ avatar_url: googleAvatar })
+            .eq("id", data.user.id);
         }
       } catch (profileErr) {
         console.warn("Profile creation warning (non-fatal):", profileErr);

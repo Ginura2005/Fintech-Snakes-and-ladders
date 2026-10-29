@@ -157,6 +157,31 @@ export default function FestivalHeader({
           {user ? (
             <div className="flex items-center gap-2">
               <Link
+                href="/profile"
+                title="Player Profile & Identity"
+                className={`h-9 px-2.5 rounded-xl border flex items-center gap-2 transition-all active:scale-95 ${
+                  activePath === "/profile"
+                    ? "border-[#fec01f] bg-[#fec01f]/15 text-[#fec01f]"
+                    : "border-white/15 bg-white/5 text-white/80 hover:text-white hover:border-[#fec01f]/60"
+                }`}
+              >
+                <div className="w-6 h-6 rounded-full overflow-hidden bg-[#042a2d] border border-[#fec01f] shrink-0 flex items-center justify-center">
+                  {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon size={12} className="text-[#fec01f]" />
+                  )}
+                </div>
+                <span className="text-xs font-semibold max-w-[80px] truncate hidden lg:inline">
+                  {user.user_metadata?.full_name?.split(" ")[0] || "Profile"}
+                </span>
+              </Link>
+              <Link
                 href="/game"
                 className="h-9 px-3.5 sm:px-4 rounded-xl bg-[#fec01f] hover:bg-[#e5ac1b] text-black font-semibold text-xs tracking-wider uppercase inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
               >
@@ -259,6 +284,17 @@ export default function FestivalHeader({
               <Trophy size={17} className="text-[#fec01f]" />
               <span>Leaderboard</span>
             </Link>
+
+            {user && (
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+              >
+                <UserIcon size={17} className="text-[#fec01f]" />
+                <span>Player Profile</span>
+              </Link>
+            )}
 
             {isAdmin && (
               <Link
