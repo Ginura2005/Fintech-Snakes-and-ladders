@@ -18,6 +18,8 @@ import {
   Home,
   ShieldCheck,
 } from "lucide-react";
+import UserAvatar from "@/components/ui/UserAvatar";
+import { getGoogleAvatarUrl, getGoogleDisplayName } from "@/lib/auth/google-avatar";
 
 interface FestivalHeaderProps {
   user?: User | null;
@@ -86,18 +88,18 @@ export default function FestivalHeader({
 
         {/* Desktop Navigation — Icon-forward, concise labels, zero text bloat */}
         <nav
-          aria-label="Arena Navigation"
+          aria-label="Primary"
           className="hidden md:flex items-center gap-1 sm:gap-2 lg:gap-3 text-xs font-mono uppercase tracking-wider"
         >
           <Link
             href="/game"
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
               activePath === "/game"
-                ? "bg-[#fec01f]/15 text-[#fec01f] border border-[#fec01f]/40 font-bold"
+                ? "bg-primary/15 text-primary border border-primary/40 font-bold"
                 : "text-white/75 hover:text-white hover:bg-white/5"
             }`}
+            aria-current={activePath === "/game" ? "page" : undefined}
           >
-            <Gamepad2 size={15} className="shrink-0" />
             <span>Arena</span>
           </Link>
 
@@ -105,11 +107,11 @@ export default function FestivalHeader({
             href="/puzzles"
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
               activePath === "/puzzles"
-                ? "bg-[#fec01f]/15 text-[#fec01f] border border-[#fec01f]/40 font-bold"
+                ? "bg-primary/15 text-primary border border-primary/40 font-bold"
                 : "text-white/75 hover:text-white hover:bg-white/5"
             }`}
+            aria-current={activePath === "/puzzles" ? "page" : undefined}
           >
-            <Puzzle size={15} className="shrink-0" />
             <span>Puzzles</span>
           </Link>
 
@@ -117,11 +119,11 @@ export default function FestivalHeader({
             href="/leaderboard"
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
               activePath === "/leaderboard"
-                ? "bg-[#fec01f]/15 text-[#fec01f] border border-[#fec01f]/40 font-bold"
+                ? "bg-primary/15 text-primary border border-primary/40 font-bold"
                 : "text-white/75 hover:text-white hover:bg-white/5"
             }`}
+            aria-current={activePath === "/leaderboard" ? "page" : undefined}
           >
-            <Trophy size={15} className="shrink-0 text-[#fec01f]" />
             <span>Ranks</span>
           </Link>
 
@@ -144,9 +146,8 @@ export default function FestivalHeader({
                   ? "bg-[#8d1739]/30 text-[#fec01f] border border-[#fec01f]/50 font-bold shadow-sm"
                   : "text-[#fec01f] bg-[#8d1739]/20 hover:bg-[#8d1739]/35 border border-[#8d1739]/40"
               }`}
-              title="Admin Mission Control"
+              title="Admin"
             >
-              <ShieldCheck size={14} className="shrink-0 text-[#fec01f]" />
               <span>Admin</span>
             </Link>
           )}
@@ -166,27 +167,22 @@ export default function FestivalHeader({
                 }`}
               >
                 <div className="w-6 h-6 rounded-full overflow-hidden bg-[#042a2d] border border-[#fec01f] shrink-0 flex items-center justify-center">
-                  {user.user_metadata?.avatar_url || user.user_metadata?.picture ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={user.user_metadata.avatar_url || user.user_metadata.picture}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <UserIcon size={12} className="text-[#fec01f]" />
-                  )}
+                  <UserAvatar
+                    src={getGoogleAvatarUrl(user)}
+                    alt="Profile"
+                    iconSize={12}
+                  />
                 </div>
                 <span className="text-xs font-semibold max-w-[80px] truncate hidden lg:inline">
-                  {user.user_metadata?.full_name?.split(" ")[0] || "Profile"}
+                  {getGoogleDisplayName(user)?.split(" ")[0] || "Profile"}
                 </span>
               </Link>
               <Link
                 href="/game"
-                className="h-9 px-3.5 sm:px-4 rounded-xl bg-[#fec01f] hover:bg-[#e5ac1b] text-black font-semibold text-xs tracking-wider uppercase inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                className="h-10 min-h-[40px] px-3.5 sm:px-4 rounded-xl bg-primary hover:bg-primary-hover text-black font-semibold text-xs tracking-wider uppercase inline-flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm active:scale-95 transition-all"
               >
-                <Play size={13} className="fill-current" />
-                <span>Play</span>
+                <Play size={13} className="fill-current shrink-0" aria-hidden />
+                <span className="leading-none">Play</span>
               </Link>
               {onSignOut && (
                 <button
@@ -202,11 +198,12 @@ export default function FestivalHeader({
           ) : (
             onSignIn && (
               <button
+                type="button"
                 onClick={onSignIn}
                 disabled={signingIn}
-                className="h-9 px-3.5 sm:px-4 rounded-xl bg-[#fec01f] hover:bg-[#e5ac1b] text-black font-semibold text-xs tracking-wide inline-flex items-center gap-2 shadow-sm active:scale-95 transition-all disabled:opacity-60"
+                className="h-10 min-h-[40px] px-3.5 sm:px-4 rounded-xl bg-primary hover:bg-primary-hover text-black font-semibold text-xs tracking-wide inline-flex items-center justify-center gap-2 whitespace-nowrap shadow-sm active:scale-95 transition-all disabled:opacity-60"
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0 block" viewBox="0 0 24 24" aria-hidden>
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -224,7 +221,7 @@ export default function FestivalHeader({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span>{signingIn ? "Connecting…" : "Sign In"}</span>
+                <span className="leading-none">{signingIn ? "Connecting…" : "Sign In"}</span>
               </button>
             )
           )}
@@ -247,41 +244,41 @@ export default function FestivalHeader({
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Home size={17} className="text-[#fec01f]" />
+              <Home size={17} className="text-primary" aria-hidden />
               <span>Home</span>
             </Link>
             <Link
               href="/game"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Gamepad2 size={17} className="text-teal-400" />
-              <span>Game Arena</span>
+              <Gamepad2 size={17} aria-hidden />
+              <span>Arena</span>
             </Link>
             <Link
               href="/game?mode=practice"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-3 px-3.5 rounded-xl hover:bg-white/5 text-teal-300 hover:text-teal-200 transition-colors flex items-center gap-3 min-h-[44px]"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 text-brand-teal-bright hover:text-white transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Play size={17} />
+              <Play size={17} aria-hidden />
               <span>Practice Mode</span>
             </Link>
             <Link
               href="/puzzles"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Puzzle size={17} className="text-[#fec01f]" />
-              <span>FinTech Puzzles</span>
+              <Puzzle size={17} aria-hidden />
+              <span>Puzzles</span>
             </Link>
             <Link
               href="/leaderboard"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+              className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors flex items-center gap-3 min-h-[44px]"
             >
-              <Trophy size={17} className="text-[#fec01f]" />
+              <Trophy size={17} aria-hidden />
               <span>Leaderboard</span>
             </Link>
 
@@ -289,10 +286,10 @@ export default function FestivalHeader({
               <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors flex items-center gap-3 min-h-[44px]"
+                className="py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors flex items-center gap-3 min-h-[44px]"
               >
-                <UserIcon size={17} className="text-[#fec01f]" />
-                <span>Player Profile</span>
+                <UserIcon size={17} aria-hidden />
+                <span>Profile</span>
               </Link>
             )}
 
@@ -300,20 +297,20 @@ export default function FestivalHeader({
               <Link
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-3 px-3.5 rounded-xl bg-[#8d1739]/20 border border-[#8d1739]/40 text-[#fec01f] font-bold transition-colors flex items-center gap-3 min-h-[44px]"
+                className="py-3 px-3.5 rounded-xl bg-brand-burgundy/20 border border-brand-burgundy/40 text-primary font-bold transition-colors flex items-center gap-3 min-h-[44px]"
               >
-                <ShieldCheck size={17} />
-                <span>Admin Mission Control</span>
+                <ShieldCheck size={17} aria-hidden />
+                <span>Admin</span>
               </Link>
             )}
             <a
               href="https://fintechfestival.lk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-between py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-[#fec01f] transition-colors min-h-[44px]"
+              className="inline-flex items-center justify-between py-3 px-3.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors min-h-[44px]"
             >
               <span className="flex items-center gap-3">
-                <ExternalLink size={17} />
+                <ExternalLink size={17} aria-hidden />
                 <span>Main Website</span>
               </span>
               <span className="text-xs text-white/40">fintechfestival.lk</span>

@@ -15,25 +15,25 @@ export async function generateMetadata({
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://verse.fintechfestival.lk";
 
   const defaultMeta: Metadata = {
-    title: "Arena Challenge | Lanka FinTechverse",
-    description: "Can you beat this score in Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
+    title: "Arena Challenge | Sri Lanka FinTechverse",
+    description: "Can you beat this score in Sri Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
     openGraph: {
-      title: "Arena Challenge | Lanka FinTechverse",
-      description: "Can you beat this score in Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
+      title: "Arena Challenge | Sri Lanka FinTechverse",
+      description: "Can you beat this score in Sri Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
       url: `${baseUrl}/challenge/${token}`,
       images: [
         {
           url: `${baseUrl}/api/og/challenge?token=${token}`,
           width: 1200,
           height: 630,
-          alt: "Lanka FinTechverse Challenge Scorecard",
+          alt: "Sri Lanka FinTechverse Challenge Scorecard",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Arena Challenge | Lanka FinTechverse",
-      description: "Can you beat this score in Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
+      title: "Arena Challenge | Sri Lanka FinTechverse",
+      description: "Can you beat this score in Sri Lanka FinTechverse? Race against autonomous AI at the Sri Lanka FinTech Festival 2026.",
       images: [`${baseUrl}/api/og/challenge?token=${token}`],
     },
   };
@@ -70,7 +70,7 @@ export async function generateMetadata({
     const name = profile?.display_name || "A challenger";
     const score = (run.player_score ?? 0).toLocaleString();
 
-    const title = `${name} scored ${score} pts in Lanka FinTechverse!`;
+    const title = `${name} scored ${score} pts in Sri Lanka FinTechverse!`;
     const description = `Can you beat ${name}'s score? Step into the official arena at the Sri Lanka FinTech Festival 2026.`;
     const ogImageUrl = `${baseUrl}/api/og/challenge?token=${token}`;
 

@@ -68,7 +68,7 @@ export default function CompactScoreHeader({
         {/* Ava's Human-like Speech Reaction Bubble */}
         {computerReaction && (
           <div className="absolute -bottom-3 right-2 sm:right-4 z-30 animate-speech-bubble pointer-events-none max-w-[85%]">
-            <div className="bg-gradient-to-r from-rose-900 to-[#1e0712] border border-rose-400 text-white text-[9px] sm:text-xs font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-[0_4px_15px_rgba(244,63,94,0.5)] flex items-center gap-1 sm:gap-1.5 truncate">
+            <div className="bg-gradient-to-r from-rose-900 to-[#1e0712] border border-rose-400 text-white text-[11px] sm:text-xs font-mono font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shadow-[0_4px_15px_rgba(244,63,94,0.5)] flex items-center gap-1 sm:gap-1.5 truncate">
               <span className="shrink-0 flex items-center gap-1">
                 <MessageSquare size={11} className="text-rose-300" />
                 <span>Ava:</span>
@@ -93,7 +93,7 @@ export default function CompactScoreHeader({
           >
             {/* Expressive Player Avatar */}
             <div className="relative shrink-0">
-              <GameAvatar type="player" mood={playerMood} size="hud" className="w-6 h-6 xs:w-7 xs:h-7 sm:w-10 sm:h-10" />
+              <GameAvatar type="player" mood={playerMood} size="hud" className="w-7 h-7 sm:w-10 sm:h-10" />
               {isPlayerTurn && (
                 <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#fec01f] border-1.5 sm:border-2 border-[#0a0a28] animate-ping" />
               )}
@@ -102,24 +102,24 @@ export default function CompactScoreHeader({
             {/* Stats */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1 sm:gap-1.5 leading-none">
-                <span className="font-heading font-bold text-white text-[10px] xs:text-[11px] sm:text-sm truncate max-w-[50px] xs:max-w-[85px] sm:max-w-none">
+                <span className="font-heading font-bold text-white text-[11px] sm:text-sm truncate max-w-[85px] sm:max-w-none">
                   {playerName}
                 </span>
-                <span className="font-mono text-[7px] xs:text-[8px] sm:text-[10px] text-[#fec01f] font-bold shrink-0">
+                <span className="font-mono text-[10px] sm:text-[10px] text-[#fec01f] font-bold shrink-0">
                   Sq {playerPosition.toString().padStart(2, "0")}
                 </span>
               </div>
 
               {/* Score & Health */}
               <div className="flex items-center flex-wrap gap-1 sm:gap-2 mt-0.5 sm:mt-1">
-                <span className="font-mono font-bold text-[9px] xs:text-[10px] sm:text-sm text-[#fec01f] leading-none shrink-0">
-                  {playerScore.toLocaleString()} <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-normal text-white/50">pts</span>
+                <span className="font-mono font-bold text-[11px] sm:text-sm text-[#fec01f] leading-none shrink-0">
+                  {playerScore.toLocaleString()} <span className="text-[11px] sm:text-[11px] font-normal text-white/50">pts</span>
                 </span>
 
                 {/* Puzzle Bonus Intel Badge */}
                 {puzzleBonus > 0 && (
                   <span
-                    className="flex items-center gap-0.5 text-[7px] xs:text-[8px] sm:text-[9px] font-mono font-bold text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 px-1 py-0.5 rounded shrink-0 leading-none shadow-sm"
+                    className="flex items-center gap-0.5 text-[11px] sm:text-[11px] font-mono font-bold text-[#00f0ff] bg-[#00f0ff]/10 border border-[#00f0ff]/30 px-1 py-0.5 rounded shrink-0 leading-none shadow-sm"
                     title={`+${puzzleBonus} pts contributed from solving daily logic challenges`}
                   >
                     <Puzzle size={9} className="text-[#00f0ff] shrink-0" />
@@ -145,7 +145,7 @@ export default function CompactScoreHeader({
                 {/* Shield badge */}
                 {playerShields > 0 && (
                   <span
-                    className="flex items-center gap-0.5 text-[7px] xs:text-[8px] sm:text-[9px] font-mono font-bold text-teal-300 bg-teal-950/70 border border-teal-500/40 px-1 rounded shrink-0 leading-tight"
+                    className="flex items-center gap-0.5 text-[11px] sm:text-[11px] font-mono font-bold text-teal-300 bg-teal-950/70 border border-teal-500/40 px-1 rounded shrink-0 leading-tight"
                     title={`${playerShields} shield active`}
                   >
                     <Shield size={8} className="fill-teal-400" />
@@ -158,7 +158,7 @@ export default function CompactScoreHeader({
 
           {/* Center: Turn Status & Audio Controls */}
           <div className="flex flex-col items-center justify-center text-center px-0.5 shrink-0">
-            <span className="font-mono text-[8px] sm:text-[10px] text-white/50 uppercase tracking-widest leading-none mb-0.5">
+            <span className="font-mono text-[11px] sm:text-[10px] text-white/50 uppercase tracking-widest leading-none mb-0.5">
               Turn {turnSequence}{boardSeed ? ` · #${boardSeed}` : ""}
             </span>
 
@@ -195,13 +195,13 @@ export default function CompactScoreHeader({
                   aria-label="Shuffle arena board"
                 >
                   <Shuffle size={12} />
-                  <span className="hidden sm:inline text-[9px] font-mono font-bold">Shuffle</span>
+                  <span className="hidden sm:inline text-[11px] font-mono font-bold">Shuffle</span>
                 </button>
               )}
             </div>
 
             <span
-              className={`text-[7px] sm:text-[9px] font-mono uppercase tracking-wider font-bold mt-0.5 px-1 sm:px-1.5 py-0.2 rounded whitespace-nowrap ${
+              className={`text-[10px] sm:text-[11px] font-mono uppercase tracking-wider font-bold mt-0.5 px-1 sm:px-1.5 py-0.2 rounded whitespace-nowrap ${
                 isPlayerTurn
                   ? "bg-[#fec01f]/15 text-[#fec01f] border border-[#fec01f]/30"
                   : "bg-rose-500/15 text-rose-300 border border-rose-500/30"
@@ -225,11 +225,11 @@ export default function CompactScoreHeader({
             {/* Stats */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-end gap-1 sm:gap-1.5 leading-none">
-                <span className="font-mono text-[7px] xs:text-[8px] sm:text-[10px] text-rose-400 font-bold shrink-0">
+                <span className="font-mono text-[10px] sm:text-[10px] text-rose-400 font-bold shrink-0">
                   Sq {computerPosition.toString().padStart(2, "0")}
                 </span>
-                <span className="font-heading font-bold text-white text-[10px] xs:text-[11px] sm:text-sm truncate max-w-[50px] xs:max-w-[85px] sm:max-w-none">
-                  Ava <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-normal text-rose-300/80 font-mono">(AI)</span>
+                <span className="font-heading font-bold text-white text-[11px] sm:text-sm truncate max-w-[85px] sm:max-w-none">
+                  Ava <span className="text-[11px] sm:text-[11px] font-normal text-rose-300/80 font-mono">(AI)</span>
                 </span>
               </div>
 
@@ -238,7 +238,7 @@ export default function CompactScoreHeader({
                 {/* Shield badge */}
                 {computerShields > 0 && (
                   <span
-                    className="flex items-center gap-0.5 text-[7px] xs:text-[8px] sm:text-[9px] font-mono font-bold text-teal-300 bg-teal-950/70 border border-teal-500/40 px-1 rounded shrink-0 leading-tight"
+                    className="flex items-center gap-0.5 text-[11px] sm:text-[11px] font-mono font-bold text-teal-300 bg-teal-950/70 border border-teal-500/40 px-1 rounded shrink-0 leading-tight"
                     title={`${computerShields} shield active`}
                   >
                     <Shield size={8} className="fill-teal-400" />
@@ -261,15 +261,15 @@ export default function CompactScoreHeader({
                   ))}
                 </div>
 
-                <span className="font-mono font-bold text-[9px] xs:text-[10px] sm:text-sm text-rose-300 leading-none shrink-0">
-                  {computerScore.toLocaleString()} <span className="text-[7px] xs:text-[8px] sm:text-[9px] font-normal text-white/50">pts</span>
+                <span className="font-mono font-bold text-[11px] sm:text-sm text-rose-300 leading-none shrink-0">
+                  {computerScore.toLocaleString()} <span className="text-[11px] sm:text-[11px] font-normal text-white/50">pts</span>
                 </span>
               </div>
             </div>
 
             {/* Expressive Ava Avatar */}
             <div className="relative shrink-0">
-              <GameAvatar type="computer" mood={computerMood} size="hud" className="w-6 h-6 xs:w-7 xs:h-7 sm:w-10 sm:h-10" />
+              <GameAvatar type="computer" mood={computerMood} size="hud" className="w-7 h-7 sm:w-10 sm:h-10" />
               {!isPlayerTurn && (
                 <span className="absolute -bottom-0.5 -left-0.5 w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-rose-500 border-1.5 sm:border-2 border-[#0a0a28] animate-ping" />
               )}

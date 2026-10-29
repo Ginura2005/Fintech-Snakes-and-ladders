@@ -1,6 +1,6 @@
 "use client";
 
-import { Shield, Sparkles, Award, Gem } from "lucide-react";
+import { Shield, Gem } from "lucide-react";
 
 interface TreasureOverlayProps {
   points: number;

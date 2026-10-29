@@ -13,7 +13,6 @@ import {
   Heart,
   HelpCircle,
   Clock,
-  Sparkles,
 } from "lucide-react";
 
 interface LeaderboardEntry {

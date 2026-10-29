@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function isPracticeGameRequest(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/game" || pathname === "/game/result") {
+    return searchParams.get("mode") === "practice";
+  }
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -15,7 +23,6 @@ export async function updateSession(request: NextRequest) {
     "sb_publishable_s5SduLYiklyi0zbHAY9qdA_DSv7ZOK2";
 
   if (!url || !anonKey) {
-    // If Supabase is not configured yet, allow navigation so app is inspectable
     return supabaseResponse;
   }
 
@@ -39,21 +46,24 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
-    // Refresh session
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Protect /game and /api/game routes for authenticated users
+    const pathname = request.nextUrl.pathname;
     const isProtectedPath =
-      request.nextUrl.pathname.startsWith("/game") ||
-      (request.nextUrl.pathname.startsWith("/api/game") &&
-        request.nextUrl.pathname !== "/api/game/state");
+      (pathname.startsWith("/game") ||
+        (pathname.startsWith("/api/game") && pathname !== "/api/game/state")) &&
+      !isPracticeGameRequest(request);
 
     if (isProtectedPath && !user) {
+      // Send users home with a safe return path — UI opens a sign-in modal.
       const redirectUrl = request.nextUrl.clone();
+      const intended =
+        `${pathname}${request.nextUrl.search}` || "/game";
       redirectUrl.pathname = "/";
-      redirectUrl.searchParams.set("signin", "required");
+      redirectUrl.search = "";
+      redirectUrl.searchParams.set("next", intended);
       return NextResponse.redirect(redirectUrl);
     }
   } catch (e) {

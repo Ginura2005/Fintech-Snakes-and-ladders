@@ -8,7 +8,6 @@ import {
   HelpCircle,
   Gem,
   RotateCcw,
-  Sparkles,
   ArrowUpRight,
   ArrowDownRight,
   Shield,

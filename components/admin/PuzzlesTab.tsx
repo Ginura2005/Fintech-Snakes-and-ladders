@@ -9,8 +9,6 @@ import {
   TrendingUp,
   Binary,
   Grid3X3,
-  Sparkles,
-  Zap,
   Clock,
   Award,
 } from "lucide-react";

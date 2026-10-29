@@ -10,7 +10,6 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   Search,
   Users,
 } from "lucide-react";

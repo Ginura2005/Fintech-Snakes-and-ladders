@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import {
+  getGoogleAvatarUrl,
+  getGoogleDisplayName,
+  normalizeGoogleAvatarUrl,
+} from "@/lib/auth/google-avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -162,15 +167,8 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    const googleAvatar =
-      user.user_metadata?.avatar_url ||
-      user.user_metadata?.picture ||
-      null;
-
-    const googleName =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      null;
+    const googleName = getGoogleDisplayName(user);
+    let googleAvatar = getGoogleAvatarUrl(user);
 
     // If profile didn't exist yet, lazily create it
     if (!profile) {
@@ -186,6 +184,27 @@ export async function GET(request: NextRequest) {
         .select()
         .single();
       profile = newProfile;
+    } else if ((!profile.avatar_url || profile.avatar_url === "") && googleAvatar) {
+      // Backfill Google photo for GIS logins that skipped /auth/callback
+      const { data: synced } = await db
+        .from("player_profiles")
+        .update({
+          avatar_url: googleAvatar,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+        .select()
+        .single();
+      if (synced) profile = synced;
+    }
+
+    // Fall back to a stored googleusercontent URL when auth metadata omits picture
+    if (
+      !googleAvatar &&
+      typeof profile?.avatar_url === "string" &&
+      profile.avatar_url.includes("googleusercontent.com")
+    ) {
+      googleAvatar = normalizeGoogleAvatarUrl(profile.avatar_url);
     }
 
     // 2. Fetch career stats

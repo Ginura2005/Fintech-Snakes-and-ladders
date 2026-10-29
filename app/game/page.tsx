@@ -29,6 +29,7 @@ import {
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
 import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import FieldLegend from "@/components/game/FieldLegend";
 import {
   Volume2,
   VolumeX,
@@ -36,10 +37,6 @@ import {
   Trophy,
   RotateCcw,
   Play,
-  TrendingUp,
-  AlertTriangle,
-  HelpCircle,
-  Gem,
   Gamepad2,
   History,
   X,
@@ -1279,87 +1276,42 @@ function GameContent() {
               />
             )}
 
-            {/* Field Point Values Reference Pills (Placed directly below Roll Dice button) */}
-            <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-white/70 pt-0.5">
-              <span className="flex items-center gap-1.5 bg-teal-950/60 border border-teal-500/30 px-2.5 py-1 rounded-full text-teal-300">
-                <TrendingUp size={12} />
-                <span>Ladders (+25)</span>
-              </span>
-              <span className="flex items-center gap-1.5 bg-rose-950/60 border border-rose-500/30 px-2.5 py-1 rounded-full text-rose-300">
-                <AlertTriangle size={12} />
-                <span>Snakes (-10/-25 &amp; Heart)</span>
-              </span>
-              <span className="flex items-center gap-1.5 bg-amber-950/60 border border-[#fec01f]/30 px-2.5 py-1 rounded-full text-[#fec01f]">
-                <HelpCircle size={12} />
-                <span>Quiz (+50)</span>
-              </span>
-              <span className="flex items-center gap-1.5 bg-orange-950/60 border border-orange-500/30 px-2.5 py-1 rounded-full text-orange-300">
-                <Gem size={12} />
-                <span>Treasure (+50 &amp; Shield)</span>
-              </span>
-            </div>
+            <FieldLegend className="max-w-2xl mx-auto justify-center pt-1" compact />
 
-            {/* Mobile Collapsible Chronicle & Field Intel */}
+            {/* Mobile collapsible event log + field guide */}
             <div className="lg:hidden">
               <button
+                type="button"
                 onClick={() => setShowMobileIntel(!showMobileIntel)}
                 className="w-full py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 text-xs font-mono uppercase tracking-wider text-white/70 flex items-center justify-between hover:bg-white/10 transition-colors"
               >
-                <span className="flex items-center gap-1.5"><History size={13} className="text-[#fec01f]" /><span>Match Chronicle &amp; Field Guide ({events.length})</span></span>
-                <span>{showMobileIntel ? "▲ Hide" : "▼ Show"}</span>
+                <span className="flex items-center gap-1.5">
+                  <History size={13} className="text-primary" aria-hidden />
+                  <span>Match log ({events.length})</span>
+                </span>
+                <span>{showMobileIntel ? "Hide" : "Show"}</span>
               </button>
               {showMobileIntel && (
                 <div className="mt-3 space-y-3 animate-slide-up">
                   <EventLog events={events} />
-                  <div className="festival-card p-3 text-xs font-mono text-white/60 space-y-1.5 border-white/10 bg-[#0a0a28]/80">
-                    <p className="font-bold text-white/90 uppercase tracking-wider text-[11px] mb-1">
-                      Field Intel
+                  <div className="festival-card p-3 space-y-2">
+                    <p className="font-mono font-bold text-white/90 uppercase tracking-wider text-[11px]">
+                      Field guide
                     </p>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded bg-teal-500/20 border border-teal-400 shrink-0" />
-                      <span><strong>Ladders:</strong> Boost ahead +25 pts</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
-                      <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; Heart</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
-                      <span><strong>Quiz:</strong> FinTech test +50 pts</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded bg-orange-500/20 border border-orange-400 shrink-0" />
-                      <span><strong>Treasure:</strong> Points &amp; Shield protection</span>
-                    </div>
+                    <FieldLegend compact />
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Desktop Right Telemetry Feed */}
           <div className="hidden lg:block space-y-4">
             <EventLog events={events} />
-            <div className="festival-card p-4 text-xs font-mono text-white/60 space-y-2 border-white/10 bg-[#0a0a28]/80">
-              <p className="font-bold text-white/90 uppercase tracking-wider text-[11px] mb-2 border-b border-white/5 pb-1">
-                Field Intel
+            <div className="festival-card p-4 space-y-3">
+              <p className="font-mono font-bold text-white/90 uppercase tracking-wider text-[11px] border-b border-white/10 pb-2">
+                Field guide
               </p>
-              <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-teal-500/20 border border-teal-400 shrink-0" />
-                <span><strong>Ladders:</strong> Boost ahead +25 pts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-rose-500/20 border border-rose-400 shrink-0" />
-                <span><strong>Snakes:</strong> Set back -10/-25 pts &amp; Heart</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-[#fec01f]/20 border border-[#fec01f] shrink-0" />
-                <span><strong>Quiz:</strong> FinTech test +50 pts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded bg-orange-500/20 border border-orange-400 shrink-0" />
-                <span><strong>Treasure:</strong> Points &amp; Shield protection</span>
-              </div>
+              <FieldLegend />
             </div>
           </div>
         </div>
