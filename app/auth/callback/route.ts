@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import { getSafeNextPath } from "@/lib/auth/safe-next-path";
+import { getGoogleAvatarUrl, getGoogleDisplayName } from "@/lib/auth/google-avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/game";
+  const next = getSafeNextPath(searchParams.get("next"), "/game");
 
   const forwardedHost = request.headers.get("x-forwarded-host");
   const isLocalEnv = process.env.NODE_ENV === "development";
@@ -62,10 +64,7 @@ export async function GET(request: NextRequest) {
     if (data?.user) {
       // Auto-create or verify profile and extract Google account avatar
       try {
-        const googleAvatar =
-          data.user.user_metadata?.avatar_url ||
-          data.user.user_metadata?.picture ||
-          null;
+        const googleAvatar = getGoogleAvatarUrl(data.user);
 
         const { data: existing } = await supabase
           .from("player_profiles")
@@ -75,8 +74,7 @@ export async function GET(request: NextRequest) {
 
         if (!existing) {
           const rawName =
-            data.user.user_metadata?.full_name ||
-            data.user.user_metadata?.name ||
+            getGoogleDisplayName(data.user) ||
             data.user.email?.split("@")[0] ||
             "Player";
 
@@ -88,7 +86,7 @@ export async function GET(request: NextRequest) {
             avatar_url: googleAvatar,
             leaderboard_opt_in: false,
           });
-        } else if (!existing.avatar_url && googleAvatar) {
+        } else if ((!existing.avatar_url || existing.avatar_url === "") && googleAvatar) {
           // If profile exists without an avatar, sync Google avatar
           await supabase
             .from("player_profiles")

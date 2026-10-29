@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Crown, X, Sparkles, CheckCircle2, SlidersHorizontal, Check, AlertTriangle, Lightbulb } from "lucide-react";
+import { Crown, X, CheckCircle2, SlidersHorizontal, Check, AlertTriangle, Lightbulb } from "lucide-react";
 import { QueensLevel } from "./puzzleTypes";
 import { generateQueensLevel } from "@/lib/puzzles/queens-engine";
 import { getDailyPuzzleSeed } from "@/lib/puzzles/prng";

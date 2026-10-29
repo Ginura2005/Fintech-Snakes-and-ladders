@@ -8,7 +8,6 @@ import {
   Lightbulb,
   HelpCircle,
   Clock,
-  Sparkles,
   Volume2,
   VolumeX,
   Shuffle,

@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   XCircle,
   BrainCircuit,
-  Sparkles,
   BookOpen,
 } from "lucide-react";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Dices, Target } from "lucide-react";
+import { Dices, Target } from "lucide-react";
 import Cube3D, { ThrowPhysics } from "./Cube3D";
 
 interface DicePanelProps {
@@ -45,8 +45,7 @@ export default function DicePanel({
         <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 pb-1">
           {/* Player 3D Cube Die */}
           <div className="flex flex-col items-center">
-            <span className="font-mono text-[9px] sm:text-[10px] font-bold text-[#fec01f] uppercase tracking-wider mb-1 flex items-center gap-0.5">
-              <Sparkles size={10} className="text-[#fec01f]" />
+            <span className="font-mono text-[9px] sm:text-[10px] font-bold text-[#fec01f] uppercase tracking-wider mb-1">
               You
             </span>
             <div className="relative">

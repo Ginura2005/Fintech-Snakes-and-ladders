@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Sparkles, Star } from "lucide-react";
+import { Award, Share2, Check, ArrowRight, RotateCcw, Grid, Flame, Trophy, Star } from "lucide-react";
 import { PuzzleMeta } from "./puzzleTypes";
 import PuzzleIcon from "./PuzzleIcon";
 
@@ -79,12 +79,8 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn overflow-y-auto">
-      <div className="festival-panel max-w-md w-full max-h-[88dvh] overflow-y-auto p-4 sm:p-8 space-y-3.5 sm:space-y-5 border border-[#fec01f]/40 shadow-[0_0_50px_rgba(254,192,31,0.2)] text-center relative scrollbar-none pb-safe">
-        {/* Glow decoration */}
-        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#fec01f]/15 rounded-full blur-3xl" />
-
-        {/* Big Icon */}
-        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#fec01f]/20 to-teal-500/20 border border-[#fec01f]/40 flex items-center justify-center text-[#fec01f] shadow-inner animate-bounce">
+      <div className="festival-panel max-w-md w-full max-h-[88dvh] overflow-y-auto p-4 sm:p-8 space-y-3.5 sm:space-y-5 border border-primary/40 text-center relative scrollbar-none pb-safe">
+        <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center text-primary">
           <PuzzleIcon id={meta.id} size={36} />
         </div>
 
@@ -186,9 +182,8 @@ Play daily logic puzzles at fintechfestival.lk/puzzles`;
         {/* Educational Fact / Takeaway Card if available */}
         {educationalFact && (
           <div className="p-3.5 rounded-xl bg-teal-950/30 border border-teal-500/30 text-left space-y-1">
-            <div className="flex items-center gap-1.5 text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
-              <Sparkles size={12} />
-              <span>FinTech Intelligence Takeaway</span>
+            <div className="text-teal-300 font-mono text-[10px] uppercase tracking-wider font-bold">
+              FinTech Intelligence Takeaway
             </div>
             <p className="text-xs text-white/80 leading-relaxed">
               {educationalFact}

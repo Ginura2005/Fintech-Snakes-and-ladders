@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock } from "lucide-react";
 
 interface QuizQuestion {
   id: string;
@@ -41,7 +41,6 @@ export default function QuizOverlay({ question, onAnswer }: QuizOverlayProps) {
         <div className="flex items-start justify-between mb-4 pb-3 border-b border-white/10">
           <div>
             <span className="section-badge section-badge-primary text-[10px] sm:text-[11px] mb-1.5">
-              <Sparkles size={12} className="text-[#fec01f]" />
               FinTech Challenge · Square {question.squareNumber}
             </span>
             <div className="flex items-center gap-1.5 sm:gap-2 mt-1">

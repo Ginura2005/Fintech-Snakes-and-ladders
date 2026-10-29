@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Download,
   RotateCcw,
-  Sparkles,
   Shield,
   Activity,
 } from "lucide-react";
@@ -79,7 +78,6 @@ export default function CommandCenterTab({
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#fec01f]/15 border border-[#fec01f]/40 text-[#fec01f] text-xs font-mono font-bold uppercase tracking-wider">
-              <Sparkles size={13} />
               <span>Official Festival Tournament</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">

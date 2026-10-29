@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createInitialGameState } from "@/lib/game-engine/engine";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
 import { getDailySeed } from "@/lib/game-engine/procedural-generator";
+import { getGoogleAvatarUrl } from "@/lib/auth/google-avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
           {
             id: user.id,
             display_name: sanitized,
-            avatar_url: user.user_metadata?.avatar_url ?? null,
+            avatar_url: getGoogleAvatarUrl(user),
             leaderboard_opt_in: leaderboardOptIn ?? false,
           },
           { onConflict: "id" }

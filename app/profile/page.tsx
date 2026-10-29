@@ -15,7 +15,6 @@ import {
   Check,
   Trophy,
   Shield,
-  Sparkles,
   RotateCcw,
   Save,
   ArrowLeft,
@@ -26,6 +25,7 @@ import {
   Eye,
   CheckCircle2,
 } from "lucide-react";
+import { isGoogleAvatarUrl } from "@/lib/auth/google-avatar";
 
 interface ProfileData {
   id: string;
@@ -133,11 +133,11 @@ export default function ProfilePage() {
             if (data.stats) setStats(data.stats);
 
             // Determine initial avatar source
-            if (
+            if (isGoogleAvatarUrl(data.profile.avatar_url) || (
               data.profile.avatar_url &&
               data.profile.google_avatar_url &&
               data.profile.avatar_url === data.profile.google_avatar_url
-            ) {
+            )) {
               setAvatarSource("google");
             } else if (data.profile.avatar_url?.startsWith("data:image/")) {
               setAvatarSource("custom");
@@ -362,6 +362,7 @@ export default function ProfilePage() {
                             src={avatarUrl}
                             alt="Player Avatar"
                             className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
                           />
                         ) : (
                           <div className="text-2xl font-black text-[#fec01f] tracking-wider">
@@ -420,6 +421,7 @@ export default function ProfilePage() {
                             src={profileMeta.google_avatar_url}
                             alt="Google Avatar"
                             className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
                           />
                         ) : (
                           <UserIcon size={20} className="m-2.5 text-white/50" />
@@ -661,7 +663,7 @@ export default function ProfilePage() {
 
                   <div className="flex items-center justify-between py-1.5 border-b border-white/5">
                     <span className="text-white/50 flex items-center gap-1.5">
-                      <Sparkles size={13} />
+                      <Mail size={13} />
                       <span>Provider</span>
                     </span>
                     <span className="font-mono text-white/90 uppercase">
@@ -704,7 +706,12 @@ export default function ProfilePage() {
                     <div className="w-10 h-10 rounded-full border-2 border-[#fec01f] overflow-hidden bg-[#042a2d] shrink-0 flex items-center justify-center">
                       {avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={avatarUrl} alt="Preview" className="w-full h-full object-cover" />
+                        <img
+                          src={avatarUrl}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
                       ) : (
                         <span className="text-xs font-black text-[#fec01f]">
                           {displayName.slice(0, 2).toUpperCase() || "FP"}

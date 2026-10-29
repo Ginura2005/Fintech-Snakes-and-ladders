@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Cube3D, { ThrowPhysics } from "./Cube3D";
-import { Sparkles, Bot, Dices, Target } from "lucide-react";
+import { Bot, Dices, Target } from "lucide-react";
 
 interface Cinematic3DDiceOverlayProps {
   show: boolean;
@@ -99,8 +99,7 @@ export default function Cinematic3DDiceOverlay({
         <div className="absolute top-5 sm:top-7 flex flex-col items-center gap-1 font-mono uppercase">
           <div className="flex items-center gap-1.5 text-xs sm:text-sm font-extrabold tracking-widest">
             {isPlayer ? (
-              <span className="text-[#fec01f] flex items-center gap-1.5">
-                <Sparkles size={13} className="animate-spin text-[#fec01f]" />
+              <span className="text-[#fec01f]">
                 Your 3D Dice Throw
               </span>
             ) : (

@@ -4,11 +4,8 @@ import { ArrowUpRight } from "lucide-react";
 
 export default function FestivalFooter() {
   return (
-    <footer className="relative z-10 w-full overflow-hidden border-t-2 border-white/10 bg-[#06061f]">
-      {/* Ambient background glow */}
-      <div className="pointer-events-none absolute -bottom-32 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-t from-[#fec01f]/10 to-transparent blur-3xl opacity-50" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+    <footer className="relative z-10 w-full overflow-hidden border-t-[3px] border-black bg-background">
+      <div className="mx-auto max-w-container-max px-margin-mobile lg:px-margin-desktop pt-12 pb-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 lg:gap-12">
           {/* Brand Info */}
           <div className="flex flex-col gap-4 md:col-span-5">

@@ -1,4 +1,10 @@
 import { SupabaseClient } from "@supabase/supabase-js";
+import { getSafeNextPath } from "@/lib/auth/safe-next-path";
+import {
+  decodeGoogleIdTokenPicture,
+  getGoogleAvatarUrl,
+  normalizeGoogleAvatarUrl,
+} from "@/lib/auth/google-avatar";
 
 declare global {
   interface Window {
@@ -31,9 +37,7 @@ declare global {
   }
 }
 
-const DEFAULT_CLIENT_ID =
-  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-  "952048375622-dt322h6v6moj1r84504c19962vne8965.apps.googleusercontent.com";
+const DEFAULT_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
 interface SignInOptions {
   nextUrl?: string;
@@ -50,7 +54,7 @@ export async function signInWithGoogle(
   supabase: SupabaseClient,
   options?: SignInOptions
 ): Promise<void> {
-  const next = options?.nextUrl || "/game";
+  const next = getSafeNextPath(options?.nextUrl, "/game");
   const origin = typeof window !== "undefined" ? window.location.origin : "https://verse.fintechfestival.lk";
 
   // Try Google Identity Services (GIS) on-domain sign-in
@@ -88,12 +92,42 @@ export async function signInWithGoogle(
       });
 
       const credential = await tokenPromise;
+      const jwtPicture = decodeGoogleIdTokenPicture(credential);
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "google",
         token: credential,
       });
 
       if (error) throw error;
+
+      // Ensure player_profiles picks up Google photo (GIS skips /auth/callback)
+      try {
+        const res = await fetch("/api/profile", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const json = (await res.json().catch(() => null)) as {
+          profile?: { avatar_url?: string | null; google_avatar_url?: string | null };
+        } | null;
+
+        const stored = json?.profile?.avatar_url;
+        const avatarUrl =
+          json?.profile?.google_avatar_url ||
+          getGoogleAvatarUrl(data.user) ||
+          (jwtPicture ? normalizeGoogleAvatarUrl(jwtPicture) : null);
+
+        // Only fill empty profiles — never overwrite custom uploads
+        if (avatarUrl && (!stored || stored === "")) {
+          await fetch("/api/profile", {
+            method: "PATCH",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ avatarUrl }),
+          });
+        }
+      } catch {
+        // Non-fatal — profile page / game start will backfill later
+      }
 
       if (typeof window !== "undefined") {
         window.location.href = next;

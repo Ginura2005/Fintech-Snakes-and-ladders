@@ -15,7 +15,6 @@ import {
   Star,
   Shield,
   Image as ImageIcon,
-  Sparkles,
   ExternalLink,
   ShieldAlert,
   Bot,
@@ -38,6 +37,7 @@ import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { getArenaPuzzleBonus } from "@/lib/puzzles/puzzle-storage";
+import { getGoogleAvatarUrl } from "@/lib/auth/google-avatar";
 
 interface GameRun {
   status: string;
@@ -211,7 +211,7 @@ ${targetUrl}
           const blob = await generateResultCardBlob({
             format: "post",
             displayName: profile?.display_name || "Festival Player",
-            avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
+            avatarUrl: profile?.avatar_url || getGoogleAvatarUrl(user),
             finalScore: run?.player_score || 0,
             rank: leaderboardOptIn ? rank : null,
             outcome: run?.status as any,
@@ -252,7 +252,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format: "story",
         displayName: profile?.display_name || "Festival Player",
-        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
+        avatarUrl: profile?.avatar_url || getGoogleAvatarUrl(user),
         finalScore: run?.player_score || 0,
         rank: leaderboardOptIn ? rank : null,
         outcome: run?.status as any,
@@ -338,7 +338,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format: "post",
         displayName: profile?.display_name || "Festival Player",
-        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
+        avatarUrl: profile?.avatar_url || getGoogleAvatarUrl(user),
         finalScore: run.player_score,
         rank: leaderboardOptIn ? rank : null,
         outcome: run.status as any,
@@ -381,7 +381,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format,
         displayName: profile?.display_name || "Festival Player",
-        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
+        avatarUrl: profile?.avatar_url || getGoogleAvatarUrl(user),
         finalScore: run.player_score,
         rank: leaderboardOptIn ? rank : null,
         outcome: run.status as any,
@@ -946,7 +946,7 @@ ${targetUrl}
             festivalDates="2–3 November 2026"
             defaultDisplayName={profile?.display_name || "Festival Player"}
             defaultAvatarUrl={profile?.avatar_url || null}
-            googleAvatarUrl={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null}
+            googleAvatarUrl={getGoogleAvatarUrl(user) || (profile?.avatar_url?.includes("googleusercontent.com") ? profile.avatar_url : null)}
             onProfileUpdated={(name, avUrl) => {
               setProfile((prev) => (prev ? { ...prev, display_name: name, avatar_url: avUrl } : null));
             }}

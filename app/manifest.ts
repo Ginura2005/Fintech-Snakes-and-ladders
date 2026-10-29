@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Lanka FinTechverse — Sri Lanka FinTech Festival 2026",
+    name: "Sri Lanka FinTechverse — Sri Lanka FinTech Festival 2026",
     short_name: "FinTechverse",
     description:
       "The Official Digital Finance & Logic Arena of the Sri Lanka FinTech Festival 2026.",

@@ -8,7 +8,6 @@ import {
   PauseCircle,
   PlayCircle,
   StopCircle,
-  Sparkles,
   AlertTriangle,
   CheckCircle2,
   Send,

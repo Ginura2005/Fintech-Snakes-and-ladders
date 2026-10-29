@@ -24,75 +24,98 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "700"],
 });
 
+const SITE_URL = "https://verse.fintechfestival.lk";
+const SITE_NAME = "Sri Lanka FinTechverse";
+const SITE_NAME_YEAR = "Sri Lanka FinTech Festival 2026";
+const DEFAULT_TITLE = `${SITE_NAME} | Official Game of ${SITE_NAME_YEAR}`;
+const DEFAULT_DESCRIPTION =
+  "Play the official Snakes & Ladders game of Sri Lanka FinTech Festival 2026. Race across 25 squares, answer FinTech quizzes, solve daily logic puzzles, and climb the live festival leaderboard.";
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#06061f",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#06061f" },
+    { media: "(prefers-color-scheme: light)", color: "#06061f" },
+  ],
   colorScheme: "dark",
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://verse.fintechfestival.lk"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "LANKA FINTECHVERSE | Sri Lanka FinTech Festival 2026",
-    template: "%s | Lanka FinTechverse",
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "The Official Snakes & Ladders Game and Logic Arena of the Sri Lanka FinTech Festival 2026. Test your FinTech knowledge, race against autonomous AI, climb the live festival leaderboard, and solve daily puzzles.",
-  applicationName: "Lanka FinTechverse",
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
-    "FinTech",
-    "Sri Lanka FinTech Festival 2026",
+    "Sri Lanka FinTechverse",
     "Lanka FinTechverse",
-    "LankaPay",
-    "Central Bank of Sri Lanka",
-    "Digital Banking",
-    "Financial Technology",
-    "Colombo FinTech",
-    "Gamification",
+    "Sri Lanka FinTech Festival 2026",
+    "FinTech Festival Sri Lanka",
     "Snakes and Ladders",
+    "FinTech quiz",
+    "festival leaderboard",
+    "Colombo FinTech",
+    "LankaPay",
+    "digital finance Sri Lanka",
+    "fintechfestival.lk",
   ],
-  authors: [{ name: "Sri Lanka FinTech Festival" }],
+  authors: [{ name: "Sri Lanka FinTech Festival", url: "https://fintechfestival.lk" }],
   creator: "Sri Lanka FinTech Festival",
   publisher: "Sri Lanka FinTech Festival",
+  category: "games",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   alternates: {
-    canonical: "https://verse.fintechfestival.lk",
+    canonical: SITE_URL,
   },
   icons: {
-    icon: "/short-logo-removebg-preview.png",
+    icon: [{ url: "/short-logo-removebg-preview.png", type: "image/png" }],
     shortcut: "/short-logo-removebg-preview.png",
-    apple: "/apple-icon.png",
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://verse.fintechfestival.lk",
-    title: "LANKA FINTECHVERSE — Sri Lanka FinTech Festival 2026",
-    description:
-      "Building Capacity. Creating Opportunities. Scaling Sri Lanka's Digital Future. Race against AI in the official festival arena!",
-    siteName: "Sri Lanka FinTech Festival 2026",
+    locale: "en_LK",
+    url: SITE_URL,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    siteName: SITE_NAME_YEAR,
     images: [
       {
-        url: "/long-logo-removebg-preview.png",
+        url: "/share-card-clean.png",
         width: 1200,
         height: 630,
-        alt: "Sri Lanka FinTech Festival 2026 Logo",
+        alt: "Sri Lanka FinTechverse — Sri Lanka FinTech Festival 2026",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LANKA FINTECHVERSE | Sri Lanka FinTech Festival 2026",
-    description:
-      "Test your FinTech intelligence, race against autonomous AI, and climb the official tournament leaderboard at the Sri Lanka FinTech Festival 2026.",
-    images: ["/long-logo-removebg-preview.png"],
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: ["/share-card-clean.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  other: {
+    "theme-color": "#06061f",
   },
 };
 
@@ -103,10 +126,10 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="en-LK"
       className={`${sora.variable} ${epilogue.variable} ${jetbrainsMono.variable} dark`}
     >
-      <body className="min-h-screen bg-[#06061f] text-white selection:bg-[#fec01f] selection:text-black">
+      <body className="min-h-screen bg-background text-white antialiased selection:bg-primary selection:text-black">
         <Script
           src="https://accounts.google.com/gsi/client"
           strategy="afterInteractive"

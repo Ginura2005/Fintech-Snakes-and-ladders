@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import FestivalHeader from "@/components/layout/FestivalHeader";
@@ -24,7 +23,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   HelpCircle,
-  Sparkles,
   Award,
   Globe,
   Share2,
@@ -76,12 +74,6 @@ export default function TermsContent() {
 
       {/* Hero Section */}
       <div className="relative border-b border-white/10 bg-gradient-to-b from-[#0a0a28] to-[#06061f] overflow-hidden">
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-b from-[#8d1739]/20 via-[#fec01f]/10 to-transparent blur-3xl opacity-70" />
-        <div className="pointer-events-none absolute -right-20 top-0 w-96 h-96 opacity-10">
-          <Image src="/elements/circles.webp" alt="" fill className="object-contain" />
-        </div>
-
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           <div className="flex flex-wrap items-center gap-3 mb-4">
             <Link
@@ -336,7 +328,7 @@ export default function TermsContent() {
 
                 <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02] space-y-2">
                   <div className="flex items-center gap-2 text-purple-300 font-semibold">
-                    <Sparkles size={16} />
+                    <HelpCircle size={16} />
                     <span>LinkedIn-Style Puzzle Arena</span>
                   </div>
                   <p className="text-white/70 leading-relaxed">

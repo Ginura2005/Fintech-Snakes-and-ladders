@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, HelpCircle, Send, CheckCircle, XCircle, Sparkles, Lightbulb, Volume2, VolumeX, Shuffle } from "lucide-react";
+import { Eye, HelpCircle, Send, CheckCircle, XCircle, Lightbulb, Volume2, VolumeX, Shuffle } from "lucide-react";
 import {
   PINPOINT_KNOWLEDGE_BASE,
   PinpointExpandedPack,

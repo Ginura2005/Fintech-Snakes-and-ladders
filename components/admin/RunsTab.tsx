@@ -13,7 +13,6 @@ import {
   Gem,
   AlertTriangle,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import RunDetailModal from "./RunDetailModal";
 

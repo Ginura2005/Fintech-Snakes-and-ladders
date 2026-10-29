@@ -365,14 +365,32 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+function resolveCanvasSafeSrc(src: string): string {
+  if (src.startsWith("data:") || src.startsWith("blob:") || src.startsWith("/")) {
+    return src;
+  }
+  try {
+    const parsed = new URL(src);
+    if (parsed.hostname.includes("googleusercontent.com")) {
+      return `/api/avatar-proxy?url=${encodeURIComponent(src)}`;
+    }
+  } catch {
+    // keep original
+  }
+  return src;
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    if (!src.startsWith("data:") && !src.startsWith("blob:")) {
+    const resolved = resolveCanvasSafeSrc(src);
+    // Google profile photos often require no-referrer; CORS for canvas export
+    if (!resolved.startsWith("data:") && !resolved.startsWith("blob:")) {
+      img.referrerPolicy = "no-referrer";
       img.crossOrigin = "anonymous";
     }
     img.onload = () => resolve(img);
     img.onerror = reject;
-    img.src = src;
+    img.src = resolved;
   });
 }
