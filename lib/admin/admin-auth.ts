@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
 export type AdminRole = "superadmin" | "admin" | "arbiter" | "booth_staff";
 
@@ -101,6 +102,23 @@ export async function verifyAdminRequest(
         role: null,
         userId: user.id,
       };
+    }
+
+    // Rate Limiting: Max 80 admin operations per 60s per admin user
+    if (request) {
+      const clientIp = getClientIp(request);
+      const rateLimit = await checkRateLimit(`admin:${user.id}:${clientIp}`, {
+        limit: 80,
+        windowSeconds: 60,
+      });
+      if (!rateLimit.success) {
+        return {
+          isAdmin: false,
+          email: user.email,
+          role: null,
+          userId: user.id,
+        };
+      }
     }
 
     // If a specific minimum role is required:

@@ -5,6 +5,10 @@ import { createInitialGameState } from "@/lib/game-engine/engine";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
 import { getDailySeed } from "@/lib/game-engine/procedural-generator";
 import { getGoogleAvatarUrl } from "@/lib/auth/google-avatar";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 

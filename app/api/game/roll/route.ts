@@ -10,12 +10,17 @@ import {
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
 import { generateDynamicBoard } from "@/lib/game-engine/procedural-generator";
 import { getRandomQuestion, getQuizQuestion } from "@/lib/game-engine/quiz-bank";
+import {
+  checkRateLimit,
+  checkTurnCooldown,
+  acquireActionLock,
+  releaseActionLock,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
-// Simple in-memory lock to prevent concurrent rolls for the same player
-// In production, use a database advisory lock or Redis
-const processingLocks = new Set<string>();
+// Managed via @/lib/security/rate-limiter with atomic TTL self-expiry
 
 /**
  * POST /api/game/roll
@@ -35,8 +40,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Prevent concurrent processing for same user
-    if (processingLocks.has(user.id)) {
+    // 1. Rate Limiting: Max 35 rolls per 60 seconds
+    const rateLimit = await checkRateLimit(`roll:${user.id}`, {
+      limit: 35,
+      windowSeconds: 60,
+    });
+    if (!rateLimit.success) {
+      return createRateLimitResponse(
+        rateLimit,
+        "Roll rate limit reached. Please wait a few seconds before rolling again."
+      );
+    }
+
+    // 2. Anti-Speed-Hacking: 1000ms minimum turn interval
+    const cooldown = checkTurnCooldown(`cooldown:${user.id}`, 1000);
+    if (!cooldown.allowed) {
+      return NextResponse.json(
+        {
+          error: "Turn cooldown active. Please wait for the 3D dice to settle.",
+          remainingMs: cooldown.remainingMs,
+        },
+        { status: 429, headers: { "Retry-After": "1" } }
+      );
+    }
+
+    // 3. Atomic action lock with 5s self-expiry
+    const lockKey = `lock:roll:${user.id}`;
+    if (!acquireActionLock(lockKey, 5000)) {
       return NextResponse.json(
         { error: "Turn already being processed" },
         { status: 429 }
@@ -51,12 +81,10 @@ export async function POST(request: NextRequest) {
     }
     const puzzleBonus = Math.min(50, Math.max(0, Math.floor(Number(body?.puzzleBonus) || 0)));
 
-    processingLocks.add(user.id);
-
     try {
       return await processRoll(user.id, supabase, puzzleBonus);
     } finally {
-      processingLocks.delete(user.id);
+      releaseActionLock(lockKey);
     }
   } catch (err) {
     console.error("Roll error:", err);

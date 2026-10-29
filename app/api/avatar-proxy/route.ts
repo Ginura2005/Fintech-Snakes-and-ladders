@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  checkRateLimit,
+  getClientIp,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +25,18 @@ function isAllowedAvatarHost(hostname: string): boolean {
  * Proxies Google profile photos so canvas share-cards can load them with CORS.
  */
 export async function GET(request: NextRequest) {
+  // IP Rate Limiting: Max 40 avatar proxy requests per 60s
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(`avatar-proxy:${clientIp}`, {
+    limit: 40,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return createRateLimitResponse(
+      rateLimit,
+      "Avatar proxy rate limit reached. Please wait before fetching more images."
+    );
+  }
   const raw = request.nextUrl.searchParams.get("url");
   if (!raw) {
     return NextResponse.json({ error: "Missing url" }, { status: 400 });

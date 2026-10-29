@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +24,18 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate Limiting: Max 8 retries per 60s
+    const rateLimit = await checkRateLimit(`retry:${user.id}`, {
+      limit: 8,
+      windowSeconds: 60,
+    });
+    if (!rateLimit.success) {
+      return createRateLimitResponse(
+        rateLimit,
+        "Too many match retries. Please wait a few seconds before restarting."
+      );
     }
 
     const hasServiceKey = Boolean(

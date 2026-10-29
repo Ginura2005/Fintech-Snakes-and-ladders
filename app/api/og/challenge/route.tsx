@@ -1,10 +1,26 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import {
+  checkRateLimit,
+  getClientIp,
+} from "@/lib/security/rate-limiter";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
+  // IP Rate Limiting: Max 25 OG card renders per 60s
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(`og-render:${clientIp}`, {
+    limit: 25,
+    windowSeconds: 60,
+  });
+  if (!rateLimit.success) {
+    return new Response("Card generation rate limit exceeded. Please retry shortly.", {
+      status: 429,
+      headers: { "Retry-After": "5" },
+    });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");

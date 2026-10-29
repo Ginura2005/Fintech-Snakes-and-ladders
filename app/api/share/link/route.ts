@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +22,18 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate Limiting: Max 15 challenge link creations per 60s
+    const rateLimit = await checkRateLimit(`share-link:${user.id}`, {
+      limit: 15,
+      windowSeconds: 60,
+    });
+    if (!rateLimit.success) {
+      return createRateLimitResponse(
+        rateLimit,
+        "Too many share links created. Please wait a moment."
+      );
     }
 
     const hasServiceKey = Boolean(

@@ -4,6 +4,12 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getQuizQuestion } from "@/lib/game-engine/quiz-bank";
 import { BOARD_CONFIG } from "@/lib/game-engine/board-config";
 import { generateDynamicBoard } from "@/lib/game-engine/procedural-generator";
+import {
+  checkRateLimit,
+  createRateLimitResponse,
+  acquireActionLock,
+  releaseActionLock,
+} from "@/lib/security/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +19,7 @@ export const dynamic = "force-dynamic";
  * Idempotent: if already answered this square, returns previous result.
  */
 export async function POST(request: NextRequest) {
+  let lockKey: string | null = null;
   try {
     const supabase = await createClient();
     const {
@@ -24,13 +31,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    // Rate Limiting: Max 15 quiz submissions per 60s
+    const rateLimit = await checkRateLimit(`quiz:${user.id}`, {
+      limit: 15,
+      windowSeconds: 60,
+    });
+    if (!rateLimit.success) {
+      return createRateLimitResponse(
+        rateLimit,
+        "Too many quiz attempts. Please wait a few seconds before answering."
+      );
+    }
+
+    lockKey = `lock:quiz:${user.id}`;
+    if (!acquireActionLock(lockKey, 3000)) {
+      return NextResponse.json(
+        { error: "Quiz answer already processing" },
+        { status: 429 }
+      );
+    }
+
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
     const { questionId, squareNumber, selectedOption } = body;
 
     if (
       typeof questionId !== "string" ||
       typeof squareNumber !== "number" ||
-      typeof selectedOption !== "number"
+      typeof selectedOption !== "number" ||
+      selectedOption < 0 ||
+      selectedOption > 3 ||
+      !Number.isInteger(selectedOption)
     ) {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
     }
@@ -161,5 +197,9 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("Quiz error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } finally {
+    if (lockKey) {
+      releaseActionLock(lockKey);
+    }
   }
 }

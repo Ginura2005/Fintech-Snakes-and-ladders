@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import {
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/security/rate-limiter";
+import {
   getGoogleAvatarUrl,
   getGoogleDisplayName,
   normalizeGoogleAvatarUrl,
