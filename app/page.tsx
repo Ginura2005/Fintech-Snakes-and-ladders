@@ -16,14 +16,8 @@ import {
   ExternalLink,
   HelpCircle,
   Award,
-  Puzzle,
   Grid3X3,
   AlertTriangle,
-  Crown,
-  Sun,
-  Target,
-  TrendingUp,
-  Binary,
 } from "lucide-react";
 import FestivalHeader from "@/components/layout/FestivalHeader";
 import FestivalFooter from "@/components/layout/FestivalFooter";
@@ -405,103 +399,6 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========================================================
-            PUZZLES ARENA SHOWCASE (Real Lucide icons, no emojis)
-            ======================================================== */}
-        <section className="py-14 sm:py-20 border-b border-white/10 relative overflow-hidden">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-5 mb-10">
-              <div>
-                <SectionBadge variant="primary" className="mb-2">
-                  Daily puzzles
-                </SectionBadge>
-                <h2 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-white mt-1">
-                  FinTech Logic Puzzles
-                </h2>
-                <p className="text-white/60 text-xs sm:text-sm mt-1.5 max-w-xl">
-                  Quick challenges: Queens, Tango, Pinpoint, Crossclimb, Zip, and Sudoku.
-                </p>
-              </div>
-
-              <FestivalButton
-                href="/puzzles"
-                variant="outline"
-                className="text-xs uppercase tracking-wider shrink-0 min-h-10 py-2.5"
-              >
-                <Puzzle size={15} aria-hidden />
-                Puzzles Hub
-                <ChevronRight size={15} aria-hidden />
-              </FestivalButton>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-              {[
-                {
-                  id: "queens",
-                  icon: <Crown size={22} className="text-[#fec01f]" />,
-                  title: "Queens",
-                  badge: "Logic",
-                  sub: "Placement",
-                },
-                {
-                  id: "tango",
-                  icon: <Sun size={22} className="text-amber-400" />,
-                  title: "Tango",
-                  badge: "Binary",
-                  sub: "Sun & Moon",
-                },
-                {
-                  id: "pinpoint",
-                  icon: <Target size={22} className="text-rose-400" />,
-                  title: "Pinpoint",
-                  badge: "Trivia",
-                  sub: "5 Clues",
-                },
-                {
-                  id: "crossclimb",
-                  icon: <TrendingUp size={22} className="text-teal-400" />,
-                  title: "Crossclimb",
-                  badge: "Ladder",
-                  sub: "Word Climb",
-                },
-                {
-                  id: "zip",
-                  icon: <Zap size={22} className="text-cyan-400" />,
-                  title: "Zip",
-                  badge: "Path",
-                  sub: "Maze Route",
-                },
-                {
-                  id: "mini-sudoku",
-                  icon: <Binary size={22} className="text-indigo-400" />,
-                  title: "Sudoku",
-                  badge: "6x6",
-                  sub: "Fast Logic",
-                },
-              ].map((p, idx) => (
-                <Link
-                  key={idx}
-                  href={`/puzzles?game=${p.id}`}
-                  className="festival-card p-4 flex flex-col items-center text-center group transition-transform active:scale-[0.98] min-h-[44px]"
-                >
-                  <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center mb-2.5">
-                    {p.icon}
-                  </div>
-                  <span className="font-heading font-bold text-sm text-white group-hover:text-primary transition-colors">
-                    {p.title}
-                  </span>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-semibold mt-0.5">
-                    {p.badge}
-                  </span>
-                  <span className="text-[11px] text-white/55 mt-1">
-                    {p.sub}
-                  </span>
-                </Link>
-              ))}
             </div>
           </div>
         </section>

@@ -142,6 +142,18 @@ export default function LeaderboardPage() {
               </button>
             </div>
           )}
+
+          {user && !userRank && !loading && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white/70 font-mono text-xs">
+              <span>You have not posted an official score yet.</span>
+              <Link
+                href="/game"
+                className="text-[#fec01f] font-bold underline hover:text-white transition-colors"
+              >
+                Play to Join Leaderboard →
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Live Tournament Deadline & Grand Prize Countdown */}

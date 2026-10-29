@@ -156,7 +156,7 @@ export default function Cinematic3DDiceOverlay({
           {rollValue !== null ? (
             <div
               className={`
-                px-5 py-2 rounded-xl font-heading font-black text-xs sm:text-sm tracking-wider uppercase
+                px-6 py-2.5 rounded-full font-heading font-black text-xs sm:text-sm tracking-wider uppercase
                 shadow-2xl animate-dice-settle border flex flex-col items-center gap-0.5 max-w-[90%] text-center
                 ${
                   isOvershoot

@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
         { count: "exact" }
       )
       .eq("player_profiles.leaderboard_opt_in", true)
+      .gt("final_score", 0)
       .order("final_score", { ascending: false })
       .order("player_won", { ascending: false })
       .order("quiz_correct", { ascending: false })

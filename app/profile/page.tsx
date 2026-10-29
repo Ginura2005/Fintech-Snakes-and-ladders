@@ -730,7 +730,7 @@ export default function ProfilePage() {
                   <div className="text-right shrink-0">
                     <div className="text-[10px] font-mono text-white/50 uppercase">ARENA SCORE</div>
                     <div className="text-base font-black text-[#fed136]">
-                      {stats.highScore > 0 ? stats.highScore.toLocaleString() : "4,250"}
+                      {stats.highScore > 0 ? stats.highScore.toLocaleString() : "0"}
                     </div>
                   </div>
                 </div>

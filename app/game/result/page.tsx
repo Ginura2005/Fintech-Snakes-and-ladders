@@ -76,6 +76,26 @@ export default function ResultPage() {
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [updatingOptIn, setUpdatingOptIn] = useState(false);
   const [puzzleBonus, setPuzzleBonus] = useState(0);
+  const [retrying, setRetrying] = useState(false);
+
+  const handleRetryMatch = async (keepLeaderboard: boolean = false) => {
+    setRetrying(true);
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("practice_run");
+      }
+      await fetch("/api/game/retry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keepLeaderboard }),
+      });
+      router.push("/game");
+    } catch {
+      router.push("/game");
+    } finally {
+      setRetrying(false);
+    }
+  };
 
   // Social Sharing Enhancements
   const [linkedInModalOpen, setLinkedInModalOpen] = useState(false);
@@ -191,6 +211,8 @@ export default function ResultPage() {
 
 Can you beat my score? Step into the arena here:
 ${targetUrl}
+
+Tagging @Sri Lanka FinTech Festival (https://www.linkedin.com/company/143968679/)
 
 #FinTech #SriLankaFinTechFestival #SLFinTechFest2026 #DigitalBanking #Innovation #LankaPay #DPI`;
   };
@@ -447,8 +469,28 @@ ${targetUrl}
 
   if (loading || !run) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-        <LoadingSpinner size="lg" label="Computing Arena Results..." />
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f] p-4">
+        <div className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full border-2 border-[#fec01f]/60 bg-gradient-to-b from-[#12163a]/95 via-[#0a0c28]/98 to-[#06061f] shadow-[0_0_60px_rgba(254,192,31,0.35),inset_0_0_45px_rgba(18,22,58,0.85)] flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
+          <div className="absolute inset-6 rounded-full border border-[#fec01f]/20 pointer-events-none" />
+          <div
+            className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#fec01f] border-r-teal-400 animate-spin pointer-events-none"
+            style={{ animationDuration: "3.5s" }}
+          />
+          <div className="relative w-36 h-10 mb-2 z-10">
+            <Image
+              src="/long-logo-removebg-preview.png"
+              alt="Sri Lanka FinTech Festival"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <LoadingSpinner size="md" label="Computing Arena Results…" className="z-10" />
+          <p className="text-[10px] font-mono text-white/50 tracking-widest uppercase mt-3 z-10">
+            Match Archive
+          </p>
+        </div>
       </div>
     );
   }
@@ -584,56 +626,188 @@ ${targetUrl}
           )}
         </div>
 
-        {/* 1-Run Notice */}
-        <div className="festival-card p-4 flex items-start gap-3 border-amber-500/40 bg-amber-950/20">
-          <Info size={18} className="text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-xs font-mono">
-            <p className="font-bold text-amber-300 uppercase tracking-wider">
-              Official Attempt Record Locked
-            </p>
-            <p className="text-white/70 mt-0.5 leading-relaxed">
-              This was your official festival competition run. Your score is permanently archived for the Sri Lanka FinTech Festival 2026.
-            </p>
+        {/* ── Run Decision: Retry or Post to Leaderboard ── */}
+        {!isWin ? (
+          <div className="festival-card p-6 border-2 border-rose-500/50 bg-gradient-to-r from-rose-950/40 via-[#0a0a28] to-rose-950/40 text-center space-y-4 shadow-[0_0_40px_rgba(244,63,94,0.15)]">
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-rose-400">
+              <RotateCcw size={22} className={retrying ? "animate-spin" : ""} />
+            </div>
+            <div>
+              <h3 className="font-heading font-extrabold text-xl sm:text-2xl text-white">
+                Match Lost — Retry Until You Win!
+              </h3>
+              <p className="text-xs sm:text-sm text-white/70 max-w-lg mx-auto mt-1 leading-relaxed">
+                In Lanka FinTechverse, losing runs are never locked or posted to the official leaderboard. You can retry freely until you beat Ava and achieve victory!
+              </p>
+            </div>
+            <div>
+              <button
+                onClick={() => handleRetryMatch(false)}
+                disabled={retrying}
+                className="interactive-btn interactive-btn--primary py-3.5 px-8 font-heading font-black text-xs sm:text-sm uppercase tracking-wider inline-flex items-center gap-2 shadow-[0_0_30px_rgba(254,192,31,0.55)] cursor-pointer"
+              >
+                <RotateCcw size={16} className={retrying ? "animate-spin" : ""} />
+                <span>{retrying ? "Resetting Arena…" : "Retry Match Now"}</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="festival-card p-6 border-2 border-[#fec01f]/60 bg-gradient-to-br from-[#12163a] via-[#0a0a28] to-[#06061f] space-y-4 shadow-[0_0_40px_rgba(254,192,31,0.2)]">
+            <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#fec01f] font-bold bg-[#fec01f]/15 px-2.5 py-1 rounded-full border border-[#fec01f]/30">
+                  VICTORY RUN CHOICES
+                </span>
+                <h3 className="font-heading font-extrabold text-lg sm:text-xl text-white mt-2">
+                  Choose To Post or Play Again
+                </h3>
+                <p className="text-xs text-white/70 mt-1 max-w-xl leading-relaxed">
+                  Decide whether this is the run you want to post on the official tournament leaderboard. If you want to aim higher, you can discard and play again without locking this score!
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+              {/* Option 1: Post to Leaderboard */}
+              <div
+                className={`p-4 rounded-2xl border transition-all ${
+                  leaderboardOptIn
+                    ? "border-teal-400/60 bg-teal-950/30"
+                    : "border-white/15 bg-white/[0.03]"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Trophy size={16} className="text-[#fec01f]" />
+                  <span className="font-heading font-bold text-xs uppercase tracking-wider text-white">
+                    {leaderboardOptIn ? "Run Posted to Leaderboard" : "Option A: Post Score"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/60 mb-3 leading-relaxed">
+                  {leaderboardOptIn
+                    ? rank
+                      ? `Your score of ${run.player_score.toLocaleString()} pts is live at Rank #${rank}!`
+                      : `Your score of ${run.player_score.toLocaleString()} pts is published on the live leaderboard.`
+                    : "Officially submit this victory and appear in the festival rankings."}
+                </p>
+
+                <button
+                  onClick={() => handleOptInChange(!leaderboardOptIn)}
+                  disabled={updatingOptIn}
+                  className={`w-full py-2.5 px-4 rounded-xl font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    leaderboardOptIn
+                      ? "bg-teal-500/20 text-teal-300 border border-teal-400/50 hover:bg-teal-500/30"
+                      : "interactive-btn interactive-btn--primary shadow-md"
+                  }`}
+                >
+                  <Trophy size={14} />
+                  <span>
+                    {updatingOptIn
+                      ? "Updating…"
+                      : leaderboardOptIn
+                      ? "Score Posted (Click to Unpost)"
+                      : "Post Score to Leaderboard"}
+                  </span>
+                </button>
+              </div>
+
+              {/* Option 2: Play Again for Leaderboard */}
+              <div className="p-4 rounded-2xl border border-white/15 bg-white/[0.03] flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <RotateCcw size={16} className="text-teal-400" />
+                    <span className="font-heading font-bold text-xs uppercase tracking-wider text-white">
+                      Option B: Play Again
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/60 mb-3 leading-relaxed">
+                    Not satisfied with your score? Discard this run and play again to aim for a higher tournament rank!
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleRetryMatch(leaderboardOptIn)}
+                  disabled={retrying}
+                  className="w-full py-2.5 px-4 rounded-xl border border-white/20 bg-white/10 hover:bg-white/15 text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <RotateCcw size={14} className={retrying ? "animate-spin" : ""} />
+                  <span>{retrying ? "Resetting Arena…" : "Play Again for Leaderboard"}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Official Tournament Rules: LinkedIn Verification ── */}
+        <div className="festival-card p-6 border-2 border-sky-400/50 bg-gradient-to-br from-[#07152b] via-[#0a0a28] to-[#04101e] shadow-[0_0_40px_rgba(56,189,248,0.2)]">
+          <div className="flex items-start gap-3.5 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0">
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.64 1.64 0 1 0 0-3.28 1.64 1.64 0 0 0 0 3.28m1.4 9.74V9.95H5.06v8.55z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h3 className="font-heading font-extrabold text-base sm:text-lg text-white">
+                  Official Tournament Prize Rule
+                </h3>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/40 uppercase tracking-wider">
+                  Mandatory Verification
+                </span>
+              </div>
+              <p className="text-xs text-white/70 leading-relaxed">
+                To be eligible for festival tournament prizes, merchandise, and official leader recognition, you must share your scorecard on LinkedIn and tag the official Sri Lanka FinTech Festival page.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-black/40 border border-white/10 space-y-2.5 text-xs font-mono text-white/80">
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-[#fec01f]">Step 1:</span>
+              <span>Download your verified 1080×1350 scorecard card below.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-[#fec01f]">Step 2:</span>
+              <span>
+                Tag the official LinkedIn company page:
+                <a
+                  href="https://www.linkedin.com/company/143968679/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-[#fec01f] underline hover:text-white inline-flex items-center gap-0.5 font-bold"
+                >
+                  <span>@Sri Lanka FinTech Festival (143968679)</span>
+                  <ExternalLink size={12} />
+                </a>
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-[#fec01f]">Step 3:</span>
+              <span>Include your score, challenge link, and hashtags (#SLFinTechFest2026 #FinTechSriLanka).</span>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleShareLinkedInModal}
+              className="flex-1 py-3 px-4 rounded-xl bg-[#0077B5] hover:bg-[#006097] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(0,119,181,0.4)] cursor-pointer"
+            >
+              <Download size={14} />
+              <span>Download Card & Post on LinkedIn</span>
+            </button>
+            <a
+              href="https://www.linkedin.com/company/143968679/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white/80 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors"
+            >
+              <span>Visit Official LinkedIn Page</span>
+              <ExternalLink size={14} />
+            </a>
           </div>
         </div>
 
         {/* Tournament Deadline & Grand Prize Countdown */}
         <TournamentCountdown compact />
-
-        {/* Leaderboard Opt-in Card */}
-        <div className="festival-card p-6 bg-[#0a0a28]/85 border-white/10">
-          <h3 className="font-heading font-bold text-base text-white mb-3 flex items-center gap-2">
-            <Trophy size={18} className="text-[#fec01f]" />
-            Public Leaderboard Status
-          </h3>
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={leaderboardOptIn}
-              onChange={(e) => handleOptInChange(e.target.checked)}
-              disabled={updatingOptIn}
-              className="mt-0.5 w-4 h-4 rounded text-[#fec01f] accent-[#fec01f] focus:ring-[#fec01f]"
-            />
-            <div>
-              <p className="text-sm font-medium text-white">
-                Display my player handle and score on the festival leaderboard
-              </p>
-              <p className="text-xs text-white/50 mt-0.5">
-                Your email is never shown. You can toggle this on or off at any time.
-              </p>
-            </div>
-          </label>
-
-          <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
-            <Link
-              href="/leaderboard"
-              className="text-xs font-mono text-[#fec01f] hover:underline flex items-center gap-1 uppercase tracking-wider"
-            >
-              <span>View Live Rankings</span>
-              <span>→</span>
-            </Link>
-          </div>
-        </div>
 
         {/* Result Card Image Generator */}
         <div className="festival-card p-5 sm:p-6 bg-[#0a0a28]/85 border-white/10">
@@ -951,27 +1125,41 @@ ${targetUrl}
           />
         )}
 
-        {/* Back navigation */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-2">
-          <Link
-            href="/game?mode=practice"
-            className="flex-1 py-3 rounded-xl interactive-btn bg-teal-950/80 hover:bg-teal-900 border border-teal-400/50 text-teal-200 font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2"
-          >
-            <RotateCcw size={14} />
-            <span>Play Again (Practice)</span>
-          </Link>
-          <Link
-            href="/"
-            className="flex-1 py-3 rounded-xl border border-white/15 bg-white/5 text-white/80 font-mono text-xs uppercase tracking-wider text-center hover:text-white hover:border-[#fec01f] transition-colors"
-          >
-            Festival Home
-          </Link>
+        {/* Bottom Actions */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          {!isWin ? (
+            <button
+              onClick={() => handleRetryMatch(false)}
+              disabled={retrying}
+              className="flex-1 py-3.5 rounded-xl interactive-btn interactive-btn--primary font-heading font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+            >
+              <RotateCcw size={15} className={retrying ? "animate-spin" : ""} />
+              <span>{retrying ? "Resetting Arena…" : "Retry Match Now"}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleRetryMatch(leaderboardOptIn)}
+              disabled={retrying}
+              className="flex-1 py-3.5 rounded-xl interactive-btn bg-teal-950/80 hover:bg-teal-900 border border-teal-400/50 text-teal-200 font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <RotateCcw size={15} className={retrying ? "animate-spin" : ""} />
+              <span>{retrying ? "Resetting Arena…" : "Play Again for Leaderboard"}</span>
+            </button>
+          )}
+
           <Link
             href="/leaderboard"
-            className="flex-1 py-3 rounded-xl interactive-btn interactive-btn--primary font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white font-mono text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-colors"
           >
-            <Trophy size={14} />
-            <span>Full Leaderboard</span>
+            <Trophy size={14} className="text-[#fec01f]" />
+            <span>Festival Standings</span>
+          </Link>
+
+          <Link
+            href="/"
+            className="flex-1 py-3.5 rounded-xl border border-white/15 bg-white/5 text-white/80 font-mono text-xs uppercase tracking-wider text-center hover:text-white hover:border-[#fec01f] transition-colors"
+          >
+            Festival Home
           </Link>
         </div>
       </main>

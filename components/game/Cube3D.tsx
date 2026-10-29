@@ -93,10 +93,10 @@ function DiePipFace({
         WebkitBackfaceVisibility: "hidden",
       }}
       className={`
-        absolute inset-0 rounded-2xl border-2 ${faceBorder}
+        absolute inset-0 rounded-3xl border-2 ${faceBorder}
         shadow-[inset_2px_2px_4px_rgba(255,255,255,0.35),inset_-3px_-3px_5px_rgba(0,0,0,0.8),0_0_15px_rgba(0,0,0,0.7)]
         flex items-center justify-center p-2 sm:p-2.5 select-none
-        before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent before:rounded-t-2xl before:pointer-events-none
+        before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent before:rounded-t-3xl before:pointer-events-none
       `}
     >
       <div className="grid grid-cols-3 grid-rows-3 w-full h-full items-center justify-items-center">

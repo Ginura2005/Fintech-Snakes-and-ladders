@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
@@ -1106,8 +1107,28 @@ export default function GamePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-        <LoadingSpinner size="lg" label="Connecting to Arena Host..." />
+      <div className="min-h-screen flex items-center justify-center bg-[#06061f] p-4">
+        <div className="relative w-72 h-72 sm:w-80 sm:h-80 rounded-full border-2 border-[#fec01f]/60 bg-gradient-to-b from-[#12163a]/95 via-[#0a0c28]/98 to-[#06061f] shadow-[0_0_60px_rgba(254,192,31,0.35),inset_0_0_45px_rgba(18,22,58,0.85)] flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
+          <div className="absolute inset-6 rounded-full border border-[#fec01f]/20 pointer-events-none" />
+          <div
+            className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#fec01f] border-r-teal-400 animate-spin pointer-events-none"
+            style={{ animationDuration: "3.5s" }}
+          />
+          <div className="relative w-36 h-10 mb-2 z-10">
+            <Image
+              src="/long-logo-removebg-preview.png"
+              alt="Sri Lanka FinTech Festival"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <LoadingSpinner size="md" label="Connecting to Arena Host…" className="z-10" />
+          <p className="text-[10px] font-mono text-white/50 tracking-widest uppercase mt-3 z-10">
+            Arena Sync
+          </p>
+        </div>
       </div>
     );
   }

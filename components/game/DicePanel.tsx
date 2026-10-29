@@ -38,8 +38,8 @@ export default function DicePanel({
   };
 
   return (
-    <div className="festival-card p-2 sm:p-3.5 border-2 border-white/15 bg-[#0a0a28]/95 shadow-[0_12px_35px_rgba(0,0,0,0.6)] max-w-2xl mx-auto">
-      <div className="flex items-center justify-between gap-2.5 sm:gap-6">
+    <div className="rounded-3xl sm:rounded-full p-2.5 sm:p-3.5 border-2 border-white/20 bg-gradient-to-r from-[#0e1442]/95 via-[#0a0a28]/98 to-[#0e1442]/95 shadow-[0_12px_35px_rgba(0,0,0,0.6),0_0_30px_rgba(254,192,31,0.1)] max-w-2xl mx-auto">
+      <div className="flex items-center justify-between gap-2.5 sm:gap-6 px-1">
         
         {/* Left: 3D Physical Cube Dice (Player & Ava) */}
         <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 pb-1">
@@ -83,19 +83,19 @@ export default function DicePanel({
           )}
         </div>
 
-        {/* Right: Big Thumb Roll Button & Prompt */}
+        {/* Right: Round Thumb Roll Button & Prompt */}
         <div className="flex-1 flex flex-col justify-center min-w-0">
           {isPlayerTurn ? (
             <button
               onClick={handleButtonClick}
               disabled={rolling || disabled}
               className={`
-                w-full min-h-[46px] sm:min-h-[50px] py-2.5 sm:py-3.5 px-3 sm:px-4 rounded-xl font-heading font-extrabold text-xs sm:text-base
+                w-full min-h-[46px] sm:min-h-[50px] py-2.5 sm:py-3.5 px-4 sm:px-6 rounded-full font-heading font-extrabold text-xs sm:text-base
                 transition-all duration-150 shadow-lg flex items-center justify-center gap-1.5 sm:gap-3 touch-manipulation
                 ${
                   rolling || disabled
                     ? "bg-white/10 text-white/40 border border-white/10 cursor-not-allowed"
-                    : "interactive-btn interactive-btn--primary shadow-[0_0_25px_rgba(254,192,31,0.45)] cursor-pointer hover:scale-[1.02] active:scale-95"
+                    : "interactive-btn interactive-btn--primary shadow-[0_0_25px_rgba(254,192,31,0.55)] cursor-pointer hover:scale-[1.02] active:scale-95"
                 }
               `}
             >
@@ -112,7 +112,7 @@ export default function DicePanel({
               )}
             </button>
           ) : (
-            <div className="w-full py-2.5 sm:py-3.5 px-2.5 sm:px-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-amber-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+            <div className="w-full py-2.5 sm:py-3.5 px-3 sm:px-4 rounded-full bg-amber-950/40 border border-amber-500/40 text-amber-200 font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2">
               <div className="w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
               <span className="truncate text-[11px] sm:text-xs">Ava throwing 3D die…</span>
             </div>

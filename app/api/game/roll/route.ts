@@ -307,6 +307,9 @@ async function tryRecordLeaderboardEntry(
   state: GameState,
   userId: string
 ) {
+  // Only winning runs where the player has actively chosen to post can be recorded
+  if (state.status !== "player_won") return;
+
   const { data: profile } = await serviceClient
     .from("player_profiles")
     .select("display_name, leaderboard_opt_in")
@@ -321,7 +324,7 @@ async function tryRecordLeaderboardEntry(
       player_id: userId,
       display_name: profile.display_name,
       final_score: state.playerScore,
-      player_won: state.status === "player_won",
+      player_won: true,
       quiz_correct: state.playerQuizCorrect,
       hearts_remaining: state.playerHearts,
       duration_seconds: state.completedAt
@@ -330,6 +333,6 @@ async function tryRecordLeaderboardEntry(
           )
         : null,
     },
-    { onConflict: "run_id", ignoreDuplicates: true }
+    { onConflict: "player_id" }
   );
 }
