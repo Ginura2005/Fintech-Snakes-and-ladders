@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
@@ -58,7 +58,7 @@ interface Profile {
   avatar_url?: string | null;
 }
 
-function ResultContent() {
+export default function ResultPage() {
   const router = useRouter();
   const supabase = createClient();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -93,13 +93,11 @@ function ResultContent() {
     setCustomizerModalOpen(true);
   };
 
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     setPuzzleBonus(getArenaPuzzleBonus());
     const load = async () => {
-      const modeParam = searchParams.get("mode");
-      if (modeParam === "practice" || (typeof window !== "undefined" && sessionStorage.getItem("practice_run"))) {
+      const modeParam = new URLSearchParams(window.location.search).get("mode");
+      if (modeParam === "practice" || sessionStorage.getItem("practice_run")) {
         const raw = sessionStorage.getItem("practice_run");
         if (raw) {
           try {
@@ -160,7 +158,7 @@ function ResultContent() {
       setLoading(false);
     };
     load();
-  }, [router, searchParams, supabase.auth]);
+  }, [router, supabase.auth]);
 
   const getOrGenerateShareUrl = async (): Promise<string> => {
     if (shareUrl) return shareUrl;
@@ -980,22 +978,5 @@ ${targetUrl}
 
       <FestivalFooter />
     </div>
-  );
-}
-
-export default function ResultPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-mono text-sm text-white/70">Loading Match Result…</p>
-          </div>
-        </div>
-      }
-    >
-      <ResultContent />
-    </Suspense>
   );
 }

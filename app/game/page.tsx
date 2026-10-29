@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import GameBoard from "@/components/game/Board";
 import QuizOverlay from "@/components/game/QuizOverlay";
 import TreasureOverlay from "@/components/game/TreasureOverlay";
@@ -94,9 +94,8 @@ interface TurnResult {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function GameContent() {
+export default function GamePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [isPracticeMode, setIsPracticeMode] = useState<boolean>(false);
@@ -273,7 +272,7 @@ function GameContent() {
   // Check auth and initial load
   useEffect(() => {
     const load = async () => {
-      const modeParam = searchParams.get("mode");
+      const modeParam = new URLSearchParams(window.location.search).get("mode");
       if (modeParam === "practice") {
         startPracticeGame();
         return;
@@ -328,7 +327,7 @@ function GameContent() {
       setLoading(false);
     };
     load();
-  }, [router, searchParams, startPracticeGame, supabase.auth]);
+  }, [router, startPracticeGame, supabase.auth]);
 
   // Synchronize display positions when run loads
   useEffect(() => {
@@ -1337,22 +1336,5 @@ function GameContent() {
       {/* Festival Footer */}
       <FestivalFooter />
     </div>
-  );
-}
-
-export default function GamePage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#06061f]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-3 border-[#fec01f] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="font-mono text-sm text-white/70">Initializing FinTech Arena…</p>
-          </div>
-        </div>
-      }
-    >
-      <GameContent />
-    </Suspense>
   );
 }
