@@ -214,13 +214,6 @@ export default function FestivalFooter() {
                   Live Leaderboard
                 </Link>
                 <Link
-                  href="/daily-puzzle"
-                  data-cursor="link"
-                  className="text-sm text-white/80 transition-colors hover:text-[#fec01f]"
-                >
-                  FinTech Codex Puzzles
-                </Link>
-                <Link
                   href="/profile"
                   data-cursor="link"
                   className="text-sm text-white/80 transition-colors hover:text-[#fec01f]"
@@ -245,6 +238,16 @@ export default function FestivalFooter() {
                   className="text-sm text-white/80 transition-colors hover:text-[#fec01f] inline-flex items-center gap-1"
                 >
                   Sponsors
+                  <ArrowUpRight size={12} className="opacity-60" />
+                </a>
+                <a
+                  href="https://fintechfestival.lk/programme"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-cursor="link"
+                  className="text-sm text-white/80 transition-colors hover:text-[#fec01f] inline-flex items-center gap-1"
+                >
+                  Programme
                   <ArrowUpRight size={12} className="opacity-60" />
                 </a>
               </nav>
