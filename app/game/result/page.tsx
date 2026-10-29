@@ -201,6 +201,7 @@ ${targetUrl}
           const blob = await generateResultCardBlob({
             format: "post",
             displayName: profile?.display_name || "Festival Player",
+            avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
             finalScore: run?.player_score || 0,
             rank: leaderboardOptIn ? rank : null,
             outcome: run?.status as any,
@@ -241,6 +242,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format: "story",
         displayName: profile?.display_name || "Festival Player",
+        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
         finalScore: run?.player_score || 0,
         rank: leaderboardOptIn ? rank : null,
         outcome: run?.status as any,
@@ -326,6 +328,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format: "post",
         displayName: profile?.display_name || "Festival Player",
+        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
         finalScore: run.player_score,
         rank: leaderboardOptIn ? rank : null,
         outcome: run.status as any,
@@ -368,6 +371,7 @@ ${targetUrl}
       const blob = await generateResultCardBlob({
         format,
         displayName: profile?.display_name || "Festival Player",
+        avatarUrl: user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null,
         finalScore: run.player_score,
         rank: leaderboardOptIn ? rank : null,
         outcome: run.status as any,

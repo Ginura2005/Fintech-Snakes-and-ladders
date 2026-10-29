@@ -1,8 +1,9 @@
 import QRCode from "qrcode";
 
 export interface CardRenderOptions {
-  format: "post" | "story"; // post: 1080x1350, story: 1080x1920
+  format: "post" | "story"; // post: 1122x1402, story: 1080x1920
   displayName: string;
+  avatarUrl?: string | null;
   finalScore: number;
   rank: number | null;
   outcome: "player_won" | "computer_won" | "player_eliminated";
@@ -16,18 +17,26 @@ export interface CardRenderOptions {
 export async function generateResultCardBlob(
   options: CardRenderOptions
 ): Promise<Blob> {
-  const width = 1080;
-  const height = options.format === "post" ? 1350 : 1920;
+  if (options.format === "story") {
+    return generateStoryCardBlob(options);
+  }
+  return generatePostCardBlob(options);
+}
 
+/**
+ * Generates the official customized 4:5 portrait post card (1122 x 1402 px)
+ * based directly on the official festival "& WON!" victory asset.
+ */
+async function generatePostCardBlob(options: CardRenderOptions): Promise<Blob> {
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = 1122;
+  canvas.height = 1402;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not create canvas 2d context");
 
-  // Generate QR Code data URL with festival brand colors
+  // 1. Generate Dynamic Challenge QR Code
   const qrDataUrl = await QRCode.toDataURL(options.challengeUrl, {
-    width: 240,
+    width: 230,
     margin: 1,
     color: {
       dark: "#06061F",
@@ -35,299 +44,297 @@ export async function generateResultCardBlob(
     },
   });
 
-  const [qrImage, festivalLogo] = await Promise.all([
+  // 2. Load all image assets concurrently
+  const [baseImage, crownImage, qrImage, avatarImage] = await Promise.all([
+    loadImage("/share-card-clean.png").catch(() => null),
+    loadImage("/share-card-crown.png").catch(() => null),
     loadImage(qrDataUrl),
-    loadImage("/long-logo-removebg-preview.png").catch(() => null),
+    options.avatarUrl ? loadImage(options.avatarUrl).catch(() => null) : Promise.resolve(null),
   ]);
 
-  // 1. Deep Cosmic Festival Backdrop
-  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-  bgGrad.addColorStop(0, "#050518");
-  bgGrad.addColorStop(0.28, "#09092c");
-  bgGrad.addColorStop(0.65, "#0b2628");
-  bgGrad.addColorStop(1, "#040415");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, height);
-
-  // Subtle Geometric Grid & Tech Accent Lines
-  ctx.save();
-  ctx.strokeStyle = "rgba(254, 192, 31, 0.08)";
-  ctx.lineWidth = 1;
-  const gridSize = 60;
-  for (let x = gridSize; x < width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let y = gridSize; y < height; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-
-  // Concentric radar rings (inspired by fintechfestival.lk cyber security & DPI motifs)
-  ctx.strokeStyle = "rgba(28, 160, 133, 0.14)";
-  ctx.lineWidth = 1.5;
-  for (let r = 80; r <= 360; r += 70) {
-    ctx.beginPath();
-    ctx.arc(width * 0.88, height * 0.12, r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  for (let r = 70; r <= 320; r += 60) {
-    ctx.beginPath();
-    ctx.arc(width * 0.1, height * 0.88, r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // Outer Luxury Border with Target Reticles
-  ctx.save();
-  ctx.strokeStyle = "rgba(254, 192, 31, 0.35)";
-  ctx.lineWidth = 2;
-  drawRoundedRect(ctx, 36, 36, width - 72, height - 72, 28);
-  ctx.stroke();
-
-  // Corner Bracket Accents
-  const cornerLen = 32;
-  ctx.strokeStyle = "#FEC01F";
-  ctx.lineWidth = 4;
-  // Top-left
-  ctx.beginPath();
-  ctx.moveTo(36, 36 + cornerLen);
-  ctx.lineTo(36, 36);
-  ctx.lineTo(36 + cornerLen, 36);
-  ctx.stroke();
-  // Top-right
-  ctx.beginPath();
-  ctx.moveTo(width - 36 - cornerLen, 36);
-  ctx.lineTo(width - 36, 36);
-  ctx.lineTo(width - 36, 36 + cornerLen);
-  ctx.stroke();
-  // Bottom-left
-  ctx.beginPath();
-  ctx.moveTo(36, height - 36 - cornerLen);
-  ctx.lineTo(36, height - 36);
-  ctx.lineTo(36 + cornerLen, height - 36);
-  ctx.stroke();
-  // Bottom-right
-  ctx.beginPath();
-  ctx.moveTo(width - 36 - cornerLen, height - 36);
-  ctx.lineTo(width - 36, height - 36);
-  ctx.lineTo(width - 36, height - 36 - cornerLen);
-  ctx.stroke();
-  ctx.restore();
-
-  // Vertical layout adjustments
-  const yStart = options.format === "story" ? 140 : 68;
-
-  // 2. Official Festival Header
-  ctx.save();
-  ctx.textAlign = "center";
-
-  // Logo or Festival Title
-  if (festivalLogo) {
-    const logoW = 340;
-    const logoH = 68;
-    ctx.drawImage(festivalLogo, width / 2 - logoW / 2, yStart + 15, logoW, logoH);
+  if (baseImage) {
+    // Draw the pristine official festival template
+    ctx.drawImage(baseImage, 0, 0, 1122, 1402);
   } else {
-    ctx.font = "900 36px system-ui, -apple-system, sans-serif";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", width / 2, yStart + 55);
+    // Fallback if template image fails to load
+    drawFallbackPostBackdrop(ctx, 1122, 1402, options);
   }
 
-  // Event Location & Dates
-  ctx.font = "600 18px system-ui, -apple-system, sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-  ctx.fillText("Shangri-La Colombo  ·  2–3 November 2026", width / 2, yStart + 105);
-  ctx.restore();
-
-  // 3. Main Glassmorphic Result Plaque
-  const cardY = yStart + 130;
-  const cardWidth = 920;
-  const cardHeight = options.format === "story" ? 680 : 540;
-  const cardX = (width - cardWidth) / 2;
-
-  // Outcome styling
-  const isWon = options.outcome === "player_won";
-  const isElim = options.outcome === "player_eliminated";
-  const outcomeText = isWon
-    ? "ARENA CHAMPION · VICTORY"
-    : isElim
-    ? "RISK AUDIT CONCLUDED"
-    : "MATCH FINISHED";
-  const outcomeGlow = isWon ? "#FEC01F" : isElim ? "#F43F5E" : "#1CA085";
-
+  // 3. Render Left Text: "I scored [Score] points"
   ctx.save();
-  // Plaque backing
-  drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, 32);
-  const cardGrad = ctx.createLinearGradient(0, cardY, 0, cardY + cardHeight);
-  cardGrad.addColorStop(0, "rgba(255, 255, 255, 0.07)");
-  cardGrad.addColorStop(1, "rgba(8, 12, 38, 0.85)");
-  ctx.fillStyle = cardGrad;
-  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-  ctx.shadowBlur = 40;
-  ctx.shadowOffsetY = 20;
-  ctx.fill();
-
-  // Plaque border
-  ctx.strokeStyle = isWon ? "rgba(254, 192, 31, 0.75)" : "rgba(255, 255, 255, 0.18)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.restore();
-
-  // Player Name & Title
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.font = "bold 34px system-ui, -apple-system, sans-serif";
+  ctx.font = "800 34px 'Sora', system-ui, -apple-system, sans-serif";
+  ctx.shadowColor = "#7a1104";
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 3;
+  ctx.shadowBlur = 0;
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(options.displayName, width / 2, cardY + 65);
+  ctx.fillText("I scored ", 135, 670);
+  const prefixWidth = ctx.measureText("I scored ").width;
+  ctx.fillStyle = "#FED136";
+  ctx.fillText(`${options.finalScore.toLocaleString()} points`, 135 + prefixWidth, 670);
+  ctx.restore();
 
-  // Outcome Pill
-  const pillW = 320;
-  const pillH = 40;
-  const pillY = cardY + 86;
+  // 4. Render Player Name Pill Badge above Score Badge
+  const pillX = 745;
+  const pillY = 638;
+  const pillW = 300;
+  const pillH = 36;
   ctx.save();
-  drawRoundedRect(ctx, width / 2 - pillW / 2, pillY, pillW, pillH, 20);
-  ctx.fillStyle = isWon ? "#125252" : isElim ? "#8D1739" : "#F57222";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+  drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 18);
+  const pillGrad = ctx.createLinearGradient(pillX, 0, pillX + pillW, 0);
+  pillGrad.addColorStop(0, "rgba(4, 42, 45, 0.95)");
+  pillGrad.addColorStop(1, "rgba(8, 55, 59, 0.95)");
+  ctx.fillStyle = pillGrad;
   ctx.fill();
-  ctx.strokeStyle = outcomeGlow;
+  ctx.strokeStyle = "#FEC01F";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
-  ctx.fillText(outcomeText, width / 2, pillY + 25);
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#FEC01F";
+  ctx.textAlign = "center";
+  ctx.font = "bold 15px 'Sora', system-ui, -apple-system, sans-serif";
+  const cleanName = (options.displayName || "CHALLENGER").toUpperCase();
+  ctx.fillText(`PLAYER: ${cleanName}`, pillX + pillW / 2, pillY + 23);
   ctx.restore();
 
-  // "OFFICIAL TOURNAMENT SCORE" Label
-  ctx.fillStyle = "#FEC01F";
-  ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
-  ctx.letterSpacing = "3px";
-  ctx.fillText("OFFICIAL ARENA SCORE", width / 2, cardY + 168);
+  // 5. Render Dynamic Avatar inside Badge
+  const avatarCenterX = 806;
+  const avatarCenterY = 744;
+  const avatarRadius = 50;
 
-  // Giant High-Tech Score Display
-  ctx.font = "900 96px system-ui, -apple-system, sans-serif";
-  const scoreGrad = ctx.createLinearGradient(0, cardY + 175, 0, cardY + 275);
-  scoreGrad.addColorStop(0, "#FFFFFF");
-  scoreGrad.addColorStop(1, "#FEC01F");
-  ctx.fillStyle = scoreGrad;
-  ctx.fillText(options.finalScore.toLocaleString(), width / 2, cardY + 265);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
 
-  // Leaderboard Rank Pill (if opted-in)
-  if (options.rank) {
-    const rankPillW = 380;
-    const rankPillY = cardY + 295;
-    ctx.save();
-    drawRoundedRect(ctx, width / 2 - rankPillW / 2, rankPillY, rankPillW, 38, 19);
-    ctx.fillStyle = "rgba(245, 114, 34, 0.15)";
-    ctx.fill();
-    ctx.strokeStyle = "#F57222";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  if (avatarImage) {
+    ctx.drawImage(
+      avatarImage,
+      avatarCenterX - avatarRadius,
+      avatarCenterY - avatarRadius,
+      avatarRadius * 2,
+      avatarRadius * 2
+    );
+  } else {
+    // Elegant dark emerald circular avatar with gold initials
+    const avGrad = ctx.createRadialGradient(
+      avatarCenterX,
+      avatarCenterY,
+      8,
+      avatarCenterX,
+      avatarCenterY,
+      avatarRadius
+    );
+    avGrad.addColorStop(0, "#0e4347");
+    avGrad.addColorStop(1, "#042224");
+    ctx.fillStyle = avGrad;
+    ctx.fillRect(
+      avatarCenterX - avatarRadius,
+      avatarCenterY - avatarRadius,
+      avatarRadius * 2,
+      avatarRadius * 2
+    );
 
-    ctx.fillStyle = "#F57222";
-    ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
-    ctx.fillText(`Rank #${options.rank} on Festival Leaderboard`, width / 2, rankPillY + 25);
-    ctx.restore();
+    ctx.fillStyle = "#FEC01F";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 32px 'Sora', system-ui, -apple-system, sans-serif";
+    const initials = getInitials(options.displayName);
+    ctx.fillText(initials, avatarCenterX, avatarCenterY + 2);
+  }
+  ctx.restore();
+
+  // Circular Gold Rim Stroke around Avatar
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(avatarCenterX, avatarCenterY, avatarRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = "#FEC01F";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Re-draw Golden Crown at the top of the rim
+  if (crownImage) {
+    ctx.drawImage(crownImage, 830, 685, 35, 35);
   }
 
-  // Stats Grid: 3 Distinct Metric Cards
-  const statsY = cardY + (options.rank ? 355 : 320);
-  const colWidth = (cardWidth - 80) / 3;
-
-  drawMetricCard(
-    ctx,
-    cardX + 28,
-    statsY,
-    colWidth,
-    options.format === "story" ? 120 : 100,
-    "HEARTS LEFT",
-    `${options.heartsRemaining} / 3`,
-    "Resilience"
-  );
-  drawMetricCard(
-    ctx,
-    cardX + 38 + colWidth,
-    statsY,
-    colWidth,
-    options.format === "story" ? 120 : 100,
-    "FINTECH IQ",
-    `${options.quizCorrect} Correct`,
-    "Domain Mastery"
-  );
-  drawMetricCard(
-    ctx,
-    cardX + 48 + colWidth * 2,
-    statsY,
-    colWidth,
-    options.format === "story" ? 120 : 100,
-    "SHIELDS & TREASURE",
-    `${options.treasuresCollected} Claimed`,
-    "Risk Safeguard"
-  );
-  ctx.restore();
-
-  // 4. Scannable QR Code & Challenge Section
-  const qrBoxY = cardY + cardHeight + (options.format === "story" ? 45 : 30);
-  const qrBoxSize = options.format === "story" ? 270 : 230;
-  const qrBoxX = width / 2 - qrBoxSize / 2;
-
-  // QR Code Frame with Gold Rim
-  ctx.save();
-  drawRoundedRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 24);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.shadowColor = "rgba(254, 192, 31, 0.35)";
-  ctx.shadowBlur = 25;
-  ctx.shadowOffsetY = 6;
-  ctx.fill();
-  ctx.strokeStyle = "#FEC01F";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  // Draw QR Image
-  const qrPadding = options.format === "story" ? 18 : 14;
-  ctx.drawImage(
-    qrImage,
-    qrBoxX + qrPadding,
-    qrBoxY + qrPadding,
-    qrBoxSize - qrPadding * 2,
-    qrBoxSize - qrPadding * 2
-  );
-  ctx.restore();
-
-  // Call-to-action text
+  // 6. Render Dynamic Score inside the Score Badge
   ctx.save();
   ctx.textAlign = "center";
-  ctx.fillStyle = "#FEC01F";
-  ctx.font = "900 26px system-ui, -apple-system, sans-serif";
-  ctx.letterSpacing = "1px";
-  ctx.fillText("SCAN TO BEAT THIS SCORE", width / 2, qrBoxY + qrBoxSize + 42);
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "600 18px system-ui, -apple-system, sans-serif";
-  ctx.fillText(
-    "Race against AI · Grand Prize: 10,000 LKR Festival Ticket to Top Winners!",
-    width / 2,
-    qrBoxY + qrBoxSize + 72
-  );
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
-  ctx.font = "500 16px system-ui, -apple-system, sans-serif";
-  ctx.fillText(
-    "Arena Closes Oct 31st · Sri Lanka FinTech Festival 2026 · fintechfestival.lk",
-    width / 2,
-    qrBoxY + qrBoxSize + 102
-  );
+  const scoreStr = options.finalScore.toLocaleString();
+  const fontSize = scoreStr.length > 5 ? 40 : 48;
+  ctx.font = `900 ${fontSize}px 'Sora', system-ui, -apple-system, sans-serif`;
+  ctx.shadowColor = "#7a1104";
+  ctx.shadowOffsetX = 3;
+  ctx.shadowOffsetY = 3;
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#FED136";
+  ctx.fillText(scoreStr, 948, 768);
   ctx.restore();
+
+  // 7. Render Dynamic Scannable QR Code in bottom-right green bar
+  ctx.drawImage(qrImage, 953, 1211, 114, 114);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
-      else reject(new Error("Failed to export canvas blob"));
+      else reject(new Error("Failed to export post card blob"));
     }, "image/png");
   });
+}
+
+/**
+ * Generates the official 9:16 vertical Story format (1080 x 1920 px)
+ * optimized for Instagram Stories, WhatsApp Status, Facebook Stories, and TikTok.
+ */
+async function generateStoryCardBlob(options: CardRenderOptions): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not create canvas 2d context");
+
+  // 1. First generate the customized 4:5 post card on an offscreen canvas
+  const postBlob = await generatePostCardBlob({ ...options, format: "post" });
+  const postUrl = URL.createObjectURL(postBlob);
+  const postImg = await loadImage(postUrl);
+
+  // 2. Luxury Festival Backdrop
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 1920);
+  bgGrad.addColorStop(0, "#2a020d");
+  bgGrad.addColorStop(0.5, "#3c0516");
+  bgGrad.addColorStop(1, "#1e0209");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  // Top and bottom ambient radial glows
+  const topGlow = ctx.createRadialGradient(540, 180, 50, 540, 180, 550);
+  topGlow.addColorStop(0, "rgba(105, 9, 36, 0.75)");
+  topGlow.addColorStop(1, "rgba(42, 2, 13, 0)");
+  ctx.fillStyle = topGlow;
+  ctx.fillRect(0, 0, 1080, 900);
+
+  const botGlow = ctx.createRadialGradient(540, 1750, 50, 540, 1750, 600);
+  botGlow.addColorStop(0, "rgba(20, 79, 82, 0.65)");
+  botGlow.addColorStop(1, "rgba(30, 2, 9, 0)");
+  ctx.fillStyle = botGlow;
+  ctx.fillRect(0, 1200, 1080, 720);
+
+  // Subtle cyber grid dots
+  ctx.save();
+  ctx.fillStyle = "rgba(254, 192, 31, 0.08)";
+  for (let x = 40; x < 1080; x += 50) {
+    for (let y = 40; y < 280; y += 50) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (let y = 1600; y < 1920; y += 50) {
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // 3. Story Header
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.font = "900 28px 'Sora', system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#FEC01F";
+  ctx.letterSpacing = "3px";
+  ctx.fillText("SRI LANKA FINTECH FESTIVAL 2026", 540, 145);
+
+  ctx.font = "700 18px 'Sora', system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+  ctx.letterSpacing = "1.5px";
+  ctx.fillText("OFFICIAL ARENA CHALLENGE · SHANGRI-LA COLOMBO", 540, 195);
+  ctx.restore();
+
+  // 4. Centered Card Plaque with Realistic Drop Shadow
+  const cardW = 980;
+  const cardH = 1225; // 980 / 1122 * 1402 = 1224.5
+  const cardX = (1080 - cardW) / 2;
+  const cardY = 310;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.65)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 18;
+  ctx.drawImage(postImg, cardX, cardY, cardW, cardH);
+  ctx.restore();
+
+  // 5. Story Footer Call to Action Button
+  const btnW = 800;
+  const btnH = 90;
+  const btnX = (1080 - btnW) / 2;
+  const btnY = 1690;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetY = 8;
+  drawRoundedRect(ctx, btnX, btnY, btnW, btnH, 45);
+  const btnGrad = ctx.createLinearGradient(btnX, 0, btnX + btnW, 0);
+  btnGrad.addColorStop(0, "rgba(18, 82, 82, 0.92)");
+  btnGrad.addColorStop(1, "rgba(28, 115, 115, 0.92)");
+  ctx.fillStyle = btnGrad;
+  ctx.fill();
+  ctx.strokeStyle = "#FEC01F";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.shadowColor = "transparent";
+  ctx.textAlign = "center";
+  ctx.font = "900 24px 'Sora', system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "#FED136";
+  ctx.letterSpacing = "1.2px";
+  ctx.fillText("SCAN QR OR PLAY AT FINTECHFESTIVAL.LK", 540, btnY + 54);
+
+  ctx.font = "600 16px 'Sora', system-ui, -apple-system, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+  ctx.fillText(
+    "LKR 10,000 Event Access to Top Arena Scorers · Closes Oct 31st",
+    540,
+    btnY + 128
+  );
+  ctx.restore();
+
+  URL.revokeObjectURL(postUrl);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Failed to export story card blob"));
+    }, "image/png");
+  });
+}
+
+function drawFallbackPostBackdrop(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  options: CardRenderOptions
+) {
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+  bgGrad.addColorStop(0, "#3c0516");
+  bgGrad.addColorStop(1, "#1e0209");
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "900 64px system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("I PLAYED & WON!", width / 2, 400);
+
+  ctx.fillStyle = "#FED136";
+  ctx.font = "900 80px system-ui, -apple-system, sans-serif";
+  ctx.fillText(`${options.finalScore.toLocaleString()} PTS`, width / 2, 700);
 }
 
 function drawRoundedRect(
@@ -351,37 +358,11 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
-function drawMetricCard(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  title: string,
-  value: string,
-  subtitle: string
-) {
-  ctx.save();
-  drawRoundedRect(ctx, x, y, w, h, 18);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#FEC01F";
-  ctx.font = "bold 13px system-ui, -apple-system, sans-serif";
-  ctx.fillText(title, x + w / 2, y + 28);
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "900 24px system-ui, -apple-system, sans-serif";
-  ctx.fillText(value, x + w / 2, y + 60);
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
-  ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-  ctx.fillText(subtitle, x + w / 2, y + 80);
-  ctx.restore();
+function getInitials(name: string): string {
+  if (!name) return "FP";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

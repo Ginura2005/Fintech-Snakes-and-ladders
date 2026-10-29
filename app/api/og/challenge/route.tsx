@@ -80,11 +80,11 @@ export async function GET(request: NextRequest) {
             flexDirection: "column",
             justifyContent: "space-between",
             padding: "48px 56px",
-            backgroundColor: "#06061f",
-            backgroundImage: "radial-gradient(circle at 85% 15%, rgba(254, 192, 31, 0.18) 0%, transparent 45%), radial-gradient(circle at 15% 85%, rgba(18, 82, 82, 0.35) 0%, transparent 50%), linear-gradient(135deg, #06061f 0%, #0a0a2c 50%, #050518 100%)",
+            backgroundColor: "#2e030e",
+            backgroundImage: "radial-gradient(circle at 85% 15%, rgba(254, 192, 31, 0.22) 0%, transparent 45%), radial-gradient(circle at 15% 85%, rgba(18, 82, 82, 0.45) 0%, transparent 50%), linear-gradient(135deg, #2e030e 0%, #3e0517 50%, #1c0208 100%)",
             color: "#ffffff",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            border: "8px solid #0d0d35",
+            border: "8px solid #4a061a",
             position: "relative",
           }}
         >
@@ -194,8 +194,8 @@ export async function GET(request: NextRequest) {
               justifyContent: "space-between",
               width: "100%",
               margin: "20px 0",
-              backgroundColor: "rgba(10, 10, 40, 0.75)",
-              border: "1.5px solid rgba(255, 255, 255, 0.12)",
+              backgroundColor: "rgba(10, 42, 45, 0.85)",
+              border: "1.5px solid #fec01f",
               borderRadius: 24,
               padding: "28px 36px",
             }}
@@ -320,46 +320,46 @@ export async function GET(request: NextRequest) {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(254, 192, 31, 0.3)",
                   padding: "8px 16px",
                   borderRadius: 12,
                   fontSize: 13,
-                  fontWeight: 600,
-                  color: "rgba(255, 255, 255, 0.85)",
+                  fontWeight: 700,
+                  color: "#ffffff",
                 }}
               >
-                ❤️ {hearts}/3 Hearts Left
+                Hearts: {hearts}/3
               </div>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(254, 192, 31, 0.3)",
                   padding: "8px 16px",
                   borderRadius: 12,
                   fontSize: 13,
-                  fontWeight: 600,
-                  color: "rgba(255, 255, 255, 0.85)",
+                  fontWeight: 700,
+                  color: "#ffffff",
                 }}
               >
-                ⭐ {quizCorrect} Quizzes Correct
+                Quiz: {quizCorrect} Correct
               </div>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(254, 192, 31, 0.3)",
                   padding: "8px 16px",
                   borderRadius: 12,
                   fontSize: 13,
-                  fontWeight: 600,
-                  color: "rgba(255, 255, 255, 0.85)",
+                  fontWeight: 700,
+                  color: "#ffffff",
                 }}
               >
-                💎 {treasures} Treasures
+                Treasures: {treasures} Claimed
               </div>
             </div>
 
