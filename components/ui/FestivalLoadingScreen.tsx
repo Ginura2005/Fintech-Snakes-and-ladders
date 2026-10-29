@@ -31,20 +31,20 @@ export default function FestivalLoadingScreen({
       </div>
 
       {/* THE PROMINENT CIRCULAR LOADING ARENA DISK */}
-      <div className="relative w-[min(21rem,86vw)] h-[min(21rem,86vw)] sm:w-96 sm:h-96 rounded-full border-2 sm:border-3 border-[#fec01f] bg-gradient-to-b from-[#141a4a]/95 via-[#0b0e30]/98 to-[#040618] shadow-[0_0_80px_rgba(254,192,31,0.4),inset_0_0_55px_rgba(18,22,60,0.9)] flex flex-col items-center justify-center p-6 text-center shrink-0 z-10 overflow-hidden">
+      <div className="relative w-[min(21rem,86vw)] h-[min(21rem,86vw)] sm:w-96 sm:h-96 rounded-full border-2 sm:border-4 border-[#fec01f] bg-gradient-to-b from-[#141a4a]/95 via-[#0b0e30]/98 to-[#040618] shadow-[0_0_80px_rgba(254,192,31,0.4),inset_0_0_55px_rgba(18,22,60,0.9)] flex flex-col items-center justify-center p-6 text-center shrink-0 z-10 overflow-hidden" style={{ borderRadius: "50%" }}>
         
         {/* Animated outer spinning orbital ring */}
         <div
           className="absolute -inset-1 rounded-full border-2 border-transparent border-t-[#fec01f] border-r-teal-400 border-b-[#fec01f]/40 animate-spin pointer-events-none"
-          style={{ animationDuration: "2.4s" }}
+          style={{ borderRadius: "50%", animationDuration: "2.4s" }}
         />
 
         {/* Concentric circular depth tracks */}
-        <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
-        <div className="absolute inset-6 rounded-full border border-[#fec01f]/20 pointer-events-none" />
+        <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" style={{ borderRadius: "50%" }} />
+        <div className="absolute inset-6 rounded-full border border-[#fec01f]/20 pointer-events-none" style={{ borderRadius: "50%" }} />
         <div
           className="absolute inset-9 rounded-full border border-dashed border-teal-400/20 animate-spin pointer-events-none"
-          style={{ animationDuration: "12s", animationDirection: "reverse" }}
+          style={{ borderRadius: "50%", animationDuration: "12s", animationDirection: "reverse" }}
         />
 
         {/* Festival Circular Mark in center */}

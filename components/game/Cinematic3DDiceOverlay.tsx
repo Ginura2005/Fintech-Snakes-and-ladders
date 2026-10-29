@@ -131,8 +131,8 @@ export default function Cinematic3DDiceOverlay({
           `}
         >
           {/* Inner concentric track for tabletop depth */}
-          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" />
-          <div className="absolute inset-6 rounded-full border border-white/5 pointer-events-none" />
+          <div className="absolute inset-3 rounded-full border border-white/10 pointer-events-none" style={{ borderRadius: "50%" }} />
+          <div className="absolute inset-6 rounded-full border border-white/5 pointer-events-none" style={{ borderRadius: "50%" }} />
 
           {/* Real 3D Physical Cube Die Tumbling Centered in Arena */}
           <div className="relative flex items-center justify-center">

@@ -1148,7 +1148,7 @@ export default function GamePage() {
         </div>
 
         {/* Prominent Circular Arena Disk */}
-        <div className="relative w-[min(22rem,88vw)] h-[min(22rem,88vw)] sm:w-[400px] sm:h-[400px] rounded-full border-2 sm:border-3 border-[#fec01f] bg-gradient-to-b from-[#141a4a]/95 via-[#0b0e30]/98 to-[#040618] shadow-[0_0_80px_rgba(254,192,31,0.4),inset_0_0_55px_rgba(18,22,60,0.9)] flex flex-col items-center justify-center p-6 text-center shrink-0 z-10 overflow-hidden">
+        <div className="relative w-[min(22rem,88vw)] h-[min(22rem,88vw)] sm:w-[400px] sm:h-[400px] rounded-full border-2 sm:border-4 border-[#fec01f] bg-gradient-to-b from-[#141a4a]/95 via-[#0b0e30]/98 to-[#040618] shadow-[0_0_80px_rgba(254,192,31,0.4),inset_0_0_55px_rgba(18,22,60,0.9)] flex flex-col items-center justify-center p-6 text-center shrink-0 z-10 overflow-hidden" style={{ borderRadius: "50%" }}>
           {/* Orbital rings */}
           <div
             className="absolute -inset-1 rounded-full border-2 border-transparent border-t-[#fec01f] border-r-teal-400 border-b-[#fec01f]/40 animate-spin pointer-events-none"

@@ -25,10 +25,10 @@
 
   --radius-DEFAULT: 0.125rem;
   --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-3xl: 1.5rem;
-  --radius-full: 0.75rem;
+  --radius-full: 9999px;
 
   --spacing-margin-mobile: 16px;
   --spacing-margin-desktop: 40px;

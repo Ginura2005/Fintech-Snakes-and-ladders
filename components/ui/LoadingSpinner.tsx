@@ -27,11 +27,11 @@ export default function LoadingSpinner({
       <div className="relative flex items-center justify-center">
         {/* Glow backdrop ring */}
         <div
-          className={`${sizeMap[size]} rounded-full border-[#fec01f]/20 blur-[1px] absolute inset-0`}
+          className={`${sizeMap[size]} rounded-full border-[#fec01f]/20 blur-[1px] absolute inset-0`} style={{ borderRadius: "50%" }}
         />
         {/* Spinning gradient ring */}
         <div
-          className={`${sizeMap[size]} rounded-full border-t-[#fec01f] border-r-teal-400 border-b-transparent border-l-transparent animate-spin`}
+          className={`${sizeMap[size]} rounded-full border-t-[#fec01f] border-r-teal-400 border-b-transparent border-l-transparent animate-spin`} style={{ borderRadius: "50%" }}
         />
         {/* Inner pulsing golden core for lg and xl */}
         {(size === "lg" || size === "xl") && (
