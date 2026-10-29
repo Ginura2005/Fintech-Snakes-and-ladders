@@ -198,9 +198,9 @@ export default function HomePage() {
             <div className="order-5 sm:order-3 flex flex-col xs:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 max-w-xl mx-auto min-h-[48px] w-full">
               {loading ? (
                 <>
-                  <div className="h-12 w-full sm:w-44 rounded-xl bg-white/10 animate-pulse" aria-hidden />
-                  <div className="h-12 w-full sm:w-36 rounded-xl bg-white/10 animate-pulse" aria-hidden />
-                  <div className="h-12 w-full sm:w-32 rounded-xl bg-white/10 animate-pulse" aria-hidden />
+                  <div className="h-12 w-full sm:w-44 rounded-full bg-white/10 animate-pulse" aria-hidden />
+                  <div className="h-12 w-full sm:w-36 rounded-full bg-white/10 animate-pulse" aria-hidden />
+                  <div className="h-12 w-full sm:w-32 rounded-full bg-white/10 animate-pulse" aria-hidden />
                   <span className="sr-only">Loading actions…</span>
                 </>
               ) : (
